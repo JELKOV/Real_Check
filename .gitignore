@@ -1,0 +1,68 @@
+# 기본 무시 파일
+HELP.md
+
+# 빌드 결과물
+target/
+build/
+out/
+*.class
+*.jar
+*.war
+
+# Maven Wrapper
+!.mvn/wrapper/maven-wrapper.jar
+
+# IDE별 설정 파일
+### VS Code ###
+.vscode/
+
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+
+### STS / Eclipse ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# 로그 및 임시 파일
+*.log
+*.tmp
+*.bak
+*.swp
+test-output/
+surefire-reports/
+
+# OS 캐시
+.DS_Store
+Thumbs.db
+
+# 환경 변수 / 인증 관련
+.env
+.env.*
+*.pem
+*.crt
+*.key
+*.p12
+
+# Spring Boot Devtools 관련
+.spring-boot-devtools.properties
+
+# 예외 처리 (빌드 폴더 예외 처리 시)
+/!**/src/main/**/build/
+/!**/src/test/**/build/
+/!**/src/main/**/target/
+/!**/src/test/**/target/
