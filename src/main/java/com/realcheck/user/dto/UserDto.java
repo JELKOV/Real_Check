@@ -14,9 +14,30 @@ import lombok.*;
 @AllArgsConstructor // 모든 필드를 포함한 생성자 생성
 public class UserDto {
 
+    private Long id;
     private String email;
     private String nickname;
+    private String role;
+    private boolean isActive;
     private String password;
+
+    public UserDto(Long id, String email, String nickname, String role, boolean isActive) {
+        this.id = id;
+        this.email = email;
+        this.nickname = nickname;
+        this.role = role;
+        this.isActive = isActive;
+    }
+    
+    // fromEntity 메서드에서 사용
+    public static UserDto fromEntity(User user) {
+        return new UserDto(
+                user.getId(),
+                user.getEmail(),
+                user.getNickname(),
+                user.getRole().name(),
+                user.isActive());
+    }
 
     /**
      * DTO → Entity로 변환하는 메서드
@@ -29,4 +50,5 @@ public class UserDto {
         user.setPassword(password);
         return user;
     }
+
 }

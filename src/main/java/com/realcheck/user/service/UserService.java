@@ -5,6 +5,8 @@ import com.realcheck.user.entity.User;
 import com.realcheck.user.entity.User.Role;
 import com.realcheck.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 /**
@@ -19,6 +21,9 @@ public class UserService {
 
     // UserRepository를 주입받음 (DB 접근을 담당)
     private final UserRepository userRepository;
+
+    // 암호화 주입
+    private final PasswordEncoder passwordEncoder;
 
     /**
      * 회원가입 처리 메서드
@@ -40,6 +45,10 @@ public class UserService {
         // 3. DTO → Entity 변환
         User user = dto.toEntity();
 
+        // 4. 비밀번호 암호화 적용
+        String encodedPassword = passwordEncoder.encode(dto.getPassword());
+        user.setPassword(encodedPassword);
+
         // 4. 기본 정보 세팅 (역할, 포인트, 활성 상태)
         user.setRole(Role.USER); // 회원가입은 기본적으로 일반 사용자로 설정
         user.setPoints(0); // 기본 포인트는 0
@@ -47,5 +56,17 @@ public class UserService {
 
         // 5. DB에 저장
         userRepository.save(user);
+    }
+
+    // 로그인 기능
+    public UserDto login(String email, String rawPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 이메일입니다."));
+
+        if (!passwordEncoder.matches(rawPassword, user.getPassword())) {
+            throw new RuntimeException("비밀번호가 일치하지 않습니다.");
+        }
+
+        return UserDto.fromEntity(user);
     }
 }

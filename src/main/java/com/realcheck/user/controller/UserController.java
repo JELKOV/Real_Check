@@ -32,7 +32,13 @@ public class UserController {
 
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody UserDto dto) {
-        userService.register(dto);  // 회원가입 로직 실행 (UserService에서 처리 - 의존성주입 객체 실행)
+        userService.register(dto); // 회원가입 로직 실행 (UserService에서 처리 - 의존성주입 객체 실행)
         return ResponseEntity.ok("회원가입 성공!"); // 클라이언트에 응답
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<UserDto> login(@RequestBody UserDto dto) {
+        UserDto loginUser = userService.login(dto.getEmail(), dto.getPassword());
+        return ResponseEntity.ok(loginUser);
     }
 }
