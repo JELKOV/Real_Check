@@ -1,13 +1,23 @@
 package com.realcheck;
 
+import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 public class RealcheckApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(RealcheckApplication.class, args);
-	}
+    public static void main(String[] args) {
+        // .env 파일 로드 (루트 디렉토리에 있어야 함)
+        Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
 
+        // .env의 값을 JVM 전역 속성(System properties)으로 등록
+        System.setProperty("SPRING_APPLICATION_NAME", dotenv.get("SPRING_APPLICATION_NAME", "realcheck"));
+        System.setProperty("DB_URL", dotenv.get("DB_URL"));
+        System.setProperty("DB_USERNAME", dotenv.get("DB_USERNAME"));
+        System.setProperty("DB_PASSWORD", dotenv.get("DB_PASSWORD"));
+
+        // SpringBoot 실행
+        SpringApplication.run(RealcheckApplication.class, args);
+    }
 }
