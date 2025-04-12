@@ -58,15 +58,64 @@ public class UserService {
         userRepository.save(user);
     }
 
-    // 로그인 기능
+    // 이메일 체크 기능
+    public boolean isEmailExists(String email) {
+        return userRepository.findByEmail(email).isPresent();
+    }
+
+    // 닉네임 체크 기능능
+    public boolean isNicknameExists(String nickname) {
+        return userRepository.findByNickname(nickname).isPresent();
+    }
+
+    /**
+     * 로그인 처리 메서드
+     * - 이메일로 사용자 정보를 조회한 뒤, 비밀번호를 비교하여 로그인 성공 여부를 판단함
+     * - 비밀번호는 BCrypt로 암호화된 상태이므로 PasswordEncoder를 사용해 비교
+     *
+     * @param email       사용자가 입력한 이메일
+     * @param rawPassword 사용자가 입력한 평문 비밀번호
+     * @return 로그인에 성공한 사용자 정보를 담은 UserDto (비밀번호는 포함하지 않음)
+     */
+
     public UserDto login(String email, String rawPassword) {
+        // 1. 이메일로 사용자 조회 (존재하지 않으면 예외 발생)
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 이메일입니다."));
 
+        // 2. 입력한 비밀번호(rawPassword)와 저장된 암호화된 비밀번호 비교
         if (!passwordEncoder.matches(rawPassword, user.getPassword())) {
             throw new RuntimeException("비밀번호가 일치하지 않습니다.");
         }
 
+        // 3. 로그인 성공 → User 엔티티를 DTO로 변환하여 반환 (비밀번호 제외)
         return UserDto.fromEntity(user);
+    }
+
+    /**
+     * 사용자 프로필 수정 메서드
+     * - 사용자의 닉네임 또는 비밀번호를 수정함
+     * - 닉네임은 단순 대체, 비밀번호는 암호화 후 저장
+     *
+     * @param id  수정할 사용자 ID
+     * @param dto 클라이언트에서 전달된 수정 정보 (닉네임, 비밀번호 중 하나 이상)
+     */
+    public void updateProfile(Long id, UserDto dto) {
+        // 1. 해당 ID의 사용자 정보 조회 (없으면 예외 발생)
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("사용자 없음"));
+
+        // 2. 닉네임이 전달된 경우 → 기존 닉네임을 새 닉네임으로 변경
+        if (dto.getNickname() != null)
+            user.setNickname(dto.getNickname());
+
+        // 3. 비밀번호가 전달된 경우 → 암호화 후 저장
+        if (dto.getPassword() != null) {
+            String encrypted = passwordEncoder.encode(dto.getPassword());
+            user.setPassword(encrypted);
+        }
+
+        // 4. 변경된 사용자 정보를 DB에 저장
+        userRepository.save(user);
     }
 }

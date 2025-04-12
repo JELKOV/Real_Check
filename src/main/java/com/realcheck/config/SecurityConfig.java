@@ -28,7 +28,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/user/me", "/api/user/logout").authenticated()
                         // 그 외 요청은 허용 (원하면 막을 수도 있음)
                         .anyRequest().permitAll())
-                // 기본 로그인 폼 비활성화 (우리는 REST API 사용 중이므로)
+                // 기본 로그인 폼 비활성화 (REST API 사용 중이므로)
                 .formLogin(login -> login.disable());
 
         return http.build();
