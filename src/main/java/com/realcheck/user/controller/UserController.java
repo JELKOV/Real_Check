@@ -2,6 +2,8 @@ package com.realcheck.user.controller;
 
 import com.realcheck.user.dto.UserDto;
 import com.realcheck.user.service.UserService;
+
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,9 +38,45 @@ public class UserController {
         return ResponseEntity.ok("회원가입 성공!"); // 클라이언트에 응답
     }
 
+    /**
+     * 로그인 API
+     * - 사용자의 이메일과 비밀번호를 받아 로그인 처리
+     * - 성공 시 세션에 사용자 정보를 저장하여 로그인 상태 유지
+     *
+     * @param dto     로그인 요청 정보 (이메일, 비밀번호)
+     * @param session HttpSession: 로그인 성공 시 사용자 정보를 저장할 수 있는 서버 측 저장소
+     * @return 로그인된 사용자 정보를 담은 응답
+     */
+
     @PostMapping("/login")
-    public ResponseEntity<UserDto> login(@RequestBody UserDto dto) {
+    public ResponseEntity<UserDto> login(@RequestBody UserDto dto, HttpSession session) {
+        // 이메일 + 비밀번호를 검증하여 로그인 시도
         UserDto loginUser = userService.login(dto.getEmail(), dto.getPassword());
+
+        // 로그인 성공 시, 사용자 정보를 세션에 저장 (세션 키: "loginUser")
+        session.setAttribute("loginUser", loginUser);
+
+        // 사용자 정보를 응답으로 반환 (보안상 password는 DTO에 포함 X)
         return ResponseEntity.ok(loginUser);
+    }
+
+    // 로그인한 사용자 정보 확인 API (마이페이지용)
+    // 추후에 데이터를 가져와야 할경우 Service 연결
+    @GetMapping("/me")
+    public ResponseEntity<UserDto> myPage(HttpSession session) {
+        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
+
+        if (loginUser == null) {
+            return ResponseEntity.status(401).body(null); // 로그인 안 된 상태 → 401 Unauthorized
+        }
+
+        return ResponseEntity.ok(loginUser); // 로그인된 사용자 정보 반환
+    }
+
+    // 로그아웃 API
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(HttpSession session) {
+        session.invalidate(); // 현재 세션을 무효화 (로그아웃 처리)
+        return ResponseEntity.ok("로그아웃 되었습니다.");
     }
 }
