@@ -22,25 +22,19 @@ public class StatusLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY) // auto_increment
     private Long id;
 
-    // 상태 설명 (ex: "현재 대기 3명", "예약만 가능")
-    private String content;
-
-    // 대기 인원 수 (숫자로 따로 저장)
-    private int waitCount;
-
-    // 업로드된 사진이 있을 경우의 경로 (선택적)
-    private String imageUrl;
-
-    // 등록 시각 – 기본값은 현재 시간
-    private LocalDateTime createdAt = LocalDateTime.now();
+    
+    private String content; // 상태 설명 (ex: "현재 대기 3명", "예약만 가능")
+    private int waitCount; // 대기 인원 수 (숫자로 따로 저장)   
+    private String imageUrl; // 업로드된 사진이 있을 경우의 경로 (선택적)    
+    private LocalDateTime createdAt = LocalDateTime.now(); // 등록 시각 – 기본값은 현재 시간
 
     // 이 정보를 등록한 사용자 정보 (Many-to-One 관계)
     @ManyToOne
     @JoinColumn(name = "user_id") // FK 이름은 user_id
-    private User reporter;
+    private User reporter; // 작성자
 
     // 해당 정보가 속한 장소
     @ManyToOne
     @JoinColumn(name = "place_id") // FK 이름은 place_id
-    private Place place;
+    private Place place;  // 장소
 }
