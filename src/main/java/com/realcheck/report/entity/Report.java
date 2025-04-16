@@ -16,6 +16,7 @@ import lombok.*;
 @Table(name = "reports") // 테이블명: reports
 @Getter @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 public class Report {
 
     @Id
@@ -31,10 +32,10 @@ public class Report {
     // 신고한 사용자
     @ManyToOne
     @JoinColumn(name = "reporter_id") // FK 이름은 reporter_id
-    private User reporter;
+    private User reporter; // 신고한 사람람
 
     // 어떤 상태 정보에 대해 신고한 것인지 (StatusLog와 연결)
     @ManyToOne
     @JoinColumn(name = "status_log_id") // FK 이름은 status_log_id
-    private StatusLog statusLog;
+    private StatusLog statusLog; // 신고 대상 로그그
 }

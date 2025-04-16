@@ -63,4 +63,23 @@ public class StatusLogService {
                 .map(StatusLogDto::fromEntity)
                 .toList();
     }
+
+    /**
+     * 전체 상태 로그(StatusLog)를 조회하는 메서드
+     * 
+     * 관리자 전용 기능에서 사용됩니다 (/api/status/all)
+     * 
+     * 동작 설명:
+     * - statusLogRepository.findAll() 을 통해 모든 로그(Entity)를 조회
+     * - Entity → DTO 변환을 위해 map(StatusLogDto::fromEntity) 사용
+     * - 변환된 List<StatusLogDto> 를 반환
+     *
+     * @return 모든 StatusLog를 DTO로 변환한 리스트
+     */
+
+    public List<StatusLogDto> getAllLogs() {
+        return statusLogRepository.findAll().stream()
+                .map(StatusLogDto::fromEntity) // Entity → DTO 변환
+                .toList(); // 변환된 리스트 반환
+    }
 }
