@@ -41,11 +41,16 @@ public class StatusLogService {
         // 1. 사용자 조회
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("사용자 없음"));
-        // 2. 장소 조회
+
+        // 2. 경고 누적 상태인지 처리
+        if (!user.isActive()) {
+            throw new RuntimeException("해당 사용자는 신고 누적으로 차단되었습니다.");
+        }
+        // 3. 장소 조회
         Place place = placeRepository.findById(dto.getPlaceId())
                 .orElseThrow(() -> new RuntimeException("장소 없음"));
 
-        // 3. 하루 3회 등록 제한 검사 (자정~자정 기준)
+        // 4. 하루 3회 등록 제한 검사 (자정~자정 기준)
         LocalDateTime start = LocalDate.now().atStartOfDay();
         LocalDateTime end = start.plusDays(1);
         int count = statusLogRepository.countByReporterIdAndCreatedAtBetween(userId, start, end);
@@ -53,10 +58,10 @@ public class StatusLogService {
             throw new RuntimeException("하루 3회까지만 등록 가능합니다.");
         }
 
-        // 4. StatusLog 엔티티 생성 및 저장
+        // 5. StatusLog 엔티티 생성 및 저장
         StatusLog log = dto.toEntity(user, place);
         statusLogRepository.save(log);
-        // 5. 포인트 지급 처리
+        // 6. 포인트 지급 처리
         pointService.givePoint(user, 10, "정보 공유");
     }
 
@@ -68,7 +73,8 @@ public class StatusLogService {
      * @return 상태 로그 DTO 리스트
      */
     public List<StatusLogDto> getLogsByPlace(Long placeId) {
-        return statusLogRepository.findByPlaceIdOrderByCreatedAtDesc(placeId)
+        LocalDateTime cutoff = LocalDateTime.now().minusHours(3);
+        return statusLogRepository.findRecentByPlaceId(placeId, cutoff)
                 .stream()
                 .map(StatusLogDto::fromEntity)
                 .toList();

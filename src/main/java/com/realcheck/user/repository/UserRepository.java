@@ -3,6 +3,7 @@ package com.realcheck.user.repository;
 import com.realcheck.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -31,4 +32,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * @return Optional<User> - 존재하면 User 객체, 없으면 빈 Optional
      */
     Optional<User> findByNickname(String nickname);
+
+    /**
+     * 비활성화된 사용자 목록을 조회하는 메서드
+     *
+     * - User 엔티티의 isActive 필드가 false인 사용자들을 모두 가져옴
+     * - 즉, 신고 누적으로 차단되었거나 관리자가 직접 비활성화한 사용자 목록 반환
+     *
+     * @return isActive가 false인 User 객체 리스트
+     */
+    List<User> findByIsActiveFalse();
 }

@@ -29,5 +29,12 @@ public class ReportDto {
         
         return report;
     }
+
+    public static ReportDto fromEntity(Report report) {
+        return new ReportDto(
+            report.getReason(),
+            report.getStatusLog().getId()
+        );
+    }
     
 }

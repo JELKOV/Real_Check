@@ -27,15 +27,26 @@ public class ReportService {
      * @param dto    신고 내용 (신고 사유 + 신고할 StatusLog ID)
      */
     public void report(Long userId, ReportDto dto) {
-        // 신고자 유효성 확인
+        // 1. 신고자 유효성 확인
         User reporter = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("사용자 없음"));
-        // 신고 대상 로그 유효성 확인
+        // 2. 어떤 상태 로그에 대한 신고인지 확인
         StatusLog log = statusLogRepository.findById(dto.getStatusLogId())
                 .orElseThrow(() -> new RuntimeException("해당 상태 정보 없음"));
 
-        // DTO → Entity 변환 후 저장
+        // 3. 신고 정보 저장
         Report report = dto.toEntity(reporter, log);
         reportRepository.save(report);
+
+        // 4. 해당 로그를 등록한 유저의 신고 횟수 조회
+        Long targetUserId = log.getReporter().getId();
+        long reportCount = reportRepository.countByStatusLogReporterId(targetUserId);
+
+        // 5. 신고가 3번 이상이면 사용자 차단
+        if (reportCount >= 3) {
+            User targetUser = log.getReporter();
+            targetUser.setActive(false); // 계정 비활성화
+            userRepository.save(targetUser); // 변경된 상태 저장
+        }
     }
 }

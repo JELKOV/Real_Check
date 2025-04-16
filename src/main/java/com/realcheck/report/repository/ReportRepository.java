@@ -11,4 +11,6 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
      * @return 해당 로그에 대한 신고 개수
      */
     long countByStatusLogId(Long statusLogId); // 신고 수 조회용
+
+    long countByStatusLogReporterId(Long userId); // 신고 당한 횟수
 }
