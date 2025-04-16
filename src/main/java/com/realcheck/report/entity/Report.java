@@ -20,22 +20,17 @@ import lombok.*;
 public class Report {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // 자동 증가 기본 키
 
-    // 신고 사유 (예: "정보가 틀림", "이미 영업 종료 상태")
-    private String reason;
+    private String reason; // 신고 사유 (예: "정보가 틀림", "이미 영업 종료 상태")
 
-    // 신고 시간 – 기본값은 현재 시간
-    private LocalDateTime reportedAt = LocalDateTime.now();
+    private LocalDateTime reportedAt = LocalDateTime.now(); // 신고 시간 – 기본값은 현재 시간
 
-    // 신고한 사용자
     @ManyToOne
-    @JoinColumn(name = "reporter_id") // FK 이름은 reporter_id
-    private User reporter; // 신고한 사람람
+    @JoinColumn(name = "reporter_id") // 신고자와 연결되는 외래키
+    private User reporter; // 신고한 사람
 
-    // 어떤 상태 정보에 대해 신고한 것인지 (StatusLog와 연결)
     @ManyToOne
-    @JoinColumn(name = "status_log_id") // FK 이름은 status_log_id
-    private StatusLog statusLog; // 신고 대상 로그그
+    @JoinColumn(name = "status_log_id") // 신고 대상 StatusLog와의 관계
+    private StatusLog statusLog; // 어떤 상태 정보를 신고했는지
 }

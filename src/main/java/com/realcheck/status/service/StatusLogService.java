@@ -5,6 +5,7 @@ import com.realcheck.status.entity.StatusLog;
 import com.realcheck.status.repository.StatusLogRepository;
 import com.realcheck.place.entity.Place;
 import com.realcheck.place.repository.PlaceRepository;
+import com.realcheck.point.service.PointService;
 import com.realcheck.user.entity.User;
 import com.realcheck.user.repository.UserRepository;
 
@@ -26,21 +27,25 @@ public class StatusLogService {
     private final StatusLogRepository statusLogRepository;
     private final UserRepository userRepository;
     private final PlaceRepository placeRepository;
+    private final PointService pointService;
 
     /**
-     * 대기 현황 등록
-     * - 로그인 유저 ID를 기반으로 등록자 식별
-     * - 하루 최대 3회 등록 제한
-     * - Place 존재 확인 및 관계 설정
+     * 대기 현황 등록 메서드
+     * - 로그인한 유저가 특정 장소에 대한 실시간 상태 정보를 등록
+     * - 1일 3회 등록 제한, 포인트 지급 포함
+     *
+     * @param userId 로그인한 유저의 ID (세션에서 전달받음)
+     * @param dto    상태 로그 등록 정보 (대기 설명, 인원, 이미지, 장소ID)
      */
     public void register(Long userId, StatusLogDto dto) {
+        // 1. 사용자 조회
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("사용자 없음"));
-
+        // 2. 장소 조회
         Place place = placeRepository.findById(dto.getPlaceId())
                 .orElseThrow(() -> new RuntimeException("장소 없음"));
 
-        // 하루 3회 등록 제한 검사
+        // 3. 하루 3회 등록 제한 검사 (자정~자정 기준)
         LocalDateTime start = LocalDate.now().atStartOfDay();
         LocalDateTime end = start.plusDays(1);
         int count = statusLogRepository.countByReporterIdAndCreatedAtBetween(userId, start, end);
@@ -48,14 +53,19 @@ public class StatusLogService {
             throw new RuntimeException("하루 3회까지만 등록 가능합니다.");
         }
 
-        // 엔티티로 변환 후 저장
+        // 4. StatusLog 엔티티 생성 및 저장
         StatusLog log = dto.toEntity(user, place);
         statusLogRepository.save(log);
-        // TODO: 포인트 지급 로직 추가 가능
+        // 5. 포인트 지급 처리
+        pointService.givePoint(user, 10, "정보 공유");
     }
 
     /**
-     * 특정 장소에 대한 최근 대기 현황 리스트 조회
+     * 특정 장소에 대한 상태 로그 목록 조회
+     * - 장소 ID를 기준으로 최신순 정렬된 로그 목록 반환
+     *
+     * @param placeId 장소의 고유 ID
+     * @return 상태 로그 DTO 리스트
      */
     public List<StatusLogDto> getLogsByPlace(Long placeId) {
         return statusLogRepository.findByPlaceIdOrderByCreatedAtDesc(placeId)
