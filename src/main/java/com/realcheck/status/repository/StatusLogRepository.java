@@ -20,4 +20,9 @@ public interface StatusLogRepository extends JpaRepository<StatusLog, Long> {
 
     // 특정 사용자의 당일 등록 횟수를 조회 (포인트 지급 조건 등 확인용)
     int countByReporterIdAndCreatedAtBetween(Long reporterId, LocalDateTime start, LocalDateTime end);
+
+    // 내가 등록한 Status Log 조회
+    // - findby: 조회쿼리
+    // - ReporterId: StatusLog 엔티티에서 reporter필드의 Id 기준으로 필터링하겠다는 뜻
+    List<StatusLog> findByReporterIdOrderByCreatedAtDesc (Long userId);
 }
