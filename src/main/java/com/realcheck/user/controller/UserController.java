@@ -1,5 +1,6 @@
 package com.realcheck.user.controller;
 
+import com.realcheck.user.dto.PasswordUpdateRequestDto;
 import com.realcheck.user.dto.UserDto;
 import com.realcheck.user.service.UserService;
 
@@ -22,23 +23,27 @@ public class UserController {
     // 의존성 주입된 UserService 객체 (회원 관련 로직을 담당)
     private final UserService userService;
 
+    // ─────────────────────────────────────────────
+    // [1] 회원가입 및 로그인 기능
+    // ─────────────────────────────────────────────
+
     /**
-     * (1). 회원가입 API
-     * - 클라이언트가 POST 방식으로 "/api/user/register"에 요청을 보내면 실행됨
+     * [1-1] 회원가입 API
+     * - 이메일/닉네임 중복 검사 후 회원 등록
      * - 요청 바디(@RequestBody)에 담긴 JSON 데이터를 UserDto 객체로 자동 매핑
-     * - 회원가입 처리 후 성공 메시지를 반환
      *
      * @param dto 회원가입 정보 (이메일, 닉네임, 비밀번호 등)
      * @return 성공 메시지를 담은 HTTP 200 OK 응답
      */
-
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody UserDto dto) {
         userService.register(dto); // 회원가입 로직 실행 (UserService에서 처리 - 의존성주입 객체 실행)
         return ResponseEntity.ok("회원가입 성공!"); // 클라이언트에 응답
     }
 
-    // 1- (1) 회원 가입 폼에서 이메일 유효성 검사
+    /**
+     * [1-2] 이메일 중복 체크 API
+     */
     @GetMapping("/check-email")
     public ResponseEntity<Boolean> checkEmail(@RequestParam String email) {
         boolean exists = userService.isEmailExists(email);
@@ -46,7 +51,9 @@ public class UserController {
         return ResponseEntity.ok(exists);
     }
 
-    // 1- (2) 회원 가입 폼에서 닉네임 유효성 검사사
+    /**
+     * [1-3] 닉네임 중복 체크 API
+     */
     @GetMapping("/check-nickname")
     public ResponseEntity<Boolean> checkNickname(@RequestParam String nickname) {
         boolean exists = userService.isNicknameExists(nickname);
@@ -54,15 +61,14 @@ public class UserController {
     }
 
     /**
-     * 로그인 API
-     * - 사용자의 이메일과 비밀번호를 받아 로그인 처리
-     * - 성공 시 세션에 사용자 정보를 저장하여 로그인 상태 유지
+     * [1-4] 로그인 API
+     * - 이메일/비밀번호 확인 후 세션 저장
+     * - 성공 시 로그인 상태 유지
      *
      * @param dto     로그인 요청 정보 (이메일, 비밀번호)
      * @param session HttpSession: 로그인 성공 시 사용자 정보를 저장할 수 있는 서버 측 저장소
      * @return 로그인된 사용자 정보를 담은 응답
      */
-
     @PostMapping("/login")
     public ResponseEntity<UserDto> login(@RequestBody UserDto dto, HttpSession session) {
         // 이메일 + 비밀번호를 검증하여 로그인 시도
@@ -75,15 +81,23 @@ public class UserController {
         return ResponseEntity.ok(loginUser);
     }
 
-    // 로그아웃 API
+    /**
+     * [1-5] 로그아웃 API
+     * - 세션 무효화 처리
+     */
     @PostMapping("/logout")
     public ResponseEntity<String> logout(HttpSession session) {
         session.invalidate(); // 현재 세션을 무효화 (로그아웃 처리)
         return ResponseEntity.ok("로그아웃 되었습니다.");
     }
 
-    // 로그인한 사용자 정보 확인 API (마이페이지용)
-    // 추후에 데이터를 가져와야 할경우 Service 연결
+    // ─────────────────────────────────────────────
+    // [2] 마이페이지 및 사용자 정보 수정
+    // ─────────────────────────────────────────────
+
+    /**
+     * [2-1] 마이페이지 - 로그인한 사용자 정보 조회
+     */
     @GetMapping("/me")
     public ResponseEntity<UserDto> myPage(HttpSession session) {
         UserDto loginUser = (UserDto) session.getAttribute("loginUser");
@@ -96,7 +110,7 @@ public class UserController {
     }
 
     /**
-     * 프로필 수정 API
+     * [2-2] 프로필 수정 API (닉네임/비밀번호)
      * - 로그인된 사용자만 본인의 닉네임 또는 비밀번호를 수정할 수 있음
      * - 세션에서 로그인된 사용자 정보를 가져와 해당 ID 기준으로 업데이트 진행
      *
@@ -112,11 +126,30 @@ public class UserController {
         if (loginUser == null) {
             return ResponseEntity.status(401).body("로그인 필요");
         }
-        
+
         // 로그인된 사용자의 ID로 수정 요청
         userService.updateProfile(loginUser.getId(), dto);
         // 수정 완료 메시지 반환
         return ResponseEntity.ok("수정 완료");
+    }
+
+    /**
+     * [2-3] 비밀번호 변경 전용 API
+     * - 현재 비밀번호 확인 후 새 비밀번호로 교체
+     */
+    @PutMapping("/password")
+    public ResponseEntity<String> changePassword(@RequestBody PasswordUpdateRequestDto dto, HttpSession session) {
+        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            return ResponseEntity.status(401).body("로그인이 필요합니다.");
+        }
+
+        try {
+            userService.changePassword(loginUser.getId(), dto);
+            return ResponseEntity.ok("비밀번호가 성공적으로 변경되었습니다.");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
 }

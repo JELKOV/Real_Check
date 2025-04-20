@@ -1,9 +1,12 @@
 package com.realcheck.user.service;
 
+import com.realcheck.user.dto.PasswordUpdateRequestDto;
 import com.realcheck.user.dto.UserDto;
 import com.realcheck.user.entity.User;
 import com.realcheck.user.entity.User.Role;
 import com.realcheck.user.repository.UserRepository;
+
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -11,10 +14,8 @@ import org.springframework.stereotype.Service;
 
 /**
  * UserService 클래스
- * - 회원가입 등 사용자 관련 비즈니스 로직을 처리
- * - 컨트롤러로부터 호출되어 실제 동작을 수행
+ * - 사용자 관련 비즈니스 로직 (회원가입, 로그인, 비밀번호 변경 등)을 처리
  */
-
 @Service // 스프링이 이 클래스를 서비스 컴포넌트로 등록함 (빈으로 자동 생성됨)
 @RequiredArgsConstructor // final이 붙은 필드를 자동으로 생성자 주입 (DI)
 public class UserService {
@@ -25,10 +26,14 @@ public class UserService {
     // 암호화 주입
     private final PasswordEncoder passwordEncoder;
 
+    // ─────────────────────────────────────────────
+    // [1] 회원가입 및 로그인 기능
+    // ─────────────────────────────────────────────
+
     /**
-     * 회원가입 처리 메서드
-     * - 이메일/닉네임 중복 검사
-     * - DTO를 엔티티로 변환 후 저장
+     * [1-1] 회원가입 처리
+     * - 이메일, 닉네임 중복 확인
+     * - 비밀번호 암호화 후 저장
      * 
      * @param dto - 클라이언트로부터 받은 회원가입 정보
      */
@@ -58,26 +63,16 @@ public class UserService {
         userRepository.save(user);
     }
 
-    // 이메일 체크 기능
-    public boolean isEmailExists(String email) {
-        return userRepository.findByEmail(email).isPresent();
-    }
-
-    // 닉네임 체크 기능능
-    public boolean isNicknameExists(String nickname) {
-        return userRepository.findByNickname(nickname).isPresent();
-    }
-
     /**
-     * 로그인 처리 메서드
-     * - 이메일로 사용자 정보를 조회한 뒤, 비밀번호를 비교하여 로그인 성공 여부를 판단함
-     * - 비밀번호는 BCrypt로 암호화된 상태이므로 PasswordEncoder를 사용해 비교
+     * [1-2] 로그인 처리
+     * - 이메일로 사용자 조회
+     * - 비밀번호 비교 (암호화된 비밀번호와 비교)
+     * - 성공 시 DTO 반환
      *
      * @param email       사용자가 입력한 이메일
      * @param rawPassword 사용자가 입력한 평문 비밀번호
      * @return 로그인에 성공한 사용자 정보를 담은 UserDto (비밀번호는 포함하지 않음)
      */
-
     public UserDto login(String email, String rawPassword) {
         // 1. 이메일로 사용자 조회 (존재하지 않으면 예외 발생)
         User user = userRepository.findByEmail(email)
@@ -92,9 +87,27 @@ public class UserService {
         return UserDto.fromEntity(user);
     }
 
+    // ─────────────────────────────────────────────
+    // [2] 사용자 정보 관련 기능 (마이페이지)
+    // ─────────────────────────────────────────────
+
     /**
-     * 사용자 프로필 수정 메서드
-     * - 사용자의 닉네임 또는 비밀번호를 수정함
+     * [2-1] 이메일 중복 여부 확인
+     */
+    public boolean isEmailExists(String email) {
+        return userRepository.findByEmail(email).isPresent();
+    }
+
+    /**
+     * [2-2] 닉네임 중복 여부 확인
+     */
+    public boolean isNicknameExists(String nickname) {
+        return userRepository.findByNickname(nickname).isPresent();
+    }
+
+    /**
+     * [2-3] 사용자 프로필 수정
+     * - 닉네임 또는 비밀번호 변경
      * - 닉네임은 단순 대체, 비밀번호는 암호화 후 저장
      *
      * @param id  수정할 사용자 ID
@@ -117,5 +130,44 @@ public class UserService {
 
         // 4. 변경된 사용자 정보를 DB에 저장
         userRepository.save(user);
+    }
+
+    /**
+     * [2-4] 비밀번호 변경
+     * - 현재 비밀번호 확인 후 새 비밀번호로 변경
+     * 
+     * @param userId 로그인된 사용자 ID
+     * @param dto    비밀번호 변경 요청 (현재/새 비밀번호)
+     */
+    public void changePassword(Long userId, PasswordUpdateRequestDto dto) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
+
+        // 현재 비밀번호 일치 여부 확인
+        if (!passwordEncoder.matches(dto.getCurrentPassword(), user.getPassword())) {
+            throw new RuntimeException("현재 비밀번호가 일치하지 않습니다.");
+        }
+        // 새 비밀번호로 변경 (암호화)
+        user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
+        userRepository.save(user);
+    }
+
+    @PostConstruct
+    public void insertAdminAccount() {
+        System.out.println("⚙️ insertAdminAccount 실행됨");
+
+        if (userRepository.findByEmail("admin@example.com").isEmpty()) {
+            User admin = new User();
+            admin.setEmail("admin@example.com");
+            admin.setNickname("관리자");
+            admin.setRole(Role.ADMIN);
+            admin.setActive(true);
+            admin.setPoints(0);
+            admin.setPassword(passwordEncoder.encode("admin1234"));
+
+            userRepository.save(admin);
+            System.out.println("✅ 관리자 계정 생성 완료");
+        } else {
+            System.out.println("ℹ️ 이미 admin@example.com 계정이 존재합니다.");
+        }
     }
 }

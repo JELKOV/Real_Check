@@ -66,8 +66,8 @@ public interface StatusLogRepository extends JpaRepository<StatusLog, Long> {
      *
      * @return 월별 등록 통계 DTO 리스트 (MonthlyStatDto)
      */
-    @Query("SELECT new com.realcheck.admin.dto.MonthlyStat(YEAR(s.createdAt), MONTH(s.createdAt), COUNT(s)) " +
-            "FROM StatusLog s GROUP BY YEAR(s.createdAt), MONTH(s.createdAt) ORDER BY YEAR(s.createdAt), MONTH(s.createdAt)")
+    @Query("SELECT new com.realcheck.admin.dto.MonthlyStatDto(YEAR(s.createdAt), MONTH(s.createdAt), COUNT(s)) " +
+            "FROM StatusLog s GROUP BY YEAR(s.createdAt), MONTH(s.createdAt)")
     List<MonthlyStatDto> getMonthlyStatusLogCount();
 
     // ─────────────────────────────────────────────
