@@ -98,4 +98,17 @@ public interface StatusLogRepository extends JpaRepository<StatusLog, Long> {
      */
     List<StatusLog> findByReporterIdAndIsHiddenFalseOrderByCreatedAtDesc(Long userId);
 
+    /**
+     * [2-3] 특정 장소의 가장 최신 상태 로그 1개 조회
+     * - 사용자 화면에서 마커 클릭 시 최신 상태 표시용
+     * - 숨김 처리되지 않은 최신 로그 1개만 반환
+     * - SQL 변환 예:
+     * SELECT * FROM status_logs
+     * WHERE place_id = ?
+     * AND is_hidden = false
+     * ORDER BY created_at DESC
+     * LIMIT 1;
+     */
+    StatusLog findTopByPlaceIdAndIsHiddenFalseOrderByCreatedAtDesc(Long placeId);
+
 }

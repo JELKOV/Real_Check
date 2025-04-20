@@ -10,8 +10,9 @@ import com.realcheck.report.repository.ReportRepository;
 import lombok.RequiredArgsConstructor;
 
 /**
- * 관리자 전용 신고 서비스
- * - 신고 전체 조회, 통계 등 관리자 기능 처리
+ * ReportAdminService
+ * - 관리자 전용 신고 서비스
+ * - 전체 신고 목록 조회, 신고 건수 통계 등 처리
  */
 @Service
 @RequiredArgsConstructor
@@ -19,11 +20,16 @@ public class ReportAdminService {
 
     private final ReportRepository reportRepository;
 
+    // ─────────────────────────────────────────────
+    // [1] 전체 신고 목록 조회
+    // ─────────────────────────────────────────────
+
     /**
-     * 전체 신고 내역 조회
-     * - Report → ReportDto 변환하여 반환
-     * 
-     * @return 신고 목록 리스트
+     * [1-1] 전체 신고 내역 조회
+     * - 모든 신고 데이터를 ReportDto 형태로 반환
+     * - 관리자 대시보드에서 전체 신고 내용 확인용
+     *
+     * @return 신고 목록 리스트 (List<ReportDto>)
      */
     public List<ReportDto> getAllReports() {
         return reportRepository.findAll().stream()
@@ -31,14 +37,17 @@ public class ReportAdminService {
                 .toList();
     }
 
+    // ─────────────────────────────────────────────
+    // [2] 특정 로그에 대한 신고 횟수 조회
+    // ─────────────────────────────────────────────
+
     /**
-     * 특정 상태 로그(StatusLog)에 대한 신고 횟수 조회
+     * [2-1] 특정 상태 로그(StatusLog)에 대한 신고 횟수 조회
+     * - 상태 로그 ID를 기준으로 신고 누적 수 반환
+     * - 관리자 페이지에서 신고 통계나 누적 판별 용도로 사용
      *
-     * - statusLogId를 기준으로 해당 로그가 얼마나 신고되었는지 확인
-     * - 관리자 페이지에서 신고 누적 판단 또는 통계용으로 사용 가능
-     *
-     * @param statusLogId 신고 수를 조회할 대상 로그 ID
-     * @return 신고 횟수 (long)
+     * @param statusLogId 대상 로그 ID
+     * @return long 신고 횟수
      */
     public long countReportsByStatusLogId(Long statusLogId) {
         return reportRepository.countByStatusLogId(statusLogId);

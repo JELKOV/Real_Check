@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.realcheck.place.dto.PlaceDto;
@@ -29,13 +30,16 @@ public class PlaceController {
     // PlaceService는 실제 장소 등록/조회 등 비즈니스 로직을 처리하는 서비스 클래스
     private final PlaceService placeService;
 
+    // ─────────────────────────────────────────────
+    // [1] 장소 등록
+    // ─────────────────────────────────────────────
+
     /**
-     * 장소 등록 API (POST /api/place)
+     * [1-1] 장소 등록 API (POST /api/place)
      * - 프론트엔드에서 장소 정보를 JSON으로 보내면 등록됨
-     * - 장소 등록 성공 시 "장소 등록 완료" 메시지 반환
      *
-     * @param dto 장소 정보 (장소명, 설명, 등록자 ID 등)
-     * @return 성공 메시지를 담은 응답 (200 OK)
+     * @param dto 장소 정보
+     * @return 등록 완료 메시지
      */
     @PostMapping
     public ResponseEntity<String> register(@RequestBody PlaceDto dto) {
@@ -43,11 +47,15 @@ public class PlaceController {
         return ResponseEntity.ok("장소 등록 완료"); // 성공 응답 반환
     }
 
+    // ─────────────────────────────────────────────
+    // [2] 장소 조회
+    // ─────────────────────────────────────────────
+
     /**
-     * 전체 장소 조회 API (GET /api/place)
-     * - 모든 등록된 장소 목록을 가져옴 (누구나 접근 가능)
+     * [2-1] 전체 장소 목록 조회 API (GET /api/place)
+     * - 모든 등록된 장소 조회
      *
-     * @return 모든 장소의 리스트 (JSON 배열)
+     * @return 장소 리스트
      */
     @GetMapping
     public ResponseEntity<List<PlaceDto>> getAll() {
@@ -55,12 +63,11 @@ public class PlaceController {
     }
 
     /**
-     * 로그인한 사용자의 등록 장소 조회 API (GET /api/place/my)
-     * - 현재 로그인한 사용자가 등록한 장소만 조회 가능
-     * - 세션에 저장된 사용자 정보 기반으로 소유 장소 필터링
+     * [2-2] 내 장소 목록 조회 API (GET /api/place/my)
+     * - 로그인된 사용자가 등록한 장소만 조회
      *
-     * @param session 현재 로그인한 사용자의 세션 정보
-     * @return 사용자가 등록한 장소 리스트 또는 401(비로그인 상태)
+     * @param session 로그인 세션
+     * @return 내 장소 리스트
      */
     @GetMapping("/my")
     public ResponseEntity<List<PlaceDto>> getMyPlaces(HttpSession session) {
@@ -72,5 +79,22 @@ public class PlaceController {
             return ResponseEntity.status(401).build();
         // 로그인된 사용자의 ID로 등록된 장소만 조회하여 반환
         return ResponseEntity.ok(placeService.findByOwner(loginUser.getId()));
+    }
+
+    /**
+     * [2-3] 현재 위치 기반 주변 장소 조회 API
+     * - 위도, 경도, 반경을 기반으로 인근 장소 필터링
+     *
+     * @param lat          위도
+     * @param lng          경도
+     * @param radiusMeters 반경 (미터 단위, 예: 500)
+     * @return 반경 내 장소 리스트
+     */
+    @GetMapping("/nearby")
+    public ResponseEntity<List<PlaceDto>> getNearbyPlaces(
+            @RequestParam double lat,
+            @RequestParam double lng,
+            @RequestParam(defaultValue = "500") double radiusMeters) {
+        return ResponseEntity.ok(placeService.findNearbyPlaces(lat, lng, radiusMeters));
     }
 }

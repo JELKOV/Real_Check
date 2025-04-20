@@ -114,6 +114,20 @@ public class StatusLogController {
         }
     }
 
+    /**
+     * [1-6] 특정 장소의 최신 상태 로그 1개 조회 (마커 클릭 시 사용)
+     * - 숨김 처리되지 않은 로그 중 최신 1개만 반환
+     * - 예: GET /api/status/latest?placeId=3
+     */
+    @GetMapping("/latest")
+    public ResponseEntity<StatusLogDto> getLatestStatusLog(@RequestParam Long placeId) {
+        StatusLogDto latest = statusLogService.getLatestVisibleLogByPlaceId(placeId);
+        if (latest == null) {
+            return ResponseEntity.noContent().build(); // 해당 장소에 표시할 로그가 없을 경우 204
+        }
+        return ResponseEntity.ok(latest);
+    }
+
     // ────────────────────────────────────────
     // [2] 관리자 기능
     // ────────────────────────────────────────

@@ -141,9 +141,22 @@ public class StatusLogService {
         if (!log.getReporter().getId().equals(userId)) {
             throw new RuntimeException("해당 로그를 삭제할 권한이 없습니다.");
         }
-        
+
         // 3. 삭제 처리
         statusLogRepository.delete(log);
+    }
+
+    /**
+     * [1-6] 특정 장소의 최신 상태 로그 1개 조회 (사용자용)
+     * - isHidden = false 조건 포함
+     * - 지도에서 마커 클릭 시 해당 장소의 가장 최신 상태를 표시할 때 사용
+     *
+     * @param placeId 장소 ID
+     * @return 최신 상태 로그 DTO (없으면 null)
+     */
+    public StatusLogDto getLatestVisibleLogByPlaceId(Long placeId) {
+        StatusLog log = statusLogRepository.findTopByPlaceIdAndIsHiddenFalseOrderByCreatedAtDesc(placeId);
+        return log != null ? StatusLogDto.fromEntity(log) : null;
     }
 
     // ────────────────────────────────────────

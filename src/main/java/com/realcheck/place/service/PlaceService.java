@@ -23,8 +23,12 @@ public class PlaceService {
     private final PlaceRepository placeRepository; // 장소 데이터를 저장/조회하는 JPA Repository
     private final UserRepository userRepository; // 장소를 등록한 사용자 정보를 조회하기 위한 Repository
 
+    // ─────────────────────────────────────────────
+    // [1] 장소 등록 관련
+    // ─────────────────────────────────────────────
+
     /**
-     * 장소 등록 메서드
+     * [1-1] 장소 등록 메서드
      * - 등록자의 ID(ownerId)를 기반으로 User 객체를 조회하고,
      * - PlaceDto를 Place Entity로 변환하여 DB에 저장함
      *
@@ -40,11 +44,15 @@ public class PlaceService {
         placeRepository.save(place);
     }
 
+    // ─────────────────────────────────────────────
+    // [2] 장소 조회 관련
+    // ─────────────────────────────────────────────
+
     /**
-     * 전체 장소 목록을 조회하는 메서드
-     * - DB에서 모든 Place 엔티티를 조회하고, PlaceDto로 변환하여 반환함
+     * [2-1] 전체 장소 목록 조회
+     * - DB에서 모든 Place 엔티티를 조회하고, PlaceDto로 변환하여 반환
      *
-     * @return 전체 장소 리스트 (PlaceDto 리스트 형태)
+     * @return 전체 장소 리스트
      */
     public List<PlaceDto> findAll() {
         return placeRepository.findAll().stream()
@@ -53,14 +61,29 @@ public class PlaceService {
     }
 
     /**
-     * 특정 사용자가 등록한 장소만 조회하는 메서드
+     * [2-2] 특정 사용자가 등록한 장소 조회
      *
      * @param ownerId 사용자(등록자)의 ID
-     * @return 해당 사용자가 등록한 장소 리스트 (PlaceDto 리스트 형태)
+     * @return 해당 사용자가 등록한 장소 리스트
      */
     public List<PlaceDto> findByOwner(Long ownerId) {
         return placeRepository.findByOwnerId(ownerId).stream()
                 .map(PlaceDto::fromEntity) // 엔티티 → DTO 변환
+                .toList();
+    }
+
+    /**
+     * [2-3] 현재 위치 기준 반경 내 장소 조회
+     * - 사용자의 위도(lat), 경도(lng)를 기반으로 주변 장소 조회
+     *
+     * @param lat          위도
+     * @param lng          경도
+     * @param radiusMeters 검색 반경 (미터 단위)
+     * @return 반경 내 장소 리스트
+     */
+    public List<PlaceDto> findNearbyPlaces(double lat, double lng, double radiusMeters) {
+        return placeRepository.findNearbyPlaces(lat, lng, radiusMeters).stream()
+                .map(PlaceDto::fromEntity)
                 .toList();
     }
 }

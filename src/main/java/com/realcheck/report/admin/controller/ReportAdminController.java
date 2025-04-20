@@ -17,8 +17,9 @@ import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 
 /**
- * 관리자 전용 신고 API 컨트롤러
- * - 전체 신고 내역 조회 등의 기능을 담당
+ * ReportAdminController
+ * - 관리자 전용 신고 기능 컨트롤러
+ * - 전체 신고 목록 조회, 신고 수 통계 제공
  */
 @RestController
 @RequestMapping("/api/admin/report")
@@ -28,13 +29,17 @@ public class ReportAdminController {
     // 신고 관련 관리자 서비스 의존성 주입
     private final ReportAdminService reportAdminService;
 
+    // ─────────────────────────────────────────────
+    // [1] 전체 신고 목록 조회
+    // ─────────────────────────────────────────────
+
     /**
-     * 전체 신고 내역 조회 API
+     * [1-1] 전체 신고 내역 조회 API
      * - 관리자만 접근 가능
-     * - 로그인 세션에서 ADMIN 권한 확인
-     * 
+     * - 세션에서 ADMIN 권한 확인 후 전체 신고 리스트 반환
+     *
      * @param session 현재 로그인된 사용자 세션
-     * @return 신고 내역 리스트 (ReportDto)
+     * @return 신고 내역 리스트 (List<ReportDto>)
      */
     @GetMapping("/all")
     public ResponseEntity<List<ReportDto>> getAllReports(HttpSession session) {
@@ -49,15 +54,18 @@ public class ReportAdminController {
         return ResponseEntity.ok(reportAdminService.getAllReports());
     }
 
+    // ─────────────────────────────────────────────
+    // [2] 특정 상태 로그에 대한 신고 수 조회
+    // ─────────────────────────────────────────────
+
     /**
-     * 관리자 전용 API: 특정 상태 로그(StatusLog)에 대한 신고 횟수를 조회
-     * 
-     * - 로그인된 사용자가 ADMIN 권한을 가지고 있는지 확인
-     * - 전달받은 statusLogId를 기반으로 해당 로그의 신고 개수를 반환
+     * [2] 특정 상태 로그(StatusLog)에 대한 신고 횟수 조회 API
+     * - 관리자만 접근 가능
+     * - statusLogId를 기준으로 신고 수 반환
      *
-     * @param statusLogId 조회할 StatusLog의 ID
-     * @param session     현재 로그인된 사용자 정보를 담고 있는 세션
-     * @return 신고 횟수를 담은 JSON 응답 (예: {"count": 3})
+     * @param statusLogId 조회할 대상 로그 ID
+     * @param session 로그인된 사용자 세션
+     * @return 신고 수 (예: {"count": 3})
      */
     @GetMapping("/count")
     public ResponseEntity<?> countReports(@RequestParam Long statusLogId, HttpSession session) {

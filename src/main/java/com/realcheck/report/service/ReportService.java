@@ -12,6 +12,10 @@ import com.realcheck.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * ReportService
+ * - 사용자 신고 처리 및 신고 누적에 따른 자동 제재 처리
+ */
 @Service // 비즈니스 로직을 수행하는 서비스 계층
 @RequiredArgsConstructor // 생성자 주입을 자동으로 처리
 public class ReportService {
@@ -19,9 +23,15 @@ public class ReportService {
     private final StatusLogRepository statusLogRepository;
     private final UserRepository userRepository;
 
+    // ─────────────────────────────────────────────
+    // [1] 사용자 신고 처리
+    // ─────────────────────────────────────────────
+
     /**
-     * 신고 처리 메서드
-     * - 신고한 사용자 ID, 신고 대상 로그 ID를 받아 DB에 저장
+     * [1-1] 신고 처리 메서드
+     * - 신고자가 다른 사용자의 상태 로그를 신고할 때 호출됨
+     * - 신고 내용 저장 후, 신고 대상자의 누적 신고 수를 확인
+     * - 일정 횟수(3회) 이상이면 자동으로 계정 비활성화 + 해당 로그 숨김 처리
      *
      * @param userId 신고자 ID (세션에서 가져온 로그인 사용자 ID)
      * @param dto    신고 내용 (신고 사유 + 신고할 StatusLog ID)
