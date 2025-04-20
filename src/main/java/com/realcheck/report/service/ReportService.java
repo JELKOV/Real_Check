@@ -47,6 +47,9 @@ public class ReportService {
             User targetUser = log.getReporter();
             targetUser.setActive(false); // 계정 비활성화
             userRepository.save(targetUser); // 변경된 상태 저장
+
+            log.setHidden(true); // 상태 로그도 숨김 처리
+            statusLogRepository.save(log); // 변경사항 저장
         }
     }
 }

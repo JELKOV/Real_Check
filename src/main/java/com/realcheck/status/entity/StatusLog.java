@@ -37,4 +37,7 @@ public class StatusLog {
     @ManyToOne
     @JoinColumn(name = "place_id") // FK 이름은 place_id
     private Place place;  // 장소
+
+    // 신고 누적으로 비공개 여부
+    private boolean isHidden = false;
 }
