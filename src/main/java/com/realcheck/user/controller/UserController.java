@@ -20,29 +20,11 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor // final로 선언된 필드를 자동으로 생성자 주입 (DI)해주는 Lombok 어노테이션
 public class UserController {
 
-    // 의존성 주입된 UserService 객체 (회원 관련 로직을 담당)
+    // 의존성 주입된 UserService 객체
     private final UserService userService;
 
-    // ─────────────────────────────────────────────
-    // [1] 회원가입 및 로그인 기능
-    // ─────────────────────────────────────────────
-
     /**
-     * [1-1] 회원가입 API
-     * - 이메일/닉네임 중복 검사 후 회원 등록
-     * - 요청 바디(@RequestBody)에 담긴 JSON 데이터를 UserDto 객체로 자동 매핑
-     *
-     * @param dto 회원가입 정보 (이메일, 닉네임, 비밀번호 등)
-     * @return 성공 메시지를 담은 HTTP 200 OK 응답
-     */
-    @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody UserDto dto) {
-        userService.register(dto); // 회원가입 로직 실행 (UserService에서 처리 - 의존성주입 객체 실행)
-        return ResponseEntity.ok("회원가입 성공!"); // 클라이언트에 응답
-    }
-
-    /**
-     * [1-2] 이메일 중복 체크 API
+     * [1-1] 이메일 중복 체크 API
      */
     @GetMapping("/check-email")
     public ResponseEntity<Boolean> checkEmail(@RequestParam String email) {
@@ -52,7 +34,7 @@ public class UserController {
     }
 
     /**
-     * [1-3] 닉네임 중복 체크 API
+     * [1-2] 닉네임 중복 체크 API
      */
     @GetMapping("/check-nickname")
     public ResponseEntity<Boolean> checkNickname(@RequestParam String nickname) {

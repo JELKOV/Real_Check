@@ -11,11 +11,6 @@ public class PageController {
         return "index"; // 메인페이지 렌더링
     }
 
-    @GetMapping("/register")
-    public String registerPage() {
-        return "user/register"; // 회원가입 페이지 렌더링
-    }
-
     @GetMapping("/my-logs")
     public String myPage() {
         return "status/my-logs"; // 마이페이지 (내 상태 로그 보기)
