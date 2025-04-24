@@ -11,10 +11,23 @@ public class PageController {
         return "index"; // 메인페이지 렌더링
     }
 
-    @GetMapping("/login")
-    public String loginPage() {
-        return "login"; // 로그인 페이지 렌더링
+    @GetMapping("/register")
+    public String registerPage() {
+        return "user/register"; // 회원가입 페이지 렌더링
     }
 
-    // ...추가적으로 mypage, register 등도 여기에 구성
+    @GetMapping("/my-logs")
+    public String myPage() {
+        return "status/my-logs"; // 마이페이지 (내 상태 로그 보기)
+    }
+
+    @GetMapping("/nearby")
+    public String nearbyPage() {
+        return "map/nearby"; // 지도 기반 상태 보기 페이지
+    }
+
+    @GetMapping("/admin")
+    public String adminPage() {
+        return "admin/admin"; // 관리자 대시보드
+    }
 }

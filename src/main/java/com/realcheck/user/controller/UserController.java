@@ -60,37 +60,6 @@ public class UserController {
         return ResponseEntity.ok(exists);
     }
 
-    /**
-     * [1-4] 로그인 API
-     * - 이메일/비밀번호 확인 후 세션 저장
-     * - 성공 시 로그인 상태 유지
-     *
-     * @param dto     로그인 요청 정보 (이메일, 비밀번호)
-     * @param session HttpSession: 로그인 성공 시 사용자 정보를 저장할 수 있는 서버 측 저장소
-     * @return 로그인된 사용자 정보를 담은 응답
-     */
-    @PostMapping("/login")
-    public ResponseEntity<UserDto> login(@RequestBody UserDto dto, HttpSession session) {
-        // 이메일 + 비밀번호를 검증하여 로그인 시도
-        UserDto loginUser = userService.login(dto.getEmail(), dto.getPassword());
-
-        // 로그인 성공 시, 사용자 정보를 세션에 저장 (세션 키: "loginUser")
-        session.setAttribute("loginUser", loginUser);
-
-        // 사용자 정보를 응답으로 반환 (보안상 password는 DTO에 포함 X)
-        return ResponseEntity.ok(loginUser);
-    }
-
-    /**
-     * [1-5] 로그아웃 API
-     * - 세션 무효화 처리
-     */
-    @PostMapping("/logout")
-    public ResponseEntity<String> logout(HttpSession session) {
-        session.invalidate(); // 현재 세션을 무효화 (로그아웃 처리)
-        return ResponseEntity.ok("로그아웃 되었습니다.");
-    }
-
     // ─────────────────────────────────────────────
     // [2] 마이페이지 및 사용자 정보 수정
     // ─────────────────────────────────────────────
