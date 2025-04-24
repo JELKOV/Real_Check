@@ -20,16 +20,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // CSRF 비활성화
-                .authorizeHttpRequests(auth -> auth
-                        // 회원가입, 로그인은 비인증 사용자도 접근 허용
-                        .requestMatchers("/api/user/register", "/api/user/login").permitAll()
-                        // 마이페이지, 로그아웃은 로그인된 사용자만 접근 가능
-                        .requestMatchers("/api/user/me", "/api/user/logout").authenticated()
-                        // 그 외 요청은 허용 (원하면 막을 수도 있음)
-                        .anyRequest().permitAll())
-                // 기본 로그인 폼 비활성화 (REST API 사용 중이므로)
-                .formLogin(login -> login.disable());
+            .csrf(csrf -> csrf.disable()) // CSRF 비활성화 (JSP 폼에 CSRF 토큰 안 씀)
+            .authorizeHttpRequests(auth -> auth
+                .anyRequest().permitAll()) // 모든 요청 허용 (세션에서 직접 제어함)
+            .formLogin(login -> login.disable()); // Spring 기본 로그인 UI 제거
 
         return http.build();
     }

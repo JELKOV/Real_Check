@@ -11,6 +11,11 @@ public class PageController {
         return "index"; // 메인페이지 렌더링
     }
 
+    @GetMapping("/mypage")
+    public String mypage() {
+        return "user/mypage";
+    }
+
     @GetMapping("/my-logs")
     public String myPage() {
         return "status/my-logs"; // 마이페이지 (내 상태 로그 보기)

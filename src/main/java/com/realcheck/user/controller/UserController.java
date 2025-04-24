@@ -43,25 +43,12 @@ public class UserController {
     }
 
     // ─────────────────────────────────────────────
-    // [2] 마이페이지 및 사용자 정보 수정
+    // [2] 마이페이지 사용자 정보 수정
     // ─────────────────────────────────────────────
 
-    /**
-     * [2-1] 마이페이지 - 로그인한 사용자 정보 조회
-     */
-    @GetMapping("/me")
-    public ResponseEntity<UserDto> myPage(HttpSession session) {
-        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
-
-        if (loginUser == null) {
-            return ResponseEntity.status(401).body(null); // 로그인 안 된 상태 → 401 Unauthorized
-        }
-
-        return ResponseEntity.ok(loginUser); // 로그인된 사용자 정보 반환
-    }
 
     /**
-     * [2-2] 프로필 수정 API (닉네임/비밀번호)
+     * [2-1] 프로필 수정 API (닉네임/비밀번호)
      * - 로그인된 사용자만 본인의 닉네임 또는 비밀번호를 수정할 수 있음
      * - 세션에서 로그인된 사용자 정보를 가져와 해당 ID 기준으로 업데이트 진행
      *
@@ -85,7 +72,7 @@ public class UserController {
     }
 
     /**
-     * [2-3] 비밀번호 변경 전용 API
+     * [2-2] 비밀번호 변경 전용 API
      * - 현재 비밀번호 확인 후 새 비밀번호로 교체
      */
     @PutMapping("/password")
