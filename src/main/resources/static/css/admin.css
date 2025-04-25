@@ -1,0 +1,27 @@
+/* admin.jsp 관리자 페이지 */
+
+.dashboard-title {
+  font-size: 28px;
+  font-weight: bold;
+  text-align: center;
+  color: #2c3e50;
+  margin-bottom: 30px;
+}
+
+.card-title {
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.card-text {
+  font-size: 14px;
+  color: #555;
+}
+
+.card {
+  transition: transform 0.2s ease;
+}
+
+.card:hover {
+  transform: scale(1.03);
+}
