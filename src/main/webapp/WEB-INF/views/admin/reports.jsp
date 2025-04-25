@@ -19,8 +19,8 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
     <div class="container mt-5">
       <h3 class="text-center mb-4">🚨 신고 관리</h3>
 
-      <table class="table table-bordered">
-        <thead>
+      <table class="table table-bordered text-center align-middle">
+        <thead class="table-light">
           <tr>
             <th>신고자</th>
             <th>로그 ID</th>
@@ -46,7 +46,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
         <td>${'${report.reason}'}</td>
         <td>${'${report.createdAt}'}</td>
         <td>
-          <button class="btn btn-sm btn-info" onclick="getReportCount(${'${report.statusLogId}'})">신고 수</button>
+          <button class="btn btn-sm btn-success" onclick="getReportCount(${'${report.statusLogId}'})">신고 횟수 조회</button>
         </td>
       </tr>
     `

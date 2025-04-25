@@ -11,6 +11,10 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+    />
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   </head>
   <body>
@@ -28,7 +32,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
           placeholder="이메일 또는 닉네임 검색"
         />
         <button id="searchBtn" type="button" class="btn btn-primary">
-          검색
+          <i class="bi bi-search"></i>
         </button>
       </div>
 

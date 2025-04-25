@@ -38,7 +38,7 @@
               <p class="card-text">
                 지금까지 내가 등록한 상태 정보를 확인하고 관리하세요.
               </p>
-              <a href="/my-logs" class="btn btn-outline-primary">마이페이지</a>
+              <a href="/my-logs" class="btn btn-outline-primary">내정보페이지</a>
             </div>
           </div>
         </div>

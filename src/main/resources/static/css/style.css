@@ -14,3 +14,10 @@ a {
 a:hover {
   color: #0d6efd;
 }
+
+/* Bootstrap input:focus 스타일 제거 */
+input:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: #1682ed !important;
+}
