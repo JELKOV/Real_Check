@@ -165,9 +165,9 @@ public class UserService {
             admin.setPassword(passwordEncoder.encode("admin1234"));
 
             userRepository.save(admin);
-            System.out.println("✅ 관리자 계정 생성 완료");
+            System.out.println("관리자 계정 생성 완료");
         } else {
-            System.out.println("ℹ️ 이미 admin@example.com 계정이 존재합니다.");
+            System.out.println("이미 admin@example.com 계정이 존재합니다.");
         }
     }
 }
