@@ -4,18 +4,18 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>현장 정보 보기 - RealCheck</title>
+  <title>지도 요청 탐색 - RealCheck</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
 <%@ include file="../common/header.jsp" %>
 <div class="container mt-4">
-  <h3 class="text-center mb-4">등록된 현장 정보 탐색</h3>
-  <div id="statusMap" style="width: 100%; height: 500px; border: 1px solid #ccc;"></div>
+  <h3 class="text-center mb-4">🗺️ 지도에서 요청 확인 & 답변</h3>
+  <div id="map" style="width: 100%; height: 500px; border: 1px solid #ccc;"></div>
 </div>
 <script>
-// TODO: 지도 위에 status-log 마커 표시만 (클릭 시 정보 확인)
+// TODO: 지도 연동 + 마커 클릭 시 /request/{id} 이동 구현 예정
 </script>
 <%@ include file="../common/footer.jsp" %>
 </body>

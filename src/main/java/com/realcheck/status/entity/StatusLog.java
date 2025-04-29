@@ -3,41 +3,63 @@ package com.realcheck.status.entity;
 import java.time.LocalDateTime;
 
 import com.realcheck.place.entity.Place;
+import com.realcheck.request.entity.Request;
 import com.realcheck.user.entity.User;
 
 import jakarta.persistence.*;
 import lombok.*;
 
 /**
- * 현장(예: 미용실 등)의 실시간 상태 정보를 저장하는 엔티티
- * - 예: "현재 대기 3명", "잠시 휴식 중" 등의 정보
+ * StatusLog 엔티티
+ * - 장소의 실시간 상태 정보 (대기 현황, 요청 답변, 자유 공유 등) 저장
+ * - 요청과 연결되거나, 단독으로 등록될 수 있음
  */
 @Entity
-@Table(name = "status_logs") // 테이블명: status_logs
-@Getter @Setter
+@Table(name = "status_logs")
+@Getter
+@Setter
 @NoArgsConstructor
 public class StatusLog {
 
+    // ─────────────────────────────────────────────
+    // 기본 필드
+    // ─────────────────────────────────────────────
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // auto_increment
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String content;           // 상태 설명 (예: "현재 대기 3명")
+    private int waitCount;             // 대기 인원 수
+    private String imageUrl;           // 이미지 경로 (선택적)
     
-    private String content; // 상태 설명 (ex: "현재 대기 3명", "예약만 가능")
-    private int waitCount; // 대기 인원 수 (숫자로 따로 저장)   
-    private String imageUrl; // 업로드된 사진이 있을 경우의 경로 (선택적)    
-    private LocalDateTime createdAt = LocalDateTime.now(); // 등록 시각 – 기본값은 현재 시간
+    @Column(nullable = false)
+    private LocalDateTime createdAt = LocalDateTime.now(); // 등록 시간 (기본값: 현재)
 
-    // 이 정보를 등록한 사용자 정보 (Many-to-One 관계)
-    @ManyToOne
-    @JoinColumn(name = "user_id") // FK 이름은 user_id
-    private User reporter; // 작성자
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private StatusType statusType = StatusType.ANSWER;    // 상태 타입 (ANSWER or FREE_SHARE)
 
-    // 해당 정보가 속한 장소
-    @ManyToOne
-    @JoinColumn(name = "place_id") // FK 이름은 place_id
-    private Place place;  // 장소
+    private boolean isSelected = false; // 답변 채택 여부 (요청 답변일 경우만 사용)
 
-    // 신고 누적으로 비공개 여부
-    private boolean isHidden = false;
+    private boolean isHidden = false;   // 숨김 여부 (신고 누적 시 true)
+
+    private int viewCount = 0;          // 조회수 (자발적 공유일 경우 사용)
+
+    // ─────────────────────────────────────────────
+    // 관계 매핑
+    // ─────────────────────────────────────────────
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "request_id")
+    private Request request;    // 연결된 요청 (null 가능)
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User reporter;      // 작성자 (로그 등록자)
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "place_id", nullable = false)
+    private Place place;        // 관련 장소
+
 }

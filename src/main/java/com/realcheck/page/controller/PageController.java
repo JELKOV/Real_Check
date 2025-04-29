@@ -1,18 +1,24 @@
 package com.realcheck.page.controller;
 
+import com.realcheck.user.dto.UserDto;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
-import com.realcheck.user.dto.UserDto;
-
-import jakarta.servlet.http.HttpSession;
-
+/**
+ * PageController
+ * - 단순 JSP 페이지 이동을 담당하는 컨트롤러
+ */
 @Controller
 public class PageController {
 
+    // ─────────────────────────────────────────────
+    // [1] 사용자 일반 페이지
+    // ─────────────────────────────────────────────
+
     @GetMapping
     public String mainPage() {
-        return "index"; // 메인페이지 렌더링
+        return "index";
     }
 
     @GetMapping("/mypage")
@@ -21,58 +27,87 @@ public class PageController {
     }
 
     @GetMapping("/my-logs")
-    public String myPage() {
-        return "status/my-logs"; // 마이페이지 (내 상태 로그 보기)
-    }
-
-    @GetMapping("/nearby")
-    public String nearbyPage() {
-        return "map/nearby"; // 지도 기반 상태 보기 페이지
+    public String myLogsPage() {
+        return "status/my-logs";
     }
 
     @GetMapping("/edit-profile")
     public String editProfilePage() {
-        return "user/edit-profile"; // 정보 수정정
+        return "user/edit-profile";
     }
 
     @GetMapping("/change-password")
     public String changePasswordPage() {
-        return "user/change-password"; // 비밀번호 변경
+        return "user/change-password";
     }
+
+    // ─────────────────────────────────────────────
+    // [2] 요청 관련 페이지
+    // ─────────────────────────────────────────────
+
+    //요청 등록 페이지 (지도에서 질문 등록)
+    @GetMapping("/request/register")
+    public String requestRegisterPage() {
+        return "request/register";
+    }
+
+    //요청 목록 페이지 (답변 가능한 요청 리스트)
+    @GetMapping("/request/list")
+    public String requestListPage() {
+        return "request/list";
+    }
+
+    //요청 상세 페이지
+    @GetMapping("/request/{id}")
+    public String requestDetailPage() {
+        return "request/detail";
+    }
+
+    // ─────────────────────────────────────────────
+    // [3] 지도 관련 페이지
+    // ─────────────────────────────────────────────
+
+    @GetMapping("/nearby")
+    public String nearbyPage() {
+        return "map/nearby";
+    }
+
+    /** 주변 요청 확인 (답변할 요청) */
+    @GetMapping("/nearby/request-list")
+    public String nearbyRequestListPage() {
+        return "map/request-list";
+    }
+
+    // ─────────────────────────────────────────────
+    // [4] 관리자 페이지
+    // ─────────────────────────────────────────────
 
     @GetMapping("/admin")
     public String adminPage(HttpSession session) {
-        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
-        if (loginUser == null || !"ADMIN".equals(loginUser.getRole())) {
-            return "redirect:/login?error=unauthorized";
-        }
-        return "admin/admin";
+        return isAdmin(session) ? "admin/admin" : "redirect:/login?error=unauthorized";
     }
 
     @GetMapping("/admin/stats")
     public String adminStatsPage(HttpSession session) {
-        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
-        if (loginUser == null || !"ADMIN".equals(loginUser.getRole())) {
-            return "redirect:/login?error=unauthorized";
-        }
-        return "admin/stats";
+        return isAdmin(session) ? "admin/stats" : "redirect:/login?error=unauthorized";
     }
 
     @GetMapping("/admin/users")
     public String adminUsersPage(HttpSession session) {
-        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
-        if (loginUser == null || !"ADMIN".equals(loginUser.getRole())) {
-            return "redirect:/login?error=unauthorized";
-        }
-        return "admin/users";
+        return isAdmin(session) ? "admin/users" : "redirect:/login?error=unauthorized";
     }
 
     @GetMapping("/admin/reports")
     public String adminReportsPage(HttpSession session) {
+        return isAdmin(session) ? "admin/reports" : "redirect:/login?error=unauthorized";
+    }
+
+    // ─────────────────────────────────────────────
+    // [5] 내부 메서드
+    // ─────────────────────────────────────────────
+
+    private boolean isAdmin(HttpSession session) {
         UserDto loginUser = (UserDto) session.getAttribute("loginUser");
-        if (loginUser == null || !"ADMIN".equals(loginUser.getRole())) {
-            return "redirect:/login?error=unauthorized";
-        }
-        return "admin/reports";
+        return loginUser != null && "ADMIN".equals(loginUser.getRole());
     }
 }

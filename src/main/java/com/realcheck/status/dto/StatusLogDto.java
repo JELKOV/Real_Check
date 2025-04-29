@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import com.realcheck.place.entity.Place;
 import com.realcheck.status.entity.StatusLog;
+import com.realcheck.status.entity.StatusType;
 import com.realcheck.user.entity.User;
 import lombok.*;
 
@@ -25,6 +26,8 @@ public class StatusLogDto {
     private String imageUrl; // 이미지 URL (선택 사항)
     private Long placeId; // 장소 ID (어떤 장소의 대기 정보인지)
     private LocalDateTime createdAt; // 등록 일시
+    private StatusType type;
+    private Long requestId;
 
     /**
      * DTO → Entity 변환 메서드
@@ -39,8 +42,9 @@ public class StatusLogDto {
         log.setContent(this.content);
         log.setWaitCount(this.waitCount);
         log.setImageUrl(this.imageUrl);
-        log.setReporter(user); // 해당 StatusLog를 등록한 사용자
-        log.setPlace(place); // 관련 장소 정보
+        log.setReporter(user);
+        log.setPlace(place);
+        log.setStatusType(this.type != null ? this.type : StatusType.ANSWER);
         return log;
     }
 
@@ -58,6 +62,9 @@ public class StatusLogDto {
                 log.getWaitCount(),
                 log.getImageUrl(),
                 log.getPlace().getId(),
-                log.getCreatedAt());
+                log.getCreatedAt(),
+                log.getStatusType(),
+                log.getRequest() != null ? log.getRequest().getId() : null
+        );
     }
 }
