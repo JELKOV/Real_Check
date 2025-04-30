@@ -1,5 +1,14 @@
 package com.realcheck.user.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import com.realcheck.place.entity.Place;
+import com.realcheck.point.entity.Point;
+import com.realcheck.report.entity.Report;
+import com.realcheck.request.entity.Request;
+import com.realcheck.status.entity.StatusLog;
+
 // JPA에서 DB 테이블과 자바 클래스를 매핑할 때 사용하는 어노테이션
 import jakarta.persistence.*;
 // Lombok은 반복되는 getter/setter, 생성자 등을 자동 생성해주는 도구
@@ -37,14 +46,33 @@ public class User {
     private String password;
 
     // 사용자 역할 (일반 사용자, 제휴 업체, 관리자) - Enum 타입으로 관리
-    @Enumerated(EnumType.STRING) // Enum 값을 문자열로 저장 (ex: USER, PARTNER, ADMIN)
-    private Role role;
+    @Enumerated(EnumType.STRING)
+    private UserRole role;
 
     // 포인트 - 기본값 0으로 시작, 정보 제공 등으로 증가 가능
     private int points = 0;
 
     // 활성 상태 여부 - true면 정상 활동, false면 비활성화된 계정
     private boolean isActive = true;
+
+    // ──────────────────────────────
+    // 관계 설정 (양방향)
+    // ──────────────────────────────
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Request> requests = new ArrayList<>();
+
+    @OneToMany(mappedBy = "reporter", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<StatusLog> statusLogs = new ArrayList<>();
+
+    @OneToMany(mappedBy = "reporter", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Report> reports = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Point> pointLogs = new ArrayList<>();
+
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Place> places = new ArrayList<>();
 
     /**
      * 사용자 역할을 정의하는 열거형(Enum)
@@ -56,10 +84,4 @@ public class User {
         USER, PARTNER, ADMIN
     }
 
-    // 테스트 용
-    // public User(Long id, String email, String nickname) {
-    //     this.id = id;
-    //     this.email = email;
-    //     this.nickname = nickname;
-    // }
 }

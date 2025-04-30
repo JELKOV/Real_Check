@@ -3,7 +3,7 @@ package com.realcheck.user.service;
 import com.realcheck.user.dto.PasswordUpdateRequestDto;
 import com.realcheck.user.dto.UserDto;
 import com.realcheck.user.entity.User;
-import com.realcheck.user.entity.User.Role;
+import com.realcheck.user.entity.UserRole;
 import com.realcheck.user.repository.UserRepository;
 
 import jakarta.annotation.PostConstruct;
@@ -55,7 +55,7 @@ public class UserService {
         user.setPassword(encodedPassword);
 
         // 4. 기본 정보 세팅 (역할, 포인트, 활성 상태)
-        user.setRole(Role.USER); // 회원가입은 기본적으로 일반 사용자로 설정
+        user.setRole(UserRole.USER); // 회원가입은 기본적으로 일반 사용자로 설정
         user.setPoints(0); // 기본 포인트는 0
         user.setActive(true); // 계정은 기본적으로 활성화 상태
 
@@ -159,7 +159,7 @@ public class UserService {
             User admin = new User();
             admin.setEmail("admin@example.com");
             admin.setNickname("관리자");
-            admin.setRole(Role.ADMIN);
+            admin.setRole(UserRole.ADMIN);
             admin.setActive(true);
             admin.setPoints(0);
             admin.setPassword(passwordEncoder.encode("admin1234"));

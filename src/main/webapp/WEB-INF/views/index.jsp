@@ -39,8 +39,8 @@
         <div class="card-body d-flex flex-column">
           <h5 class="card-title">요청 답변하기</h5>
           <p class="card-text flex-grow-1">
-            주변 요청을 확인하고 답변을 등록하세요.<br />
-            정확한 답변으로 포인트를 획득하세요.
+            근처에서 답하지 못한 요청을 확인하고 답변을 등록하세요.<br />
+            추가 포인트를 드립니다. 정확한 답변으로 포인트를 획득하세요.
           </p>
           <a href="/request/list" class="btn btn-outline-primary mt-auto">요청 확인하기</a>
         </div>

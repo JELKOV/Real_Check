@@ -26,6 +26,7 @@ public class Request {
     private Long id; // 기본 키 (자동 생성)
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id") 
     private User user; // 요청을 등록한 사용자
 
     private String title; // 요청 제목

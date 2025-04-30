@@ -56,9 +56,12 @@ public class RequestController {
      * @return 조건을 만족하는 요청 리스트
      */
     @GetMapping("/open")
-    public ResponseEntity<List<Request>> findOpenRequests() {
-        List<Request> openRequests = requestService.findOpenRequests();
-        return ResponseEntity.ok(openRequests);
+    public ResponseEntity<List<RequestDto>> findOpenRequests() {
+        List<Request> entities = requestService.findOpenRequests();
+        List<RequestDto> dtoList = entities.stream()
+            .map(RequestDto::fromEntity) // 여기서 순환 끊기
+            .toList();
+        return ResponseEntity.ok(dtoList);
     }
 
     /**
