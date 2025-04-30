@@ -30,9 +30,12 @@ public class Place {
     @Column(nullable = false)
     private String address; // 도로명 주소 (예: "서울 강남구 테헤란로 123")
 
-    // 위도와 경도는 선택적으로 설정 (필수가 아님)
-    private double latitude; // 장소의 위도 (예: 37.4979)
-    private double longitude; // 장소의 경도 (예: 127.0276)
+    // 위도와 경도
+    @Column(nullable = false)
+    private double lat;
+    
+    @Column(nullable = false)
+    private double lng;
 
     // 장소가 관리자에게 승인되었는지 여부 (기본은 false)
     // 추후 관리자가 검토 후 true로 변경 가능

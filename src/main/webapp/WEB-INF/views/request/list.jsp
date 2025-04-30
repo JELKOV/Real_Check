@@ -11,29 +11,36 @@
 </head>
 <body>
 <%@ include file="../common/header.jsp" %>
+
 <div class="container mt-5">
   <h3 class="text-center mb-4">전체 요청 목록</h3>
   <div id="requestList" class="row g-3"></div>
 </div>
+
 <script>
-$(function() {
-  $.get("/api/request/open", function(data) {
-    const list = data.map(req => `
-      <div class="col-md-6">
-        <div class="card h-100 shadow-sm">
-          <div class="card-body">
-            <h5 class="card-title">${req.title}</h5>
-            <p class="card-text">${req.content}</p>
-            <small>포인트: ${req.point}</small><br/>
-            <a href="/request/${req.id}" class="btn btn-outline-primary btn-sm mt-2">상세보기</a>
-          </div>
-        </div>
-      </div>
-    `);
-    $("#requestList").html(list.join(""));
+$(function () {
+  $.get("/api/request/open", function (data) {
+    var html = "";
+
+    data.forEach(function (req) {
+      html +=
+        '<div class="col-md-6">' +
+          '<div class="card h-100 shadow-sm">' +
+            '<div class="card-body">' +
+              '<h5 class="card-title">' + req.title + '</h5>' +
+              '<p class="card-text">' + req.content + '</p>' +
+              '<small>포인트: ' + req.point + '</small><br/>' +
+              '<a href="/request/' + req.id + '" class="btn btn-outline-primary btn-sm mt-2">상세보기</a>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+    });
+
+    $("#requestList").html(html);
   });
 });
 </script>
+
 <%@ include file="../common/footer.jsp" %>
 </body>
 </html>

@@ -8,7 +8,6 @@
   <link rel="stylesheet" href="/css/style.css" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <!-- 카카오 지도 API 필요 시 추가 -->
 </head>
 <body>
 <%@ include file="../common/header.jsp" %>
@@ -16,9 +15,12 @@
 <div class="container mt-5" style="max-width: 700px;">
   <h3 class="text-center mb-4">요청 등록</h3>
 
-  <!-- 지도 (선택된 위치 lat/lng 보여주기) -->
-  <div id="map" style="width: 100%; height: 400px; margin-bottom: 20px; border: 1px solid #ccc;"></div>
+  <!-- 지도 영역 -->
+  <div id="map" style="width: 100%; height: 400px; margin-bottom: 20px; border: 1px solid #ccc;">
+    <!-- 향후 Kakao 지도 연동 예정 -->
+  </div>
 
+  <!-- 요청 등록 폼 -->
   <form id="requestForm">
     <div class="mb-3">
       <label for="title" class="form-label">요청 제목</label>
@@ -50,14 +52,14 @@
 
 <script>
 $(document).ready(function () {
-  // [TODO] 지도 클릭 시 placeId, lat, lng 설정하기
-  $("#map").text("여기 지도 연동 예정");
+  // TODO: Kakao 지도 API 연동 시 마커 클릭 시 아래 값들을 설정
+  $("#map").text("🗺 지도는 추후 Kakao Maps API로 연동 예정");
 
   // 요청 등록 처리
   $("#requestForm").on("submit", function (e) {
     e.preventDefault();
 
-    const requestData = {
+    var requestData = {
       title: $("#title").val(),
       content: $("#content").val(),
       point: parseInt($("#point").val()),
@@ -82,5 +84,6 @@ $(document).ready(function () {
   });
 });
 </script>
+
 </body>
 </html>

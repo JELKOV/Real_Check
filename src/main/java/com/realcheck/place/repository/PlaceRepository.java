@@ -53,7 +53,7 @@ public interface PlaceRepository extends JpaRepository<Place, Long> {
      */
     @Query("SELECT p FROM Place p WHERE " +
             "FUNCTION('ST_Distance_Sphere', " +
-            "point(p.longitude, p.latitude), point(:lng, :lat)) <= :radiusInMeters")
+            "point(p.lng, p.lat), point(:lng, :lat)) <= :radiusInMeters")
     List<Place> findNearbyPlaces(@Param("lat") double lat,
             @Param("lng") double lng,
             @Param("radiusInMeters") double radiusInMeters);

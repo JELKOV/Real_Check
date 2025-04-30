@@ -111,4 +111,26 @@ public interface StatusLogRepository extends JpaRepository<StatusLog, Long> {
      */
     StatusLog findTopByPlaceIdAndIsHiddenFalseOrderByCreatedAtDesc(Long placeId);
 
+    /**
+     * [2-4] 현재 위치 기준 반경 내 상태 로그 조회
+     * - 사용자의 위도(lat), 경도(lng)를 기반으로 일정 반경 내에 존재하는 상태 로그를 조회
+     * - 숨김 여부와 관계없이 최근 생성된 로그를 대상으로 함
+     * 
+     * SQL 변환 예:
+     * SELECT * FROM status_logs
+     * WHERE ST_Distance_Sphere(POINT(place.lng, place.lat), POINT(:lng, :lat)) <= :radius
+     * AND created_at >= :cutoff;
+     * 
+     * @param lat     기준 위도
+     * @param lng     기준 경도
+     * @param radius  검색 반경 (미터 단위)
+     * @param cutoff  시간 기준 (예: 3시간 전)
+     * @return 반경 내 상태 로그 리스트
+     */
+    @Query("SELECT s FROM StatusLog s WHERE FUNCTION('ST_Distance_Sphere', POINT(s.place.lng, s.place.lat), POINT(:lng, :lat)) <= :radius AND s.createdAt >= :cutoff")
+    List<StatusLog> findNearbyLogs(
+            @Param("lat") double lat,
+            @Param("lng") double lng,
+            @Param("radius") double radius,
+            @Param("cutoff") LocalDateTime cutoff);
 }

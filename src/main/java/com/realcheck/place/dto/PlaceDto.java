@@ -34,8 +34,8 @@ public class PlaceDto {
         Place place = new Place();
         place.setName(this.name);
         place.setAddress(this.address);
-        place.setLatitude(this.latitude);
-        place.setLongitude(this.longitude);
+        place.setLat(this.latitude);
+        place.setLng(this.longitude);
         place.setOwner(owner); // 등록자 정보 주입
         return place;
     }
@@ -52,8 +52,8 @@ public class PlaceDto {
                 place.getId(),
                 place.getName(),
                 place.getAddress(),
-                place.getLatitude(),
-                place.getLongitude(),
+                place.getLat(),
+                place.getLng(),
                 place.getOwner() != null ? place.getOwner().getId() : null);
     }
 }

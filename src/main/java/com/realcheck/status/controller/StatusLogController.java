@@ -128,6 +128,77 @@ public class StatusLogController {
         return ResponseEntity.ok(latest);
     }
 
+    /**
+     * [1-7] 자발적 공유 등록 API (FREE_SHARE)
+     * - 로그인한 사용자가 장소 상태를 자유롭게 공유
+     * - StatusLog 타입: FREE_SHARE
+     */
+    @PostMapping("/free-share")
+    public ResponseEntity<?> registerFreeShare(@RequestBody StatusLogDto dto, HttpSession session) {
+        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            return ResponseEntity.status(401).body("로그인이 필요합니다.");
+        }
+
+        statusLogService.registerFreeShare(loginUser.getId(), dto);
+        return ResponseEntity.ok("자발적 공유 등록 완료");
+    }
+
+    /**
+     * [1-8] 요청 기반 답변 등록 API (ANSWER)
+     * - 특정 요청에 대해 상태 정보를 응답 형태로 공유
+     * - StatusLog에 requestId를 연결하여 저장
+     */
+    @PostMapping("/answer/{requestId}")
+    public ResponseEntity<?> registerAnswer(
+            @PathVariable Long requestId,
+            @RequestBody StatusLogDto dto,
+            HttpSession session) {
+        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            return ResponseEntity.status(401).body("로그인이 필요합니다.");
+        }
+
+        dto.setRequestId(requestId);
+        statusLogService.registerAnswer(loginUser.getId(), dto);
+        return ResponseEntity.ok("요청에 대한 답변 등록 완료");
+    }
+
+    /**
+     * [1-9] 요청 기반 답변 채택 API
+     * - 요청 작성자만 자신이 받은 답변 중 하나를 채택 가능
+     * - 해당 StatusLog에 isSelected = true, 요청 마감 처리
+     */
+    @PostMapping("/select/{statusLogId}")
+    public ResponseEntity<?> selectAnswer(@PathVariable Long statusLogId, HttpSession session) {
+        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            return ResponseEntity.status(401).body("로그인이 필요합니다.");
+        }
+
+        try {
+            statusLogService.selectAnswer(statusLogId, loginUser.getId());
+            return ResponseEntity.ok("답변이 채택되었습니다.");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(403).body(e.getMessage());
+        }
+    }
+
+    /**
+     * [1-10] 현재 위치 기반 근처 상태 로그 조회 API
+     * - 위도, 경도, 반경(m)을 기준으로 3시간 이내 상태 로그 조회
+     * - 예: GET /api/status/nearby?lat=37.5&lng=127.0&radius=500
+     */
+    @GetMapping("/nearby")
+    public ResponseEntity<List<StatusLogDto>> getNearbyStatusLogs(
+            @RequestParam double lat,
+            @RequestParam double lng,
+            @RequestParam(defaultValue = "500") double radiusMeters) {
+
+        List<StatusLogDto> logs = statusLogService.findNearbyStatusLogs(lat, lng, radiusMeters);
+        return ResponseEntity.ok(logs);
+    }
+
     // ────────────────────────────────────────
     // [2] 관리자 기능
     // ────────────────────────────────────────

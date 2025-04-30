@@ -210,6 +210,24 @@ public class StatusLogService {
         requestRepository.save(request);
     }
 
+    /**
+     * [1-11] 현재 위치 기반 근처 상태 로그 조회
+     * - 사용자의 위도/경도를 기준으로 일정 반경 내에 있는 상태 로그를 조회
+     * - 최근 3시간 이내에 등록된 로그만 반환
+     *
+     * @param lat 위도
+     * @param lng 경도
+     * @param radiusMeters 반경 (미터 단위)
+     * @return 근처 상태 로그 목록 (StatusLogDto 리스트)
+     */
+    public List<StatusLogDto> findNearbyStatusLogs(double lat, double lng, double radiusMeters) {
+        LocalDateTime cutoff = LocalDateTime.now().minusHours(3);
+        return statusLogRepository.findNearbyLogs(lat, lng, radiusMeters, cutoff)
+                .stream()
+                .map(StatusLogDto::fromEntity)
+                .toList();
+    }
+
     // ────────────────────────────────────────
     // [2] 관리자 기능
     // ────────────────────────────────────────
