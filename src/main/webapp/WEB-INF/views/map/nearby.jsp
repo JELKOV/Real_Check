@@ -5,10 +5,12 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
   <head>
     <meta charset="UTF-8" />
     <title>현장 정보 보기 - RealCheck</title>
+    <link rel="stylesheet" href="/css/style.css" />
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
+    <link href="/css/map.css" rel="stylesheet" />
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script
       type="text/javascript"
@@ -20,21 +22,24 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
     <div class="container mt-4">
       <h3 class="text-center mb-4">등록된 현장 정보 탐색</h3>
-      <div
-        id="statusMap"
-        style="width: 100%; height: 500px; border: 1px solid #ccc"
-      ></div>
-      <div class="text-center mt-3">
-        <button id="findMyLocation" class="btn btn-outline-primary">
-          📍 내 위치 다시 찾기
-        </button>
+      <div id="statusMap" class="map-container position-relative">
+        <div class="map-control-button" id="myLocationButton" title="내 위치">
+          📍
+        </div>
+        <div
+          class="map-control-button"
+          id="refreshNearbyButton"
+          title="주변 정보"
+        >
+          🔄
+        </div>
       </div>
     </div>
 
     <script>
       let map = null;
-      let myMarker = null;
       let dataMarkers = [];
+      let userCircle = null; // 내 위치 원형 객체
 
       function loadMapWithPosition(lat, lng) {
         const center = new naver.maps.LatLng(lat, lng);
@@ -51,6 +56,22 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
         // 이전 마커 제거
         dataMarkers.forEach((m) => m.setMap(null));
         dataMarkers = [];
+
+        // 이전 원형 제거
+        if (userCircle) {
+          userCircle.setMap(null);
+        }
+
+        userCircle = new naver.maps.Circle({
+          map: map,
+          center: center,
+          radius: 3000, // 미터 단위 (3km)
+          strokeColor: "#007BFF",
+          strokeOpacity: 0.6,
+          strokeWeight: 2,
+          fillColor: "#007BFF",
+          fillOpacity: 0.15,
+        });
 
         // 주변 현장 로그 가져오기
         $.get(
@@ -117,8 +138,15 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
       $(document).ready(function () {
         getUserLocation();
 
-        $("#findMyLocation").on("click", function () {
+        $("#myLocationButton").on("click", function () {
           getUserLocation();
+        });
+
+        $("#refreshNearbyButton").on("click", function () {
+          if (map) {
+            const center = map.getCenter();
+            loadMapWithPosition(center.lat(), center.lng());
+          }
         });
       });
     </script>

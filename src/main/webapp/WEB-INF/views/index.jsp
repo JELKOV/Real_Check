@@ -18,7 +18,7 @@
   <h2 class="text-center mb-5">실시간 현장 정보 요청/답변 서비스</h2>
 
   <div class="row g-4">
-    
+
     <!-- 1. 요청 등록하기 -->
     <div class="col-md-3">
       <div class="card shadow-sm h-100">
@@ -33,7 +33,7 @@
       </div>
     </div>
 
-    <!-- 2. 주변 요청 확인하고 답변하기 -->
+    <!-- 2. 요청 답변하기 -->
     <div class="col-md-3">
       <div class="card shadow-sm h-100">
         <div class="card-body d-flex flex-column">
@@ -47,11 +47,25 @@
       </div>
     </div>
 
+    <!-- 2.5. 지도에서 요청 보기 -->
+    <div class="col-md-3">
+      <div class="card shadow-sm h-100">
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title">지도에서 요청 확인</h5>
+          <p class="card-text flex-grow-1">
+            지도를 통해 요청 위치를 한눈에 확인하세요.<br />
+            근처 요청을 직접 보고 응답할 수 있어요.
+          </p>
+          <a href="/nearby/request-list" class="btn btn-outline-info mt-auto">지도 요청 보기</a>
+        </div>
+      </div>
+    </div>
+
     <!-- 3. 주변 현황(정보) 탐색하기 -->
     <div class="col-md-3">
       <div class="card shadow-sm h-100">
         <div class="card-body d-flex flex-column">
-          <h5 class="card-title">정보 탐색</h5>
+          <h5 class="card-title">내 주변 정보 탐색</h5>
           <p class="card-text flex-grow-1">
             내 주변에 등록된 정보를 지도에서 탐색하세요.<br />
             다양한 질문과 답변을 확인할 수 있습니다.
