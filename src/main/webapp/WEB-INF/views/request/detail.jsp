@@ -12,6 +12,10 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
       rel="stylesheet"
     />
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script
+      type="text/javascript"
+      src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=fyljbu3cv5"
+    ></script>
   </head>
 
   <body>
@@ -22,6 +26,8 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
       <!-- 요청 상세 정보 -->
       <div id="requestDetail" class="mb-5 border rounded p-4 bg-light"></div>
+      <!-- 지도 표시 -->
+      <div id="map" style="height: 300px" class="mb-5"></div>
 
       <!-- 답변 리스트 -->
       <h4 class="mt-5 mb-3">등록된 답변</h4>
@@ -56,30 +62,31 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
       $(document).ready(function () {
         // 요청 정보 가져오기
-        $.get("/api/request/" + requestId, function (request) {
-          let html =
-            "<h5>" +
-            request.title +
-            "</h5>" +
-            "<p class='text-muted'>" +
-            request.content +
-            "</p>" +
-            "<p><strong>포인트:</strong> " +
-            request.point +
-            "</p>" +
-            "<p><strong>장소:</strong> " +
-            request.placeId +
-            " (" +
-            request.lat +
-            ", " +
-            request.lng +
-            ")</p>";
-
+        $.get(`/api/request/${"${requestId}"}`, function (request) {
+          currentPlaceId = request.placeId;
+          console.log(currentPlaceId);
+          const html = `
+            <h5>${"${request.title}"}</h5>
+            <p class="text-muted">${"${request.content}"}</p>
+            <p><strong>포인트:</strong> ${"${request.point}"}</p>
+            <p><strong>장소:</strong> ${"${request.placeName || request.customPlaceName}"}</p>
+          `;
           $("#requestDetail").html(html);
+          // 지도 초기화
+          const map = new naver.maps.Map("map", {
+            center: new naver.maps.LatLng(request.lat, request.lng),
+            zoom: 16,
+          });
+
+          // 마커 표시
+          new naver.maps.Marker({
+            position: new naver.maps.LatLng(request.lat, request.lng),
+            map: map,
+          });
         });
 
         // 답변 리스트 불러오기
-        $.get(`/api/status/by-request/${requestId}`, function (answers) {
+        $.get(`/api/status/by-request/${"${requestId}"}`, function (answers) {
           if (answers.length === 0) {
             $("#answerList").html(
               '<li class="list-group-item">등록된 답변이 없습니다.</li>'
@@ -121,11 +128,11 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
             content: content,
             waitCount: 0,
             imageUrl: null, // TODO: 이미지 업로드 후 URL 연결
-            placeId: 1, // 테스트용 (실제론 지도에서 선택한 값이 들어가야 함)
+            placeId: currentPlaceId, 
           };
 
           $.ajax({
-            url: `/api/answer/${requestId}`,
+            url: `/api/answer/${"${requestId}"}`,
             method: "POST",
             contentType: "application/json",
             data: JSON.stringify(dto),

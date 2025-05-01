@@ -1,5 +1,6 @@
 package com.realcheck.request.entity;
 
+import com.realcheck.place.entity.Place;
 import com.realcheck.status.entity.StatusLog;
 import com.realcheck.user.entity.User;
 import jakarta.persistence.*;
@@ -10,8 +11,12 @@ import java.util.List;
 
 /**
  * Request 엔티티 클래스
- * - 사용자가 등록하는 요청 정보를 담는 클래스
- * - 요청에 대한 답변(StatusLog)이 연결될 수 있음
+ *
+ * 사용자가 등록한 요청 정보를 표현하는 도메인 객체로,
+ * - 제목, 내용, 포인트
+ * - 장소 정보 (공식 등록 장소 or 사용자 자유입력)
+ * - 요청 시각 및 마감 여부
+ * - 연결된 상태 로그(StatusLog)들과의 관계를 포함
  */
 @Entity
 @Getter
@@ -21,35 +26,58 @@ import java.util.List;
 @AllArgsConstructor
 public class Request {
 
+    // 요청 ID (기본키)
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // 기본 키 (자동 생성)
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id") 
-    private User user; // 요청을 등록한 사용자
-
-    private String title; // 요청 제목
-
-    @Column(columnDefinition = "TEXT")
-    private String content; // 요청 상세 설명
-
-    private Integer point; // 요청에 걸린 포인트
-
-    private String placeId; // 장소 식별자 (예: 외부 API 기반)
-
-    private Double lat; // 장소 위도
-    private Double lng; // 장소 경도
-
-    private boolean isClosed; // 요청 마감 여부 (답변 채택 시 true)
-
-    private LocalDateTime createdAt; // 요청 등록 시각
+    private Long id;
 
     /**
-     * 연결된 상태 로그 목록
-     * - 하나의 요청에 여러 개의 상태 로그가 연결될 수 있음
-     * - 양방향 관계 설정: StatusLog의 request 필드와 매핑됨
-     * - @Builder 사용 시 초기값이 유지되도록 @Builder.Default 사용
+     * 요청자 정보
+     * - 요청을 등록한 사용자(User)와 N:1 관계
+     * - 지연 로딩 (fetch = LAZY)
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    // 요청 제목
+    private String title;
+
+    // 요청 상세 설명
+    @Column(columnDefinition = "TEXT")
+    private String content;
+
+    // 요청에 걸린 포인트
+    private Integer point; 
+
+    /**
+     * 장소 정보 (택 1 구조)
+     *
+     * 공식 등록된 장소인 경우 → place 객체 연결
+     * 자유입력 장소인 경우 → customPlaceName, lat/lng 필드 사용
+     * → 둘 다 null일 수 없도록, 프론트 또는 컨트롤러에서 유효성 검증 필요
+     */
+    // 공식 등록 장소일 경우
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "place_id")
+    private Place place;
+
+    // 사용자 입력 장소 정보 (자유 형식일 때)
+    private String customPlaceName;
+    private Double lat;
+    private Double lng;
+
+    // 요청 마감 여부 (답변 채택 시 true)
+    private boolean isClosed; 
+
+    // 요청 등록 시각
+    private LocalDateTime createdAt; 
+
+    /**
+     * 연결된 상태 로그 (답변들)
+     * - 하나의 요청에 여러 개의 답변(StatusLog)이 연결됨
+     * - 양방향 연관 관계
+     * - Request → StatusLog 는 mappedBy로 관리됨 (읽기 전용)
      */
     @Builder.Default
     @OneToMany(mappedBy = "request", fetch = FetchType.LAZY, cascade = CascadeType.ALL)

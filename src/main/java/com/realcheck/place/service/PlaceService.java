@@ -37,7 +37,7 @@ public class PlaceService {
     public void registerPlace(PlaceDto dto) {
         // 1. 등록자(ownerId)를 통해 User 객체 조회
         User owner = userRepository.findById(dto.getOwnerId())
-                .orElseThrow(() -> new RuntimeException("등록자 정보 없음"));
+                .orElseThrow(() -> new RuntimeException("등록자(User ID: " + dto.getOwnerId() + ")를 찾을 수 없습니다."));
         // 2. DTO → Entity 변환
         Place place = dto.toEntity(owner);
         // 3. DB에 장소 저장
@@ -83,6 +83,21 @@ public class PlaceService {
      */
     public List<PlaceDto> findNearbyPlaces(double lat, double lng, double radiusMeters) {
         return placeRepository.findNearbyPlaces(lat, lng, radiusMeters).stream()
+                .map(PlaceDto::fromEntity)
+                .toList();
+    }
+
+    /**
+     * [2-4] 승인된 장소만 필터링
+     * - 사용자에게 보여줄 장소를 제한함
+     * @param lat
+     * @param lng
+     * @param radiusMeters
+     * @return
+     */
+    public List<PlaceDto> findApprovedNearby(double lat, double lng, double radiusMeters) {
+        return placeRepository.findApprovedNearby(lat, lng, radiusMeters)
+                .stream()
                 .map(PlaceDto::fromEntity)
                 .toList();
     }

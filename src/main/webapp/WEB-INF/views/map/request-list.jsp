@@ -43,9 +43,11 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
       let userCircle = null;
       let requestMarkers = [];
 
+      // 요청 마커 로드 함수
       function loadRequestMarkers(lat, lng) {
         const center = new naver.maps.LatLng(lat, lng);
 
+        // 지도 초기화 또는 재중심
         if (!map) {
           map = new naver.maps.Map("map", {
             center: center,
@@ -55,9 +57,8 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
           map.setCenter(center);
         }
 
-        // 이전 원형 제거
+        // 사용자 위치 원형 표시
         if (userCircle) userCircle.setMap(null);
-
         userCircle = new naver.maps.Circle({
           map: map,
           center: center,
@@ -69,54 +70,64 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
           fillOpacity: 0.15,
         });
 
-        // 이전 마커 제거
+        // 기존 마커 제거
         requestMarkers.forEach((m) => m.setMap(null));
         requestMarkers = [];
 
-        $.get(`/api/request/nearby?lat=${"${lat}"}&lng=${"${lng}"}&radius=3000`, function (requests) {
-          $(".alert").remove();
+        // 요청 정보 불러오기
+        $.get(
+          `/api/request/nearby?lat=${"${lat}"}&lng=${"${lng}"}&radius=3000`,
+          function (requests) {
+            $(".alert").remove();
 
-          if (!requests || requests.length === 0) {
-            const message = `
+            if (!requests || requests.length === 0) {
+              const message = `
               <div class="text-center mt-3">
                 <div class="alert alert-info" role="alert">
                   근처에 등록된 요청이 없습니다.
                 </div>
               </div>`;
-            $("#map").after(message);
-            return;
-          }
+              $("#map").after(message);
+              return;
+            }
 
-          requests.forEach((req) => {
-            if (!req.lat || !req.lng) return;
+            // 마커 & InfoWindow 생성
+            requests.forEach((req) => {
+              if (!req.lat || !req.lng) return;
 
-            const marker = new naver.maps.Marker({
-              map: map,
-              position: new naver.maps.LatLng(req.lat, req.lng),
-            });
+              const marker = new naver.maps.Marker({
+                map: map,
+                position: new naver.maps.LatLng(req.lat, req.lng),
+              });
 
-            const content = `
+              const content = `
               <div style="padding:8px; font-size:13px;">
                 <strong>${"${req.title}"}</strong><br/>
                 포인트: ${"${req.point}"}pt<br/>
                 현재 답변 수: ${"${req.answerCount}"}개/3개<br/>
-                <a href="/request/${"${req.id}"} class="btn btn-sm btn-primary mt-1">자세히 보기</a>
+                <a href="javascript:goToDetail(${"${req.id}"})" class="btn btn-sm btn-primary mt-1">자세히 보기</a>
               </div>
             `;
+              const infoWindow = new naver.maps.InfoWindow({
+                content: content,
+              });
 
-            const infoWindow = new naver.maps.InfoWindow({
-              content: content,
+              naver.maps.Event.addListener(marker, "click", function () {
+                infoWindow.open(map, marker);
+              });
+
+              requestMarkers.push(marker);
             });
-
-            naver.maps.Event.addListener(marker, "click", function () {
-              infoWindow.open(map, marker);
-            });
-
-            requestMarkers.push(marker);
-          });
-        });
+          }
+        );
       }
 
+      // 상세 페이지 이동 함수
+      function goToDetail(id) {
+        window.location.href = `/request/${"${id}"}`;
+      }
+
+      // 위치 기반 요청 마커 로드
       function getUserLocation() {
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
@@ -140,6 +151,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
         }
       }
 
+      // 초기 이벤트 바인딩
       $(document).ready(function () {
         getUserLocation();
 

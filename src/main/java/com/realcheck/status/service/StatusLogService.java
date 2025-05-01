@@ -228,6 +228,12 @@ public class StatusLogService {
                 .toList();
     }
 
+    public List<StatusLogDto> getAnswersByRequestId(Long requestId) {
+        return statusLogRepository.findByRequestId(requestId).stream()
+                .map(StatusLogDto::fromEntity)
+                .toList();
+    }
+
     // ────────────────────────────────────────
     // [2] 관리자 기능
     // ────────────────────────────────────────

@@ -99,7 +99,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
               const infoWindow = new naver.maps.InfoWindow({
                 content: `
                 <div style="padding: 5px; max-width: 200px;">
-                  <strong>${"${log.placeId}"}</strong><br/>
+                  <strong>${"${log.placeName}"}</strong><br/>
                   ${"${log.content}"}<br/>
                   <small>${"${new Date(log.createdAt).toLocaleString()}"}</small>
                 </div>`,

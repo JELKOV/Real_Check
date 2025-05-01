@@ -111,6 +111,7 @@ public interface StatusLogRepository extends JpaRepository<StatusLog, Long> {
      */
     StatusLog findTopByPlaceIdAndIsHiddenFalseOrderByCreatedAtDesc(Long placeId);
 
+    List<StatusLog> findByRequestId(Long requestId);
     /**
      * [2-4] 현재 위치 기준 반경 내 상태 로그 조회
      * - 사용자의 위도(lat), 경도(lng)를 기반으로 일정 반경 내에 존재하는 상태 로그를 조회

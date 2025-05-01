@@ -15,6 +15,7 @@ import com.realcheck.place.service.PlaceService;
 import com.realcheck.user.dto.UserDto;
 
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -37,14 +38,11 @@ public class PlaceController {
     /**
      * [1-1] 장소 등록 API (POST /api/place)
      * - 프론트엔드에서 장소 정보를 JSON으로 보내면 등록됨
-     *
-     * @param dto 장소 정보
-     * @return 등록 완료 메시지
      */
     @PostMapping
-    public ResponseEntity<String> register(@RequestBody PlaceDto dto) {
-        placeService.registerPlace(dto); // 서비스 계층에 등록 요청 위임
-        return ResponseEntity.ok("장소 등록 완료"); // 성공 응답 반환
+    public ResponseEntity<String> register(@Valid @RequestBody PlaceDto dto) {
+        placeService.registerPlace(dto);
+        return ResponseEntity.ok("장소 등록 완료");
     }
 
     // ─────────────────────────────────────────────
@@ -54,8 +52,6 @@ public class PlaceController {
     /**
      * [2-1] 전체 장소 목록 조회 API (GET /api/place)
      * - 모든 등록된 장소 조회
-     *
-     * @return 장소 리스트
      */
     @GetMapping
     public ResponseEntity<List<PlaceDto>> getAll() {
@@ -65,9 +61,6 @@ public class PlaceController {
     /**
      * [2-2] 내 장소 목록 조회 API (GET /api/place/my)
      * - 로그인된 사용자가 등록한 장소만 조회
-     *
-     * @param session 로그인 세션
-     * @return 내 장소 리스트
      */
     @GetMapping("/my")
     public ResponseEntity<List<PlaceDto>> getMyPlaces(HttpSession session) {
@@ -84,11 +77,6 @@ public class PlaceController {
     /**
      * [2-3] 현재 위치 기반 주변 장소 조회 API
      * - 위도, 경도, 반경을 기반으로 인근 장소 필터링
-     *
-     * @param lat          위도
-     * @param lng          경도
-     * @param radiusMeters 반경 (미터 단위, 예: 500)
-     * @return 반경 내 장소 리스트
      */
     @GetMapping("/nearby")
     public ResponseEntity<List<PlaceDto>> getNearbyPlaces(

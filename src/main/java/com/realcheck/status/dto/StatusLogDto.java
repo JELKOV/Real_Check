@@ -24,7 +24,11 @@ public class StatusLogDto {
     private String content; // 대기 상황 설명 (예: "현재 3명 대기 중")
     private int waitCount; // 대기 인원 수
     private String imageUrl; // 이미지 URL (선택 사항)
-    private Long placeId; // 장소 ID (어떤 장소의 대기 정보인지)
+
+    private Long placeId; // 공식 장소 ID (null 가능)
+    private Double lat; // 위치 위도 (커스텀 장소 대응)
+    private Double lng; // 위치 경도
+
     private LocalDateTime createdAt; // 등록 일시
     private StatusType type;
     private Long requestId;
@@ -45,6 +49,15 @@ public class StatusLogDto {
         log.setReporter(user);
         log.setPlace(place);
         log.setStatusType(this.type != null ? this.type : StatusType.ANSWER);
+
+        if (place != null) {
+            log.setLat(place.getLat());
+            log.setLng(place.getLng());
+        } else {
+            log.setLat(this.lat);
+            log.setLng(this.lng);
+        }
+
         return log;
     }
 
@@ -61,10 +74,11 @@ public class StatusLogDto {
                 log.getContent(),
                 log.getWaitCount(),
                 log.getImageUrl(),
-                log.getPlace().getId(),
+                log.getPlace() != null ? log.getPlace().getId() : null,
+                log.getLat(),
+                log.getLng(),
                 log.getCreatedAt(),
                 log.getStatusType(),
-                log.getRequest() != null ? log.getRequest().getId() : null
-        );
+                log.getRequest() != null ? log.getRequest().getId() : null);
     }
 }

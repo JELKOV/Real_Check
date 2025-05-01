@@ -5,6 +5,7 @@ import com.realcheck.request.entity.Request;
 import com.realcheck.request.service.RequestService;
 import com.realcheck.user.entity.User;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,57 +27,39 @@ public class RequestController {
 
     /**
      * [1] 요청 등록 API
-     * - URL: POST /api/request
-     * - 조건: 세션 로그인 사용자만 가능
-     * - 요청 본문: JSON(Request)
-     * - 응답: 저장된 요청 객체 반환
-     *
-     * @param request 요청 등록 데이터
-     * @param session 현재 세션 (로그인 확인용)
-     * @return 저장된 요청 or 401 Unauthorized
+     * - 세션 로그인 사용자만 가능
+     * - RequestDto → Entity 변환은 Service 내부에서 처리
+     * - 사용페이지: request/register.jsp
      */
     @PostMapping
-    public ResponseEntity<?> createRequest(@RequestBody Request request, HttpSession session) {
+    public ResponseEntity<?> createRequest(@Valid @RequestBody RequestDto dto, HttpSession session) {
         User loginUser = (User) session.getAttribute("loginUser");
         if (loginUser == null) {
             return ResponseEntity.status(401).body("로그인이 필요합니다.");
         }
-
-        request.setUser(loginUser); // 요청자 설정
-        Request savedRequest = requestService.createRequest(request);
-        return ResponseEntity.ok(savedRequest);
+    
+        Request savedRequest = requestService.createRequest(dto, loginUser);
+        return ResponseEntity.ok(RequestDto.fromEntity(savedRequest));
     }
 
     /**
-     * [2] 미마감 요청 중 답변 부족 요청 조회
-     * - URL: GET /api/request/open
-     * - 조건: isClosed = false AND 답변 수 < 3
-     * - 용도: 홈화면 등에서 전체 오픈 요청 조회
-     *
-     * @return 조건을 만족하는 요청 리스트
+     * [2] 미마감 + 답변 3개 미만 요청 조회
+     * - 리스트 조회용
+     * - 사용페이지: request/list.jsp
      */
     @GetMapping("/open")
     public ResponseEntity<List<RequestDto>> findOpenRequests() {
         List<Request> entities = requestService.findOpenRequests();
         List<RequestDto> dtoList = entities.stream()
-            .map(RequestDto::fromEntity) // 여기서 순환 끊기
-            .toList();
+                .map(RequestDto::fromEntity)
+                .toList();
         return ResponseEntity.ok(dtoList);
     }
 
     /**
-     * [3] 위치 기반 주변 요청 조회 API
-     * - URL: GET /api/request/nearby?lat=...&lng=...&radius=...
-     * - 조건:
-     * - 반경 radiusMeters 이내
-     * - 마감되지 않은 요청
-     * - 답변 수가 3개 미만
-     * - 용도: 지도에서 내 위치 기준 요청 보기
-     *
-     * @param lat          위도
-     * @param lng          경도
-     * @param radiusMeters 거리 반경 (기본값: 3000m)
-     * @return 조건을 만족하는 요청 리스트
+     * [3] 반경 내 요청 조회 (지도용)
+     * - 마감되지 않고 답변 3개 미만이며 위도/경도 존재하는 요청
+     * - 사용페이지: map/requset-list.jsp
      */
     @GetMapping("/nearby")
     public ResponseEntity<List<RequestDto>> findNearbyOpenRequests(
@@ -84,10 +67,10 @@ public class RequestController {
             @RequestParam double lng,
             @RequestParam(defaultValue = "3000") double radiusMeters) {
 
-        List<Request> entities = requestService.findNearbyWithFewAnswers(lat, lng, radiusMeters);
+        List<Request> entities = requestService.findNearbyValidRequests(lat, lng, radiusMeters);
         List<RequestDto> dtoList = entities.stream()
                 .map(RequestDto::fromEntity)
-                .toList(); // ← 엔티티 → DTO 변환
+                .toList();
 
         return ResponseEntity.ok(dtoList);
     }
@@ -96,9 +79,7 @@ public class RequestController {
      * [4] 특정 요청 상세 조회
      * - URL: GET /api/request/{id}
      * - 요청 ID를 기반으로 요청 객체 조회
-     *
-     * @param id 요청 ID
-     * @return 요청 정보 or 400 Bad Request
+     * - 사용페이지: request/detail.jsp
      */
     @GetMapping("/{id}")
     public ResponseEntity<?> findRequestById(@PathVariable Long id) {
@@ -106,7 +87,7 @@ public class RequestController {
         if (requestOpt.isEmpty()) {
             return ResponseEntity.badRequest().body("요청을 찾을 수 없습니다.");
         }
-        return ResponseEntity.ok(requestOpt.get());
+        return ResponseEntity.ok(RequestDto.fromEntity(requestOpt.get()));
     }
 
 }

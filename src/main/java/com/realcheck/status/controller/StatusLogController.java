@@ -199,6 +199,16 @@ public class StatusLogController {
         return ResponseEntity.ok(logs);
     }
 
+    /**
+     * [1-11] 요청 ID로 연결된 답변 목록 조회
+     * - 예: GET /api/status/by-request/5
+     */
+    @GetMapping("/by-request/{requestId}")
+    public ResponseEntity<List<StatusLogDto>> getAnswersByRequest(@PathVariable Long requestId) {
+        List<StatusLogDto> answers = statusLogService.getAnswersByRequestId(requestId);
+        return ResponseEntity.ok(answers);
+    }
+
     // ────────────────────────────────────────
     // [2] 관리자 기능
     // ────────────────────────────────────────

@@ -29,37 +29,43 @@ public class StatusLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String content;           // 상태 설명 (예: "현재 대기 3명")
-    private int waitCount;             // 대기 인원 수
-    private String imageUrl;           // 이미지 경로 (선택적)
-    
+    private String content; // 상태 설명 (예: "현재 대기 3명")
+    private int waitCount; // 대기 인원 수
+    private String imageUrl; // 이미지 경로 (선택적)
+
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now(); // 등록 시간 (기본값: 현재)
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private StatusType statusType = StatusType.ANSWER;    // 상태 타입 (ANSWER or FREE_SHARE)
+    private StatusType statusType = StatusType.ANSWER; // 상태 타입 (ANSWER or FREE_SHARE)
 
     private boolean isSelected = false; // 답변 채택 여부 (요청 답변일 경우만 사용)
 
-    private boolean isHidden = false;   // 숨김 여부 (신고 누적 시 true)
+    private boolean isHidden = false; // 숨김 여부 (신고 누적 시 true)
 
-    private int viewCount = 0;          // 조회수 (자발적 공유일 경우 사용)
+    private int viewCount = 0; // 조회수 (자발적 공유일 경우 사용)
+
+    @Column
+    private Double lat;
+
+    @Column
+    private Double lng;
 
     // ─────────────────────────────────────────────
     // 관계 매핑
     // ─────────────────────────────────────────────
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "request_id")
-    private Request request;    // 연결된 요청 (null 가능)
+    @JoinColumn(name = "request_id", nullable = true)
+    private Request request; // 연결된 요청 (null 가능)
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User reporter;      // 작성자 (로그 등록자)
+    private User reporter; // 작성자 (로그 등록자)
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "place_id", nullable = false)
-    private Place place;        // 관련 장소
+    @JoinColumn(name = "place_id", nullable = true)
+    private Place place; // 관련 장소
 
 }
