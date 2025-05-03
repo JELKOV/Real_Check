@@ -45,19 +45,19 @@ public class PageController {
     // [2] 요청 관련 페이지
     // ─────────────────────────────────────────────
 
-    //요청 등록 페이지 (지도에서 질문 등록)
+    // 요청 등록 페이지 (지도에서 질문 등록) - 사용페이지 : index.jsp
     @GetMapping("/request/register")
     public String requestRegisterPage() {
         return "request/register";
     }
 
-    //요청 목록 페이지 (답변 가능한 요청 리스트)
+    // 요청 목록 페이지 (답변 가능한 요청 리스트) - 사용페이지 : index.jsp
     @GetMapping("/request/list")
     public String requestListPage() {
         return "request/list";
     }
 
-    //요청 상세 페이지
+    // 요청 상세 페이지 - 사용페이지: (1) request/list.jsp (2) map/request-list.jsp
     @GetMapping("/request/{id}")
     public String requestDetailPage() {
         return "request/detail";
@@ -67,12 +67,13 @@ public class PageController {
     // [3] 지도 관련 페이지
     // ─────────────────────────────────────────────
 
+    // 주변 졍보 확인 (답변 달린 내용) - 사용페이지: index.jsp
     @GetMapping("/nearby")
     public String nearbyPage() {
         return "map/nearby";
     }
 
-    /** 주변 요청 확인 (답변할 요청) */
+    // 주변 요청 확인 (답변할 요청) - 사용페이지: index.jsp
     @GetMapping("/nearby/request-list")
     public String nearbyRequestListPage() {
         return "map/request-list";

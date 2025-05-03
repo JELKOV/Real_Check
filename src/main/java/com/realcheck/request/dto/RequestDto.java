@@ -58,9 +58,6 @@ public class RequestDto {
     /**
      * DTO → Entity 변환 메서드
      * - 클라이언트가 보낸 데이터를 실제 DB에 저장 가능한 형태로 변환
-     *
-     * @param user 현재 로그인한 사용자 (요청자)
-     * @return Request 엔티티 객체
      */
     public Request toEntity(User user) {
         if (placeName == null && (customPlaceName == null || lat == null || lng == null)) {
@@ -83,9 +80,6 @@ public class RequestDto {
     /**
      * Entity → DTO 변환 메서드
      * - DB에서 꺼낸 Request 객체를 클라이언트에게 전달 가능한 형태로 변환
-     *
-     * @param r Request 엔티티
-     * @return 변환된 DTO 객체
      */
     public static RequestDto fromEntity(Request r) {
         return RequestDto.builder()

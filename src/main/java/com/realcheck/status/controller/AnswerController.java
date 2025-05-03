@@ -5,7 +5,7 @@ import com.realcheck.request.service.RequestService;
 import com.realcheck.status.dto.StatusLogDto;
 import com.realcheck.status.entity.StatusType;
 import com.realcheck.status.service.StatusLogService;
-import com.realcheck.user.entity.User;
+import com.realcheck.user.dto.UserDto;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,14 +20,18 @@ public class AnswerController {
     private final RequestService requestService;
     private final StatusLogService statusLogService;
 
-    // 요청에 대한 답변 등록 → StatusLog(type: ANSWER)에 저장
+    /**
+     * 요청에 대한 답변 등록 → StatusLog(type: ANSWER)에 저장 - 사용페이지: request/detail.jsp
+     * - 사용자가 요청(Request)에 대해 답변(StatusLog)을 등록하는 컨트롤러
+     */
     @PostMapping("/{requestId}")
     public ResponseEntity<?> createAnswer(
             @PathVariable Long requestId,
             @RequestBody StatusLogDto dto,
             HttpSession session
     ) {
-        User loginUser = (User) session.getAttribute("loginUser");
+        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
+        System.out.println(">> 세션 loginUser: " + loginUser);
         if (loginUser == null) {
             return ResponseEntity.status(401).body("로그인이 필요합니다.");
         }
@@ -37,8 +41,10 @@ public class AnswerController {
             return ResponseEntity.badRequest().body("요청을 찾을 수 없습니다.");
         }
 
-        dto.setType(StatusType.ANSWER); // ANSWER 타입 지정
-        dto.setRequestId(requestId);    // 연결된 요청 ID 설정
+        // ANSWER 타입 지정
+        dto.setType(StatusType.ANSWER);
+        // 연결된 요청 ID 설정
+        dto.setRequestId(requestId);    
         statusLogService.registerAnswer(loginUser.getId(), dto);
 
         return ResponseEntity.ok("답변 등록 완료");

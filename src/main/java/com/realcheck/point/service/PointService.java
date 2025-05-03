@@ -26,13 +26,9 @@ public class PointService {
     // ─────────────────────────────────────────────
 
     /**
-     * [1] 포인트 지급 메서드
+     * [1] 포인트 지급 메서드 - StatusLogService: registerInternal
      * - 특정 사용자에게 포인트를 지급
      * - 지급 사유 및 시점 기록
-     *
-     * @param user   포인트를 받을 사용자
-     * @param amount 지급할 포인트 수
-     * @param reason 지급 사유 (예: 상태 등록 보상)
      */
     public void givePoint(User user, int amount, String reason) {
         Point point = new Point();
@@ -51,9 +47,6 @@ public class PointService {
     /**
      * [2] 포인트 내역 조회 메서드
      * - 특정 사용자의 포인트 지급 이력을 모두 조회
-     *
-     * @param userId 사용자 ID
-     * @return 포인트 목록 (List<PointDto>)
      */
     public List<PointDto> getPointsByUserId(Long userId) {
         return pointRepository.findByUserId(userId).stream()

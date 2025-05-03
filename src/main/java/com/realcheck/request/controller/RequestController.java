@@ -26,10 +26,9 @@ public class RequestController {
     private final RequestService requestService;
 
     /**
-     * [1] 요청 등록 API
+     * [1] 요청 등록 API - 사용페이지: request/register.jsp
      * - 세션 로그인 사용자만 가능
      * - RequestDto → Entity 변환은 Service 내부에서 처리
-     * - 사용페이지: request/register.jsp
      */
     @PostMapping
     public ResponseEntity<?> createRequest(@Valid @RequestBody RequestDto dto, HttpSession session) {
@@ -43,9 +42,8 @@ public class RequestController {
     }
 
     /**
-     * [2] 미마감 + 답변 3개 미만 요청 조회
+     * [2] 미마감 + 답변 3개 미만 요청 조회 - 사용페이지: request/list.jsp
      * - 리스트 조회용
-     * - 사용페이지: request/list.jsp
      */
     @GetMapping("/open")
     public ResponseEntity<List<RequestDto>> findOpenRequests() {
@@ -57,9 +55,8 @@ public class RequestController {
     }
 
     /**
-     * [3] 반경 내 요청 조회 (지도용)
+     * [3] 반경 내 요청 조회 (지도용) - 사용페이지: map/requset-list.jsp
      * - 마감되지 않고 답변 3개 미만이며 위도/경도 존재하는 요청
-     * - 사용페이지: map/requset-list.jsp
      */
     @GetMapping("/nearby")
     public ResponseEntity<List<RequestDto>> findNearbyOpenRequests(
@@ -76,10 +73,9 @@ public class RequestController {
     }
 
     /**
-     * [4] 특정 요청 상세 조회
+     * [4] 특정 요청 상세 조회 - 사용페이지: request/detail.jsp
      * - URL: GET /api/request/{id}
      * - 요청 ID를 기반으로 요청 객체 조회
-     * - 사용페이지: request/detail.jsp
      */
     @GetMapping("/{id}")
     public ResponseEntity<?> findRequestById(@PathVariable Long id) {

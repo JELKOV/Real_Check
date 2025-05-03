@@ -33,16 +33,15 @@ public class RequestService {
     }
 
     /**
-     * [2] 답변 부족한 미마감 요청 전체 조회
+     * [2] 미마감 + 답변 3개 미만 요청 조회 - RequestController: findOpenRequests
      * - 조건: isClosed = false AND statusLogs.size < 3
-     * - 홈/리스트 조회에 사용
      */
     public List<Request> findOpenRequests() {
         return requestRepository.findOpenRequestsWithoutAnswer();
     }
 
     /**
-     * [3] 반경 내 열린 요청 목록 조회
+     * [3] 반경 내 열린 요청 목록 조회 - RequestController: findNearbyOpenRequests
      * - 위도, 경도 기준으로 radius(m) 이내
      * - 장소 좌표가 존재하며 답변 수가 3개 미만인 요청 필터
      */
@@ -52,22 +51,18 @@ public class RequestService {
     }
 
     /**
-     * [4] ID로 요청 단건 조회
+     * [4] ID로 요청 단건 조회 - RequestController: findRequestById
      * - 상세 보기 등에서 사용
-     *
-     * @param id 요청 ID
-     * @return Optional<Request>
      */
     public Optional<Request> findById(Long id) {
         return requestRepository.findById(id);
     }
 
     /**
+     * (미사용)
      * [5] 요청 마감 처리
      * - isClosed = true 설정 후 저장
      * - 답변 채택 후 호출되며, 요청을 닫기 위한 메서드
-     *
-     * @param request 마감할 요청
      */
     public void closeRequest(Request request) {
         request.setClosed(true);

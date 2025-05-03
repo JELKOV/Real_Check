@@ -28,9 +28,7 @@ public class StatusLogController {
     // ────────────────────────────────────────
 
     /**
-     * [1-1] 대기 현황 등록 API
-     * - 로그인된 사용자만 가능
-     * - 세션에서 사용자 정보를 가져와 등록 처리
+     * [1-1] 장소 기반 상태 등록 (placeId 필요)
      */
     @PostMapping
     public ResponseEntity<String> register(@RequestBody StatusLogDto dto, HttpSession session) {
@@ -43,7 +41,23 @@ public class StatusLogController {
     }
 
     /**
-     * [1-2] 장소별 대기 현황 조회 API
+     * [1-2] 자발적 공유 등록 API (FREE_SHARE)
+     * - 로그인한 사용자가 장소 상태를 자유롭게 공유
+     * - StatusLog 타입: FREE_SHARE
+     */
+    @PostMapping("/free-share")
+    public ResponseEntity<?> registerFreeShare(@RequestBody StatusLogDto dto, HttpSession session) {
+        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            return ResponseEntity.status(401).body("로그인이 필요합니다.");
+        }
+
+        statusLogService.registerFreeShare(loginUser.getId(), dto);
+        return ResponseEntity.ok("자발적 공유 등록 완료");
+    }
+
+    /**
+     * [1-3] 장소별 최근 3시간 이내 상태 조회
      * - 해당 장소 ID로 3시간 이내의 최신 상태 목록 조회
      */
     @GetMapping("/place/{placeId}")
@@ -52,7 +66,21 @@ public class StatusLogController {
     }
 
     /**
-     * [1-3] 내가 등록한 상태 로그 목록 조회 API
+     * [1-4] 특정 장소의 최신 상태 로그 1건
+     * - 숨김 처리되지 않은 로그 중 최신 1개만 반환
+     * - 예: GET /api/status/latest?placeId=3
+     */
+    @GetMapping("/latest")
+    public ResponseEntity<StatusLogDto> getLatestStatusLog(@RequestParam Long placeId) {
+        StatusLogDto latest = statusLogService.getLatestVisibleLogByPlaceId(placeId);
+        if (latest == null) {
+            return ResponseEntity.noContent().build(); // 해당 장소에 표시할 로그가 없을 경우 204
+        }
+        return ResponseEntity.ok(latest);
+    }
+
+    /**
+     * [1-5] 내가 등록한 상태 로그 목록 조회 API
      * - 세션 사용자 ID 기반으로 내 기록만 조회
      */
     @GetMapping("/my")
@@ -66,13 +94,8 @@ public class StatusLogController {
     }
 
     /**
-     * [1-4] 상태 로그 수정 API
+     * [1-6] 상태 로그 수정 API
      * - 로그인한 사용자가 본인이 작성한 상태 로그를 수정
-     * 
-     * @param id      수정할 상태 로그 ID
-     * @param dto     수정할 데이터 (내용, 대기 인원, 이미지)
-     * @param session 현재 로그인한 사용자 세션
-     * @return 수정 결과 메시지
      */
     @PutMapping("/{id}")
     public ResponseEntity<String> updateStatusLog(@PathVariable Long id, @RequestBody StatusLogDto dto,
@@ -91,12 +114,8 @@ public class StatusLogController {
     }
 
     /**
-     * [1-5] 상태 로그 삭제 API
+     * [1-7] 상태 로그 삭제 API
      * - 로그인한 사용자가 본인이 작성한 로그만 삭제 가능
-     * 
-     * @param id      삭제할 상태 로그 ID
-     * @param session 현재 로그인한 사용자 세션
-     * @return 삭제 결과 메시지
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteStatusLog(@PathVariable Long id,
@@ -115,53 +134,13 @@ public class StatusLogController {
     }
 
     /**
-     * [1-6] 특정 장소의 최신 상태 로그 1개 조회 (마커 클릭 시 사용)
-     * - 숨김 처리되지 않은 로그 중 최신 1개만 반환
-     * - 예: GET /api/status/latest?placeId=3
+     * [1-8] 요청 ID로 연결된 답변 목록 조회 - 사용페이지: request/detail.jsp
+     * - GET /api/status/by-request/5
      */
-    @GetMapping("/latest")
-    public ResponseEntity<StatusLogDto> getLatestStatusLog(@RequestParam Long placeId) {
-        StatusLogDto latest = statusLogService.getLatestVisibleLogByPlaceId(placeId);
-        if (latest == null) {
-            return ResponseEntity.noContent().build(); // 해당 장소에 표시할 로그가 없을 경우 204
-        }
-        return ResponseEntity.ok(latest);
-    }
-
-    /**
-     * [1-7] 자발적 공유 등록 API (FREE_SHARE)
-     * - 로그인한 사용자가 장소 상태를 자유롭게 공유
-     * - StatusLog 타입: FREE_SHARE
-     */
-    @PostMapping("/free-share")
-    public ResponseEntity<?> registerFreeShare(@RequestBody StatusLogDto dto, HttpSession session) {
-        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
-        if (loginUser == null) {
-            return ResponseEntity.status(401).body("로그인이 필요합니다.");
-        }
-
-        statusLogService.registerFreeShare(loginUser.getId(), dto);
-        return ResponseEntity.ok("자발적 공유 등록 완료");
-    }
-
-    /**
-     * [1-8] 요청 기반 답변 등록 API (ANSWER)
-     * - 특정 요청에 대해 상태 정보를 응답 형태로 공유
-     * - StatusLog에 requestId를 연결하여 저장
-     */
-    @PostMapping("/answer/{requestId}")
-    public ResponseEntity<?> registerAnswer(
-            @PathVariable Long requestId,
-            @RequestBody StatusLogDto dto,
-            HttpSession session) {
-        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
-        if (loginUser == null) {
-            return ResponseEntity.status(401).body("로그인이 필요합니다.");
-        }
-
-        dto.setRequestId(requestId);
-        statusLogService.registerAnswer(loginUser.getId(), dto);
-        return ResponseEntity.ok("요청에 대한 답변 등록 완료");
+    @GetMapping("/by-request/{requestId}")
+    public ResponseEntity<List<StatusLogDto>> getAnswersByRequest(@PathVariable Long requestId) {
+        List<StatusLogDto> answers = statusLogService.getAnswersByRequestId(requestId);
+        return ResponseEntity.ok(answers);
     }
 
     /**
@@ -197,16 +176,6 @@ public class StatusLogController {
 
         List<StatusLogDto> logs = statusLogService.findNearbyStatusLogs(lat, lng, radiusMeters);
         return ResponseEntity.ok(logs);
-    }
-
-    /**
-     * [1-11] 요청 ID로 연결된 답변 목록 조회
-     * - 예: GET /api/status/by-request/5
-     */
-    @GetMapping("/by-request/{requestId}")
-    public ResponseEntity<List<StatusLogDto>> getAnswersByRequest(@PathVariable Long requestId) {
-        List<StatusLogDto> answers = statusLogService.getAnswersByRequestId(requestId);
-        return ResponseEntity.ok(answers);
     }
 
     // ────────────────────────────────────────

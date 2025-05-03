@@ -36,10 +36,6 @@ public class StatusLogDto {
     /**
      * DTO → Entity 변환 메서드
      * - 컨트롤러/서비스에서 DTO를 받아 실제 DB에 저장할 수 있도록 Entity로 변환
-     *
-     * @param user  등록자 (세션에서 가져온 로그인 유저)
-     * @param place 해당 대기 정보가 속한 장소 객체
-     * @return StatusLog 엔티티 객체
      */
     public StatusLog toEntity(User user, Place place) {
         StatusLog log = new StatusLog();
@@ -64,9 +60,6 @@ public class StatusLogDto {
     /**
      * Entity → DTO 변환 메서드
      * - DB에 저장된 StatusLog 엔티티를 클라이언트에 응답할 DTO 형태로 변환
-     *
-     * @param log StatusLog 엔티티
-     * @return StatusLogDto
      */
     public static StatusLogDto fromEntity(StatusLog log) {
         return new StatusLogDto(

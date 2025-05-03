@@ -63,15 +63,26 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
       $(document).ready(function () {
         // 요청 정보 가져오기
         $.get(`/api/request/${"${requestId}"}`, function (request) {
-          currentPlaceId = request.placeId;
-          console.log(currentPlaceId);
+
+          const formattedDate = new Date(request.createdAt).toLocaleString();
+          const nickname = request.requesterNickname || '익명';
+          const location = request.placeName || request.customPlaceName || '장소 정보 없음';
           const html = `
-            <h5>${"${request.title}"}</h5>
-            <p class="text-muted">${"${request.content}"}</p>
-            <p><strong>포인트:</strong> ${"${request.point}"}</p>
-            <p><strong>장소:</strong> ${"${request.placeName || request.customPlaceName}"}</p>
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">${"${request.title}"}</h5>
+                <p class="card-text text-muted">${"${request.content}"}</p>
+                <ul class="list-unstyled mt-3">
+                  <li><strong>포인트:</strong> ${"${request.point}"}pt</li>
+                  <li><strong>장소:</strong> ${"${location}"}</li>
+                  <li><strong>작성자:</strong> ${"${nickname}"}</li>
+                  <li><strong>작성일:</strong> ${"${formattedDate}"}</li>
+                </ul>
+              </div>
+            </div>
           `;
           $("#requestDetail").html(html);
+          
           // 지도 초기화
           const map = new naver.maps.Map("map", {
             center: new naver.maps.LatLng(request.lat, request.lng),
@@ -128,7 +139,6 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
             content: content,
             waitCount: 0,
             imageUrl: null, // TODO: 이미지 업로드 후 URL 연결
-            placeId: currentPlaceId, 
           };
 
           $.ajax({

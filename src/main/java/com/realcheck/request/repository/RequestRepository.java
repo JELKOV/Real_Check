@@ -17,8 +17,9 @@ import java.util.List;
 public interface RequestRepository extends JpaRepository<Request, Long> {
 
     /**
-     * [1] 마감되지 않은 모든 요청 조회
-     * - 사용 예: 관리자 페이지, 전체 요청 리스트
+     * (미사용)
+     * [1] 마감되지 않은 모든 요청 조회 
+     * - 예: 관리자 페이지, 전체 요청 리스트
      *
      * SQL:
      * SELECT * FROM request WHERE is_closed = false;
@@ -26,9 +27,9 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
     List<Request> findByIsClosedFalse();
 
     /**
-     * [2] 미마감 요청 중 답변이 3개 미만인 경우 조회
+     * [2] 미마감 요청 중 답변이 3개 미만인 경우 조회 - RequestService: findOpenRequests
      * - 홈화면, 응답 대기 요청 리스트에 사용
-     *
+     * 
      * SQL:
      * SELECT r.* FROM request r LEFT JOIN status_log s ON r.id = s.request_id WHERE
      * r.is_closed = false GROUP BY r.id HAVING COUNT(s.id) < 3;
@@ -37,22 +38,15 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
     List<Request> findOpenRequestsWithoutAnswer();
 
     /**
-     * [3] 현재 위치 기준, 반경 내 응답 부족 요청 조회
+     * [3] 현재 위치 기준, 반경 내 응답 부족 요청 조회 - RequestService: findNearbyValidRequests
      * - 장소 정보가 있는 요청만 대상으로 함
      * - 위도/경도 null 방지 포함
      * - ST_Distance_Sphere는 MySQL 전용 함수이므로 DB 호환성 주의
-     *
-     * 사용 예: 지도에서 주변 요청 불러오기
-     *
-     * SQL 예시:
-     * SELECT * FROM request r
-     * WHERE is_closed = false
+     * 
+     * SQL:
+     * SELECT * FROM request r WHERE is_closed = false
      * AND ST_Distance_Sphere(POINT(r.lng, r.lat), POINT(:lng, :lat)) <= :radius
      * AND SIZE(r.statusLogs) < 3
-     *
-     * @param lat    현재 위도
-     * @param lng    현재 경도
-     * @param radius 미터 단위 반경
      */
     @Query("""
             SELECT r FROM Request r
