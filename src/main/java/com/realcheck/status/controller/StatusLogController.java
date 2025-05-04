@@ -145,7 +145,7 @@ public class StatusLogController {
 
     /**
      * [1-9] 요청 기반 답변 채택 API
-     * - 요청 작성자만 자신이 받은 답변 중 하나를 채택 가능
+     * - 요청 작성자만 자신이 받은 답변 중 하나를 채택 가능 - 사용페이지: request/detail.jsp
      * - 해당 StatusLog에 isSelected = true, 요청 마감 처리
      */
     @PostMapping("/select/{statusLogId}")

@@ -68,4 +68,11 @@ public class RequestService {
         request.setClosed(true);
         requestRepository.save(request);
     }
+
+    /**
+     * [6] 특정 사용자(userId)의 요청 목록 조회 - RequestController: findMyRequests
+     */
+    public List<Request> findByUserId(Long userId) {
+        return requestRepository.findByUserIdOrderByCreatedAtDesc(userId);
+    }
 }

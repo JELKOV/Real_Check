@@ -23,7 +23,7 @@ public interface StatusLogRepository extends JpaRepository<StatusLog, Long> {
          * [1-1] 특정 장소의 상태 로그를 최신순으로 조회
          * - 관리자 페이지에서 전체 로그 보기용 (숨김 여부 무시)
          * - JPQL 기준: StatusLog s에서 조회
-         * - SQL 변환 예:
+         * - SQL:
          * SELECT * FROM status_logs
          * WHERE place_id = ? AND created_at >= ?
          * ORDER BY created_at DESC;
@@ -34,7 +34,7 @@ public interface StatusLogRepository extends JpaRepository<StatusLog, Long> {
         /**
          * [1-2] 특정 사용자의 당일 등록 횟수 조회 - StatusLogService: registerInternal
          * - 포인트 지급 조건 체크용
-         * - SQL 변환 예:
+         * - SQL:
          * SELECT COUNT(*) FROM status_logs
          * WHERE reporter_id = ?
          * AND created_at BETWEEN ? AND ?;
@@ -44,7 +44,7 @@ public interface StatusLogRepository extends JpaRepository<StatusLog, Long> {
         /**
          * [1-3] 내가 작성한 모든 StatusLog 조회 (숨김 여부 관계 없음)
          * - 마이페이지나 관리자 페이지에서 사용
-         * - SQL 변환 예:
+         * - SQL:
          * SELECT * FROM status_logs
          * WHERE reporter_id = ?
          * ORDER BY created_at DESC;
@@ -56,7 +56,7 @@ public interface StatusLogRepository extends JpaRepository<StatusLog, Long> {
          * - 관리자 대시보드 통계용으로 사용
          * - 연도 및 월별로 그룹화하여 등록된 StatusLog 개수를 반환
          * 
-         * SQL 변환 예:
+         * SQL:
          * SELECT YEAR(created_at) AS year,
          * MONTH(created_at) AS month,
          * COUNT(*) AS count
@@ -77,7 +77,7 @@ public interface StatusLogRepository extends JpaRepository<StatusLog, Long> {
         /**
          * [2-1] 특정 장소에 대해 3시간 이내 + 숨김 처리되지 않은 로그만 조회
          * - 사용자 화면에 표시할 로그 필터링용
-         * - SQL 변환 예:
+         * - SQL:
          * SELECT * FROM status_logs
          * WHERE place_id = ?
          * AND created_at >= ?
@@ -91,7 +91,7 @@ public interface StatusLogRepository extends JpaRepository<StatusLog, Long> {
         /**
          * [2-2] 내가 등록한 상태 로그 중 숨김 처리되지 않은 로그만 조회
          * - 마이페이지에서 공개 게시물만 표시
-         * - SQL 변환 예:
+         * - SQL:
          * SELECT * FROM status_logs
          * WHERE reporter_id = ?
          * AND is_hidden = false
@@ -103,7 +103,7 @@ public interface StatusLogRepository extends JpaRepository<StatusLog, Long> {
          * [2-3] 특정 장소의 가장 최신 상태 로그 1개 조회
          * - 사용자 화면에서 마커 클릭 시 최신 상태 표시용
          * - 숨김 처리되지 않은 최신 로그 1개만 반환
-         * - SQL 변환 예:
+         * - SQL:
          * SELECT * FROM status_logs
          * WHERE place_id = ?
          * AND is_hidden = false
@@ -113,20 +113,30 @@ public interface StatusLogRepository extends JpaRepository<StatusLog, Long> {
         StatusLog findTopByPlaceIdAndIsHiddenFalseOrderByCreatedAtDesc(Long placeId);
 
         /**
-         * [2-4] 특정 요청(Request)에 연결된 모든 상태 로그 조회 - StatusLogService: getAnswersByRequestId
+         * [2-4] 특정 요청(Request)에 등록된 답변(StatusLog)의 개수 조회 - StatusLogService: registerAnswer
+         * - 요청당 최대 3개의 답변만 허용하기 위한 제약 조건 검사 시 사용
+         * - SQL:
+         * SELECT COUNT(*) FROM status_logs
+         * WHERE request_id = ?;
+         */
+        long countByRequestId(Long requestId);
+
+        /**
+         * [2-5] 특정 요청(Request)에 연결된 모든 상태 로그 조회 - StatusLogService:
+         * getAnswersByRequestId
          * - 요청 상세 페이지에서 답변(StatusLog) 목록 표시용
-         * - SQL 변환 예:
+         * - SQL:
          * SELECT * FROM status_logs
          * WHERE request_id = ?;
          */
         List<StatusLog> findByRequestId(Long requestId);
 
         /**
-         * [2-5] 현재 위치 기준 반경 내 상태 로그 조회
+         * [2-6] 현재 위치 기준 반경 내 상태 로그 조회
          * - 사용자의 위도(lat), 경도(lng)를 기반으로 일정 반경 내에 존재하는 상태 로그를 조회
          * - 숨김 여부와 관계없이 최근 생성된 로그를 대상으로 함
          * 
-         * SQL 변환 예:
+         * SQL:
          * SELECT * FROM status_logs
          * WHERE ST_Distance_Sphere(POINT(place.lng, place.lat), POINT(:lng, :lat)) <=
          * :radius

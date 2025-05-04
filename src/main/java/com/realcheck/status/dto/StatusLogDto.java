@@ -18,12 +18,14 @@ import lombok.*;
 @Data // 모든 필드에 대해 Getter, Setter, equals, hashCode, toString 메서드를 자동 생성
 @NoArgsConstructor // 기본 생성자 (파라미터 없는 생성자) 자동 생성
 @AllArgsConstructor // 모든 필드를 인자로 받는 생성자 자동 생성
+@Builder
 public class StatusLogDto {
 
     private Long id;
     private String content; // 대기 상황 설명 (예: "현재 3명 대기 중")
     private int waitCount; // 대기 인원 수
     private String imageUrl; // 이미지 URL (선택 사항)
+    private boolean isSelected;
 
     private Long placeId; // 공식 장소 ID (null 가능)
     private Double lat; // 위치 위도 (커스텀 장소 대응)
@@ -32,6 +34,10 @@ public class StatusLogDto {
     private LocalDateTime createdAt; // 등록 일시
     private StatusType type;
     private Long requestId;
+
+    private Long requestOwnerId;
+    private String nickname;
+
 
     /**
      * DTO → Entity 변환 메서드
@@ -42,6 +48,7 @@ public class StatusLogDto {
         log.setContent(this.content);
         log.setWaitCount(this.waitCount);
         log.setImageUrl(this.imageUrl);
+        log.setSelected(this.isSelected);
         log.setReporter(user);
         log.setPlace(place);
         log.setStatusType(this.type != null ? this.type : StatusType.ANSWER);
@@ -62,16 +69,23 @@ public class StatusLogDto {
      * - DB에 저장된 StatusLog 엔티티를 클라이언트에 응답할 DTO 형태로 변환
      */
     public static StatusLogDto fromEntity(StatusLog log) {
-        return new StatusLogDto(
-                log.getId(),
-                log.getContent(),
-                log.getWaitCount(),
-                log.getImageUrl(),
-                log.getPlace() != null ? log.getPlace().getId() : null,
-                log.getLat(),
-                log.getLng(),
-                log.getCreatedAt(),
-                log.getStatusType(),
-                log.getRequest() != null ? log.getRequest().getId() : null);
+        return StatusLogDto.builder()
+                .id(log.getId())
+                .content(log.getContent())
+                .waitCount(log.getWaitCount())
+                .isSelected(log.isSelected())
+                .imageUrl(log.getImageUrl())
+                .placeId(log.getPlace() != null ? log.getPlace().getId() : null)
+                .lat(log.getLat())
+                .lng(log.getLng())
+                .createdAt(log.getCreatedAt())
+                .type(log.getStatusType())
+                .requestId(log.getRequest() != null ? log.getRequest().getId() : null)
+                .nickname(log.getReporter() != null ? log.getReporter().getNickname() : null)
+                .requestOwnerId(
+                    log.getRequest() != null && log.getRequest().getUser() != null
+                        ? log.getRequest().getUser().getId()
+                        : null)
+                .build();
     }
 }

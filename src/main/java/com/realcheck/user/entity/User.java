@@ -74,14 +74,4 @@ public class User {
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Place> places = new ArrayList<>();
 
-    /**
-     * 사용자 역할을 정의하는 열거형(Enum)
-     * - USER: 일반 사용자
-     * - PARTNER: 제휴 업체
-     * - ADMIN: 관리자
-     */
-    public enum Role {
-        USER, PARTNER, ADMIN
-    }
-
 }

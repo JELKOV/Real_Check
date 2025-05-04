@@ -34,39 +34,42 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
       <ul id="answerList" class="list-group mb-4"></ul>
 
       <!-- 답변 등록 폼 -->
-      <h5>답변 등록</h5>
-      <form id="answerForm" enctype="multipart/form-data">
-        <div class="mb-3">
-          <textarea
-            class="form-control"
-            name="content"
-            id="answerContent"
-            rows="3"
-            placeholder="답변 내용을 입력하세요"
-            required
-          ></textarea>
-        </div>
-        <div class="mb-3">
-          <input type="file" name="file" class="form-control" />
-        </div>
-        <button type="submit" class="btn btn-success w-100">
-          답변 등록하기
-        </button>
-      </form>
+      <div id="answerFormSection">
+        <h5>답변 등록</h5>
+        <form id="answerForm" enctype="multipart/form-data">
+          <div class="mb-3">
+            <textarea
+              class="form-control"
+              name="content"
+              id="answerContent"
+              rows="3"
+              placeholder="답변 내용을 입력하세요"
+              required
+            ></textarea>
+          </div>
+          <div class="mb-3">
+            <input type="file" name="file" class="form-control" />
+          </div>
+          <button type="submit" class="btn btn-success w-100">
+            답변 등록하기
+          </button>
+        </form>
+      </div>
     </div>
 
     <%@ include file="../common/footer.jsp" %>
 
     <script>
       const requestId = location.pathname.split("/").pop();
+      const loginUserId = "${loginUser != null ? loginUser.id : ''}";
 
       $(document).ready(function () {
         // 요청 정보 가져오기
         $.get(`/api/request/${"${requestId}"}`, function (request) {
-
           const formattedDate = new Date(request.createdAt).toLocaleString();
-          const nickname = request.requesterNickname || '익명';
-          const location = request.placeName || request.customPlaceName || '장소 정보 없음';
+          const nickname = request.requesterNickname || "익명";
+          const location =
+            request.placeName || request.customPlaceName || "장소 정보 없음";
           const html = `
             <div class="card">
               <div class="card-body">
@@ -82,7 +85,15 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
             </div>
           `;
           $("#requestDetail").html(html);
-          
+
+          // 로그인 유저 확인 및 답변 수 제한을 통한 입력창 숨김 처리
+          if (
+            parseInt(loginUserId) === request.requesterId ||
+            request.answerCount >= 3
+          ) {
+            $("#answerFormSection").hide();
+          }
+
           // 지도 초기화
           const map = new naver.maps.Map("map", {
             center: new naver.maps.LatLng(request.lat, request.lng),
@@ -105,29 +116,59 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
             return;
           }
 
-          answers.forEach((answer) => {
-            const imageHtml = answer.imageUrl
-              ? '<img src="' +
-                answer.imageUrl +
-                '" style="max-width:100px;" class="mt-2" />'
-              : "";
-            const nickname = answer.nickname ? answer.nickname : "익명 사용자";
-            const row =
-              '<li class="list-group-item">' +
-              "<strong>" +
-              nickname +
-              "</strong>" +
-              "<p>" +
-              answer.content +
-              "</p>" +
-              imageHtml +
-              '<br><small class="text-muted">' +
-              new Date(answer.createdAt).toLocaleString() +
-              "</small>" +
-              "</li>";
+          answers
+            .sort((a, b) => b.isSelected - a.isSelected)
+            .forEach((answer) => {
+              const imageHtml = answer.imageUrl
+                ? '<img src="' +
+                  answer.imageUrl +
+                  '" style="max-width:100px;" class="mt-2" />'
+                : "";
+              const nickname = answer.nickname
+                ? answer.nickname
+                : "익명 사용자";
+              const isOwner = answer.requestOwnerId === parseInt(loginUserId);
+              const canSelect = isOwner && !answer.requestClosed && !answer.isSelected;
 
-            $("#answerList").append(row);
-          });
+              const selectedBadge = answer.isSelected
+                ? `<span class="badge bg-success ms-2">✅ 채택됨</span>`
+                : "";
+
+              const selectBtn = canSelect
+                ? `
+              <button class="btn btn-sm btn-outline-success select-answer-btn mt-2" data-id="${"${answer.id}"}">이 답변 채택</button>
+            `
+                : "";
+
+              const row =
+                '<li class="list-group-item">' +
+                "<strong>" + nickname + "</strong>" +
+                selectedBadge +
+                "<p>" + answer.content + "</p>" +
+                imageHtml +
+                '<br><small class="text-muted">' +
+                new Date(answer.createdAt).toLocaleString() +
+                "</small>" +
+                selectBtn +
+                "</li>";
+
+              $("#answerList").append(row);
+            });
+        });
+
+        // 채택 처리
+        $(document).on("click", ".select-answer-btn", function () {
+          const statusLogId = $(this).data("id");
+          if (!confirm("이 답변을 채택하시겠습니까?")) return;
+
+          $.post(`/api/status/select/${"${statusLogId}"}`)
+            .done(() => {
+              alert("답변이 채택되었습니다.");
+              location.reload();
+            })
+            .fail((xhr) => {
+              alert("채택 실패: " + xhr.responseText);
+            });
         });
 
         // 답변 등록 처리

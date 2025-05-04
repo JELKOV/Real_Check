@@ -63,6 +63,12 @@ public class PageController {
         return "request/detail";
     }
 
+    // 내 요청 관련 페이지 -  구현 check
+    @GetMapping("/my-requests")
+    public String myRequestsPage() {
+        return "request/my-requests";
+    }
+
     // ─────────────────────────────────────────────
     // [3] 지도 관련 페이지
     // ─────────────────────────────────────────────

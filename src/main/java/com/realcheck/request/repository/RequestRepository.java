@@ -18,7 +18,7 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
 
     /**
      * (미사용)
-     * [1] 마감되지 않은 모든 요청 조회 
+     * [1] 마감되지 않은 모든 요청 조회
      * - 예: 관리자 페이지, 전체 요청 리스트
      *
      * SQL:
@@ -61,4 +61,8 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
             @Param("radius") double radius,
             @Param("timeLimit") LocalDateTime timeLimit);
 
+    /**
+     * [4] UserId 요청한사람 기준으로 요청 목록 불러오기 - RequestService: findByUserId
+     */
+    List<Request> findByUserIdOrderByCreatedAtDesc(Long userId);
 }

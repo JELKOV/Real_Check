@@ -112,6 +112,9 @@ public class StatusLogService {
      * - 포인트 지급 없음 (givePoint = false)
      */
     public void registerAnswer(Long userId, StatusLogDto dto) {
+        if (statusLogRepository.countByRequestId(dto.getRequestId()) >= 3) {
+            throw new RuntimeException("해당 요청은 이미 3개의 답변이 등록되었습니다.");
+        }
         registerInternal(userId, dto, StatusType.ANSWER, false, false);
     }
 
@@ -242,7 +245,7 @@ public class StatusLogService {
     }
 
     /**
-     * [2-12] 요청 기반 답변 채택 처리
+     * [2-12] 요청 기반 답변 채택 처리 - StatusLogController : selectAnswer
      * - 요청 작성자가 본인 요청에 연결된 답변을 선택
      * - 상태 로그의 selected = true, 요청 마감 처리
      */

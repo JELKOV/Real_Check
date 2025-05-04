@@ -48,7 +48,8 @@ public class RequestDto {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
 
-    // 요청자 이메일 / 닉네임
+    // 요청자 PK/ 이메일 / 닉네임
+    private Long requesterId;
     private String requesterEmail;
     private String requesterNickname;
 
@@ -93,6 +94,7 @@ public class RequestDto {
                 .lng(r.getLng())
                 .isClosed(r.isClosed())
                 .createdAt(r.getCreatedAt())
+                .requesterId(r.getUser() != null ? r.getUser().getId() : null)
                 .requesterEmail(r.getUser() != null ? r.getUser().getEmail() : null)
                 .requesterNickname(r.getUser() != null ? r.getUser().getNickname() : null)
                 .answerCount(r.getStatusLogs() != null ? r.getStatusLogs().size() : 0)

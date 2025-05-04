@@ -13,10 +13,14 @@
 
       <c:choose>
         <c:when test="${not empty sessionScope.loginUser}">
+          <a href="/my-requests" class="text-white mx-2 text-decoration-none nav-link-style">내 요청</a>
+          <a href="/my-logs" class="text-white mx-2 text-decoration-none nav-link-style">내 답변</a>
           <a href="/mypage" class="text-white mx-2 text-decoration-none nav-link-style">마이페이지</a>
+          
           <c:if test="${loginUser.role == 'ADMIN'}">
             <a href="/admin" class="text-warning mx-2 text-decoration-none nav-link-style">관리자페이지</a>
           </c:if>
+    
           <a href="/logout" class="text-white mx-2 text-decoration-none nav-link-style">로그아웃</a>
         </c:when>
         <c:otherwise>

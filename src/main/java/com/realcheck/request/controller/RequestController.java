@@ -3,6 +3,7 @@ package com.realcheck.request.controller;
 import com.realcheck.request.dto.RequestDto;
 import com.realcheck.request.entity.Request;
 import com.realcheck.request.service.RequestService;
+import com.realcheck.user.dto.UserDto;
 import com.realcheck.user.entity.User;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -36,7 +37,7 @@ public class RequestController {
         if (loginUser == null) {
             return ResponseEntity.status(401).body("로그인이 필요합니다.");
         }
-    
+
         Request savedRequest = requestService.createRequest(dto, loginUser);
         return ResponseEntity.ok(RequestDto.fromEntity(savedRequest));
     }
@@ -84,6 +85,25 @@ public class RequestController {
             return ResponseEntity.badRequest().body("요청을 찾을 수 없습니다.");
         }
         return ResponseEntity.ok(RequestDto.fromEntity(requestOpt.get()));
+    }
+
+    /**
+     * [5] 로그인한 사용자의 요청 목록 조회 - 사용페이지: request/my-requests.jsp
+     * - 세션에서 사용자 ID를 확인 후 해당 사용자의 요청 반환
+     */
+    @GetMapping("/my")
+    public ResponseEntity<?> findMyRequests(HttpSession session) {
+        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            return ResponseEntity.status(401).body("로그인이 필요합니다.");
+        }
+
+        List<Request> myRequests = requestService.findByUserId(loginUser.getId());
+        List<RequestDto> dtoList = myRequests.stream()
+                .map(RequestDto::fromEntity)
+                .toList();
+
+        return ResponseEntity.ok(dtoList);
     }
 
 }
