@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %> <%@ taglib
 prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
+<!--TODO : 입력폼 변화 / 지도 연동 / 카테고리화 입력폼변화 / 추가필드 답변 -->
 <!DOCTYPE html>
 <html lang="ko">
   <head>
@@ -108,53 +109,56 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
         });
 
         // 답변 리스트 불러오기
-        $.get(`/api/status/by-request/${"${requestId}"}`, function (answers) {
-          if (answers.length === 0) {
-            $("#answerList").html(
-              '<li class="list-group-item">등록된 답변이 없습니다.</li>'
-            );
-            return;
+        $.get(
+          `/api/status/by-request/${"${requestId}"}`,
+          function (answers) {
+            if (answers.length === 0) {
+              $("#answerList").html(
+                '<li class="list-group-item">등록된 답변이 없습니다.</li>'
+              );
+              return;
+            }
+
+            const hasSelected = answers.some((a) => a.selected);
+
+            answers
+              .sort((a, b) => (b.selected ? 1 : 0) - (a.selected ? 1 : 0))
+              .forEach((answer) => {
+                const imageHtml = answer.imageUrl
+                  ? '<img src="' +
+                    answer.imageUrl +
+                    '" style="max-width:100px;" class="mt-2" />'
+                  : "";
+                const nickname = answer.nickname
+                  ? answer.nickname
+                  : "익명 사용자";
+                const isOwner = answer.requestOwnerId === parseInt(loginUserId);
+                const canSelect = isOwner && !hasSelected && !answer.selected;
+                const formattedDate = new Date(
+                  answer.createdAt
+                ).toLocaleString();
+
+                const selectedBadge = answer.selected
+                  ? `<span class="badge bg-success ms-2">✅ 채택됨</span>`
+                  : "";
+
+                const selectBtn = canSelect
+                  ? `<button class="btn btn-sm btn-outline-success select-answer-btn mt-2" data-id=${"${answer.id}"}>이 답변 채택</button>`
+                  : "";
+
+                const row = `
+                <li class="list-group-item">
+                  <strong>${"${nickname}"}</strong> ${"${selectedBadge}"}
+                  <p>${"${answer.content}"}</p>
+                  ${"${imageHtml}"}
+                  <br><small class="text-muted">${"${formattedDate}"}</small>
+                  ${"${selectBtn}"}
+                </li>
+              `;
+                $("#answerList").append(row);
+              });
           }
-
-          answers
-            .sort((a, b) => b.isSelected - a.isSelected)
-            .forEach((answer) => {
-              const imageHtml = answer.imageUrl
-                ? '<img src="' +
-                  answer.imageUrl +
-                  '" style="max-width:100px;" class="mt-2" />'
-                : "";
-              const nickname = answer.nickname
-                ? answer.nickname
-                : "익명 사용자";
-              const isOwner = answer.requestOwnerId === parseInt(loginUserId);
-              const canSelect = isOwner && !answer.requestClosed && !answer.isSelected;
-
-              const selectedBadge = answer.isSelected
-                ? `<span class="badge bg-success ms-2">✅ 채택됨</span>`
-                : "";
-
-              const selectBtn = canSelect
-                ? `
-              <button class="btn btn-sm btn-outline-success select-answer-btn mt-2" data-id="${"${answer.id}"}">이 답변 채택</button>
-            `
-                : "";
-
-              const row =
-                '<li class="list-group-item">' +
-                "<strong>" + nickname + "</strong>" +
-                selectedBadge +
-                "<p>" + answer.content + "</p>" +
-                imageHtml +
-                '<br><small class="text-muted">' +
-                new Date(answer.createdAt).toLocaleString() +
-                "</small>" +
-                selectBtn +
-                "</li>";
-
-              $("#answerList").append(row);
-            });
-        });
+        );
 
         // 채택 처리
         $(document).on("click", ".select-answer-btn", function () {
@@ -165,6 +169,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
             .done(() => {
               alert("답변이 채택되었습니다.");
               location.reload();
+              //TODO: 포인트 지급 차감 처리
             })
             .fail((xhr) => {
               alert("채택 실패: " + xhr.responseText);

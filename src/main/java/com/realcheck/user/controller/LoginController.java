@@ -24,12 +24,10 @@ public class LoginController {
     // ─────────────────────────────────────────────
 
     /**
-     * [1-1] 로그인 페이지 진입
+     * page: common/header.jsp
+     * page: user/register.jsp
+     * [1] 로그인 페이지 진입
      * - 쿼리 파라미터에 error가 있으면 실패 메시지 전달
-     *
-     * @param error 로그인 실패 여부를 판단하는 쿼리 파라미터 (예: /login?error=1)
-     * @param model 뷰로 메시지를 전달하기 위한 Spring Model 객체
-     * @return 로그인 JSP 페이지 뷰 경로
      */
     @GetMapping("/login")
     public String loginPage(@RequestParam(required = false) String error, Model model) {
@@ -44,14 +42,10 @@ public class LoginController {
     // ─────────────────────────────────────────────
 
     /**
-     * [2-1] 로그인 POST 처리
+     * page: user/login.jsp
+     * [1] 로그인 POST 처리
      * - 이메일/비밀번호 검증 후 세션 저장
      * - 실패 시 쿼리 파라미터로 에러 전달
-     *
-     * @param email 입력한 이메일
-     * @param password 입력한 비밀번호
-     * @param session HttpSession 객체 (세션 저장소)
-     * @return 메인 페이지로 리다이렉트 or 실패 시 로그인 페이지로 리다이렉트
      */
     @PostMapping("/login")
     public String login(@RequestParam String email,
@@ -71,11 +65,10 @@ public class LoginController {
     // ─────────────────────────────────────────────
 
     /**
-     * [3-1] 로그아웃 처리
+     * page: common/header.jsp
+     * page: user/login.jsp
+     * [1] 로그아웃 처리
      * - 세션 무효화 후 로그인 페이지로 이동
-     *
-     * @param session 현재 로그인된 세션
-     * @return 로그인 페이지로 리다이렉트
      */
     @PostMapping("/logout")
     public String logout(HttpSession session) {

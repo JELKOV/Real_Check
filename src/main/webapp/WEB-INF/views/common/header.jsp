@@ -21,7 +21,9 @@
             <a href="/admin" class="text-warning mx-2 text-decoration-none nav-link-style">관리자페이지</a>
           </c:if>
     
-          <a href="/logout" class="text-white mx-2 text-decoration-none nav-link-style">로그아웃</a>
+          <form action="/logout" method="post" style="display:inline;">
+            <button type="submit" class="btn btn-link text-white text-decoration-none nav-link-style" style="padding: 0;">로그아웃</button>
+          </form>
         </c:when>
         <c:otherwise>
           <a href="/login" class="text-white mx-2 text-decoration-none nav-link-style">로그인</a>

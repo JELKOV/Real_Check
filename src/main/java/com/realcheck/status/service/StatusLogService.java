@@ -38,7 +38,9 @@ public class StatusLogService {
     // ─────────────────────────────────────────────
 
     /**
-     * [1-1] 요청 및 정보 상태 등록 Helper 함수 (기본 타입: ANSWER) - (1) StatusLogService: register/ registerAnswer
+     * StatusLogService: register
+     * StatusLogService: registerAnswer
+     * [1] 요청 및 정보 상태 등록 Helper 함수 (기본 타입: ANSWER)
      * - 사용자 유효성 검사 (userId 존재 여부, 정지 여부 등)
      * - 장소 ID가 있는 경우 → 해당 장소 엔티티 조회
      * - 하루 등록 횟수 제한 여부 확인 (checkLimit)
@@ -92,8 +94,8 @@ public class StatusLogService {
     // ─────────────────────────────────────────────
 
     /**
-     * [2-1] 등록된 장소에 대한 답변 - 장소 기반 정보 공유 등록 (공식 장소 + 실시간 현황) - StatusLogController: register
-     * 
+     * StatusLogController: register
+     * [1] 등록된 장소에 대한 답변 - 장소 기반 정보 공유 등록 (공식 장소 + 실시간 현황)
      * - 공식 등록된 장소(placeId 있음)
      * - 위치 기반 정보 등록 시 사용
      * - 하루 3회 등록 제한 적용 (checkLimit = true)
@@ -104,8 +106,8 @@ public class StatusLogService {
     }
 
     /**
-     * [2-2] 요청 기반 답변 등록 - AnswerController: createAnswer
-     * 
+     * AnswerController: createAnswer
+     * [2] 요청 기반 답변 등록 
      * - 누군가 등록한 요청(Request)에 대해 다른 사용자가 답변(상태 정보)을 등록할 때 사용
      * - 장소 정보는 optional (placeId가 null일 수 있음 – custom location 허용)
      * - 하루 횟수 제한 없음 (checkLimit = false)
@@ -119,7 +121,7 @@ public class StatusLogService {
     }
 
     /**
-     * [2-3] 자발적 정보 공유 등록 (FREE_SHARE)
+     * [3] 자발적 정보 공유 등록 (FREE_SHARE)
      * - 요청 없이 사용자가 직접 공유
      * - 조회수 기반 보상 구조로 활용 가능
      */
@@ -142,7 +144,7 @@ public class StatusLogService {
     }
 
     /**
-     * [2-4] 자발적 공유(FREE_SHARE) 로그 조회 시 조회수 증가
+     * [4] 자발적 공유(FREE_SHARE) 로그 조회 시 조회수 증가
      * - 조회수 1 증가 + 포인트 누적 조건 기반 처리 가능
      */
     public StatusLogDto viewFreeShare(Long logId) {
@@ -159,7 +161,7 @@ public class StatusLogService {
     }
 
     /**
-     * [2-5] 장소별 최근 로그 상태 조회
+     * [5] 장소별 최근 로그 상태 조회
      * - 최근 3시간 이내의 로그만 조회
      */
     public List<StatusLogDto> getLogsByPlace(Long placeId) {
@@ -171,7 +173,8 @@ public class StatusLogService {
     }
 
     /**
-     * [2-6] 사용자별 전체 상태 조회
+     * StatusLogController: getMyStatusLogs
+     * [6] 사용자별 전체 로그 답변 상태 조회
      */
     public List<StatusLogDto> getLogsByUser(Long userId) {
         return statusLogRepository.findByReporterIdOrderByCreatedAtDesc(userId)
@@ -181,7 +184,8 @@ public class StatusLogService {
     }
 
     /**
-     * [2-7] 상태 로그 수정
+     * StatusLogController: updateStatusLog
+     * [7] 상태 로그 수정
      * - 작성자 본인만 수정 가능
      */
     public void updateStatusLog(Long logId, Long userId, StatusLogDto dto) {
@@ -199,7 +203,8 @@ public class StatusLogService {
     }
 
     /**
-     * [2-8] 상태 로그 삭제
+     * StautsLogController: deleteStatusLog
+     * [8] 상태 로그 삭제
      * - 작성자 본인만 삭제 가능
      */
     public void deleteStatusLog(Long logId, Long userId) {
@@ -214,7 +219,7 @@ public class StatusLogService {
     }
 
     /**
-     * [2-9] 특정 장소의 가장 최근 공개된 상태 1건 조회
+     * [9] 특정 장소의 가장 최근 공개된 상태 1건 조회
      * - 마커 클릭 시 정보 표시용
      */
     public StatusLogDto getLatestVisibleLogByPlaceId(Long placeId) {
@@ -223,7 +228,8 @@ public class StatusLogService {
     }
 
     /**
-     * [2-10] 현재 위치 기반 근처 상태 로그 조회
+     * StatusLogController: getNearbyStatusLogs
+     * [10] 현재 위치 기반 근처 상태 로그 조회
      * - 사용자의 위도/경도를 기준으로 일정 반경 내에 있는 상태 로그를 조회
      * - 최근 3시간 이내에 등록된 로그만 반환
      */
@@ -236,7 +242,8 @@ public class StatusLogService {
     }
 
     /**
-     * [2-11] 특정 요청에 대한 답변 리스트 - StatusLogController: getAnswersByRequest
+     * StatusLogController: getAnswersByRequest
+     * [11] 특정 요청에 대한 답변 리스트(상세 조회)
      */
     public List<StatusLogDto> getAnswersByRequestId(Long requestId) {
         return statusLogRepository.findByRequestId(requestId).stream()
@@ -245,7 +252,8 @@ public class StatusLogService {
     }
 
     /**
-     * [2-12] 요청 기반 답변 채택 처리 - StatusLogController : selectAnswer
+     * StatusLogController : selectAnswer
+     * [12] 요청 기반 답변 채택 처리
      * - 요청 작성자가 본인 요청에 연결된 답변을 선택
      * - 상태 로그의 selected = true, 요청 마감 처리
      */
@@ -258,6 +266,10 @@ public class StatusLogService {
             throw new RuntimeException("채택 권한이 없습니다.");
         }
 
+        if (request.isClosed()) {
+            throw new RuntimeException("이미 마감된 요청입니다.");
+        }
+
         log.setSelected(true);
         request.setClosed(true);
         statusLogRepository.save(log);
@@ -265,11 +277,11 @@ public class StatusLogService {
     }
 
     // ────────────────────────────────────────
-    // [2] 관리자 기능
+    // [3] 관리자 기능
     // ────────────────────────────────────────
 
     /**
-     * [2-1] 전체 상태 로그 조회 (관리자용)
+     * [1] 전체 상태 로그 조회 (관리자용)
      * - 모든 로그를 반환
      */
     public List<StatusLogDto> getAllLogs() {

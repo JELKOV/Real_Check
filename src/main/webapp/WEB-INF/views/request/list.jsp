@@ -33,7 +33,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
                   <h5 class="card-title">${"${req.title}"}</h5>
                   <p class="card-text">${"${req.content}"}</p>
                   <small>포인트: ${"${req.point}"}</small><br/>
-                  <a href="#" class="btn btn-outline-primary btn-sm mt-2 view-detail" data-id="${"${req.id}"}">상세보기</a>
+                  <a href="#" class="btn btn-outline-primary btn-sm mt-2 view-detail" data-id=${"${req.id}"}>상세보기</a>
                 </div>
               </div>
             </div>

@@ -24,7 +24,8 @@ public class UserController {
     private final UserService userService;
 
     /**
-     * [1-1] 이메일 중복 체크 API
+     * page: user/register.jsp
+     * [1] 이메일 중복 체크 API
      */
     @GetMapping("/check-email")
     public ResponseEntity<Boolean> checkEmail(@RequestParam String email) {
@@ -34,7 +35,9 @@ public class UserController {
     }
 
     /**
-     * [1-2] 닉네임 중복 체크 API
+     * page: user/register.jsp
+     * page: user/edit-profile.jsp
+     * [2] 닉네임 중복 체크 API
      */
     @GetMapping("/check-nickname")
     public ResponseEntity<Boolean> checkNickname(@RequestParam String nickname) {
@@ -48,13 +51,9 @@ public class UserController {
 
 
     /**
-     * [2-1] 프로필 수정 API (닉네임/비밀번호)
+     * [1] 프로필 수정 API (닉네임/비밀번호)
      * - 로그인된 사용자만 본인의 닉네임 또는 비밀번호를 수정할 수 있음
      * - 세션에서 로그인된 사용자 정보를 가져와 해당 ID 기준으로 업데이트 진행
-     *
-     * @param dto     클라이언트로부터 받은 수정할 데이터 (nickname, password 등)
-     * @param session 현재 로그인된 사용자의 세션 (로그인 정보 보유)
-     * @return 수정 성공 메시지 or 로그인 필요 응답
      */
     @PutMapping("/update")
     public ResponseEntity<String> updateProfile(@RequestBody UserDto dto, HttpSession session) {
@@ -72,7 +71,8 @@ public class UserController {
     }
 
     /**
-     * [2-2] 비밀번호 변경 전용 API
+     * page: user/change-password.jsp
+     * [2] 비밀번호 변경 전용 API
      * - 현재 비밀번호 확인 후 새 비밀번호로 교체
      */
     @PutMapping("/password")

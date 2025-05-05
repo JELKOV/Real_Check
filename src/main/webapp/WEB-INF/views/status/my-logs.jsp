@@ -33,11 +33,6 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
         </thead>
         <tbody id="logsBody"></tbody>
       </table>
-      <div class="text-end mt-3">
-        <a href="/nearby" class="btn btn-outline-secondary"
-          >지도에서 등록하기</a
-        >
-      </div>
     </div>
 
     <%@ include file="../common/footer.jsp" %>
@@ -117,47 +112,40 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
         // 내 상태 로그 불러오기
         function loadMyLogs() {
           $.getJSON("/api/status/my", function (list) {
-            var $tbody = $("#logsBody");
+            const $tbody = $("#logsBody");
             $tbody.empty();
-            list.forEach(function (log, index) {
-              var imageHtml = log.imageUrl
-                ? '<img src="' +
-                  log.imageUrl +
-                  '" alt="status image" style="max-width:60px; max-height:60px;"/>'
+
+            list.forEach((log, index) => {
+              const imageHtml = log.imageUrl
+                ? `<img src="${"${log.imageUrl}"}" alt="status image" style="max-width:60px; max-height:60px;" />`
                 : "-";
-              var row =
-                '<tr data-id="' +
-                log.id +
-                '">' +
-                "<td>" +
-                (index + 1) +
-                "</td>" +
-                "<td>" +
-                log.content +
-                "</td>" +
-                "<td>" +
-                log.waitCount +
-                "</td>" +
-                "<td>" +
-                imageHtml +
-                "</td>" +
-                "<td>" +
-                log.placeId +
-                "</td>" +
-                "<td>" +
-                new Date(log.createdAt).toLocaleString("ko-KR", {
+
+              const formattedDate = new Date(log.createdAt).toLocaleString(
+                "ko-KR",
+                {
                   year: "numeric",
                   month: "2-digit",
                   day: "2-digit",
                   hour: "2-digit",
                   minute: "2-digit",
-                }) +
-                "</td>" +
-                "<td>" +
-                '<button class="btn btn-sm btn-primary btn-edit me-2">수정</button>' +
-                '<button class="btn btn-sm btn-danger btn-delete">삭제</button>' +
-                "</td>" +
-                "</tr>";
+                }
+              );
+
+              const row = `
+                <tr data-id=${"${log.id}"}>
+                  <td>${"${index + 1}"}</td>
+                  <td>${"${log.content}"}</td>
+                  <td>${"${log.waitCount}"}</td>
+                  <td>${"${imageHtml}"}</td>
+                  <td>${"${log.placeId}"}</td>
+                  <td>${"${formattedDate}"}</td>
+                  <td>
+                    <button class="btn btn-sm btn-primary btn-edit me-2">수정</button>
+                    <button class="btn btn-sm btn-danger btn-delete">삭제</button>
+                  </td>
+                </tr>
+              `;
+
               $tbody.append(row);
             });
           });
@@ -204,7 +192,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
               alert("업로드 성공! URL: " + url);
               uploadedImageUrl = url;
               $("#uploadedImage").html(
-                `<img src="${url}" style="max-width:100px;"/>`
+                `<img src="${"${url}"}" style="max-width:100px;"/>`
               );
             },
             error: function (xhr) {
@@ -214,7 +202,6 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
         });
 
         // 수정 완료 버튼 클릭
-        // 수정 폼 제출
         $("#editForm").on("submit", function (e) {
           e.preventDefault();
 
@@ -226,11 +213,11 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
           const updatedData = {
             content: $("#editContent").val(),
             waitCount: parseInt($("#editWaitCount").val()),
-            imageUrl: uploadedImageUrl, // 이게 새로 업로드한 URL
+            imageUrl: uploadedImageUrl,
           };
 
           $.ajax({
-            url: `/api/status/${editingId}`,
+            url: `/api/status/${"${editingId}"}`,
             method: "PUT",
             contentType: "application/json",
             data: JSON.stringify(updatedData),
@@ -246,11 +233,12 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
         // 삭제 버튼 클릭
         $("#logsBody").on("click", ".btn-delete", function () {
-          var $tr = $(this).closest("tr");
-          var id = $tr.data("id");
+          const $tr = $(this).closest("tr");
+          const id = $tr.data("id");
+
           if (confirm("정말 삭제하시겠습니까?")) {
             $.ajax({
-              url: "/api/status/" + id,
+              url: `/api/status/${"${id}"}`,
               method: "DELETE",
               success: function () {
                 $tr.remove();

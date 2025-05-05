@@ -48,7 +48,7 @@ public class Request {
     private String content;
 
     // 요청에 걸린 포인트
-    private Integer point; 
+    private Integer point;
 
     /**
      * 장소 정보 (택 1 구조)
@@ -68,10 +68,14 @@ public class Request {
     private Double lng;
 
     // 요청 마감 여부 (답변 채택 시 true)
-    private boolean isClosed; 
+    private boolean isClosed;
 
     // 요청 등록 시각
-    private LocalDateTime createdAt; 
+    private LocalDateTime createdAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private RequestCategory category;
 
     /**
      * 연결된 상태 로그 (답변들)

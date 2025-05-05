@@ -19,9 +19,8 @@ public class RegisterController {
     private final UserService userService;
 
     /**
-     * [GET] 회원가입 페이지
-     * 
-     * @param error (optional) 오류 코드
+     * common/header.jsp
+     * [1] 회원가입 페이지 이동
      */
     @GetMapping("/register")
     public String showRegisterForm(@RequestParam(required = false) String error,
@@ -40,7 +39,8 @@ public class RegisterController {
     }
 
     /**
-     * [POST] 회원가입 처리
+     * page: user/register.jsp
+     * [2] 회원가입 처리
      * - 비밀번호 확인 매칭
      * - UserService.register 호출
      */
@@ -54,7 +54,7 @@ public class RegisterController {
             return "redirect:/register?error=password";
         }
 
-        // 2) 가입 시도
+        // 2) 가입 시도 (무결성보장 - 서버단 중복검사)
         try {
             UserDto dto = new UserDto(null, email, nickname, null, true, password);
             userService.register(dto);

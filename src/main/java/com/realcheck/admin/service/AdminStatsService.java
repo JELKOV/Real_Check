@@ -22,23 +22,19 @@ public class AdminStatsService {
     private final PointRepository pointRepository;
     private final StatusLogRepository statusLogRepository;
 
-    // ─────────────────────────────────────────────
-    // [1] 관리자 통계 기능
-    // ─────────────────────────────────────────────
-
     /**
-     * [1-1] 전체 신고 수 반환
+     * AdminStatsController: getTotalReportCount
+     * [1] 전체 신고 수 반환
      * - report 테이블의 전체 레코드 수를 카운트
      * - 관리자 대시보드에서 신고 누적 현황을 파악할 때 사용
-     *
-     * @return long 신고된 전체 건수
      */
     public long getTotalReportCount() {
         return reportRepository.count();
     }
 
     /**
-     * [1-2] 전체 포인트 합계 반환
+     * AdminStatsController: getTotalPointSum
+     * [2] 전체 포인트 합계 반환
      * - 지급된 포인트 총합을 반환
      * - null이 반환될 경우 0으로 처리 (SUM 함수는 결과가 없으면 null 반환 가능성 있음)
      *
@@ -50,11 +46,10 @@ public class AdminStatsService {
     }
 
     /**
-     * [1-3] 월별 상태 로그 등록 수 통계 반환
+     * AdminStatsController: getMonthlyStatusLogStats
+     * [3] 월별 상태 로그 등록 수 통계 반환
      * - StatusLog 테이블의 createdAt을 기준으로 연/월별 등록 수를 집계
      * - 프론트 대시보드에 그래프나 차트용으로 활용 가능
-     *
-     * @return List<MonthlyStatDto> 월별 등록 수 리스트
      */
     public List<MonthlyStatDto> getMonthlyStatusLogCount() {
         return statusLogRepository.getMonthlyStatusLogCount();

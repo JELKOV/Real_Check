@@ -28,7 +28,7 @@ public class StatusLogController {
     // ────────────────────────────────────────
 
     /**
-     * [1-1] 장소 기반 상태 등록 (placeId 필요)
+     * [1] 장소 기반 상태 등록 (placeId 필요)
      */
     @PostMapping
     public ResponseEntity<String> register(@RequestBody StatusLogDto dto, HttpSession session) {
@@ -41,7 +41,7 @@ public class StatusLogController {
     }
 
     /**
-     * [1-2] 자발적 공유 등록 API (FREE_SHARE)
+     * [2] 자발적 공유 등록 API (FREE_SHARE)
      * - 로그인한 사용자가 장소 상태를 자유롭게 공유
      * - StatusLog 타입: FREE_SHARE
      */
@@ -57,7 +57,7 @@ public class StatusLogController {
     }
 
     /**
-     * [1-3] 장소별 최근 3시간 이내 상태 조회
+     * [3] 장소별 최근 3시간 이내 상태 조회
      * - 해당 장소 ID로 3시간 이내의 최신 상태 목록 조회
      */
     @GetMapping("/place/{placeId}")
@@ -66,7 +66,7 @@ public class StatusLogController {
     }
 
     /**
-     * [1-4] 특정 장소의 최신 상태 로그 1건
+     * [4] 특정 장소의 최신 상태 로그 1건
      * - 숨김 처리되지 않은 로그 중 최신 1개만 반환
      * - 예: GET /api/status/latest?placeId=3
      */
@@ -80,7 +80,8 @@ public class StatusLogController {
     }
 
     /**
-     * [1-5] 내가 등록한 상태 로그 목록 조회 API
+     * page: status/my-logs.jsp
+     * [5] 내가 등록한 상태 로그 목록 조회 API
      * - 세션 사용자 ID 기반으로 내 기록만 조회
      */
     @GetMapping("/my")
@@ -94,7 +95,8 @@ public class StatusLogController {
     }
 
     /**
-     * [1-6] 상태 로그 수정 API
+     * page: status/my-logs.jsp
+     * [6] 상태 로그 수정 API
      * - 로그인한 사용자가 본인이 작성한 상태 로그를 수정
      */
     @PutMapping("/{id}")
@@ -114,7 +116,8 @@ public class StatusLogController {
     }
 
     /**
-     * [1-7] 상태 로그 삭제 API
+     * page: status/my-logs.jsp
+     * [7] 상태 로그 삭제 API
      * - 로그인한 사용자가 본인이 작성한 로그만 삭제 가능
      */
     @DeleteMapping("/{id}")
@@ -134,7 +137,8 @@ public class StatusLogController {
     }
 
     /**
-     * [1-8] 요청 ID로 연결된 답변 목록 조회 - 사용페이지: request/detail.jsp
+     * page: request/detail.jsp
+     * [8] 요청 ID로 연결된 답변 목록 조회
      * - GET /api/status/by-request/5
      */
     @GetMapping("/by-request/{requestId}")
@@ -144,8 +148,9 @@ public class StatusLogController {
     }
 
     /**
-     * [1-9] 요청 기반 답변 채택 API
-     * - 요청 작성자만 자신이 받은 답변 중 하나를 채택 가능 - 사용페이지: request/detail.jsp
+     * page: request/detail.jsp
+     * [9] 요청 기반 답변 채택 API
+     * - 요청 작성자만 자신이 받은 답변 중 하나를 채택 가능 
      * - 해당 StatusLog에 isSelected = true, 요청 마감 처리
      */
     @PostMapping("/select/{statusLogId}")
@@ -164,7 +169,8 @@ public class StatusLogController {
     }
 
     /**
-     * [1-10] 현재 위치 기반 근처 상태 로그 조회 API
+     * page: map/nearby.jsp
+     * [10] 현재 위치 기반 근처 상태 로그 조회 API
      * - 위도, 경도, 반경(m)을 기준으로 3시간 이내 상태 로그 조회
      * - 예: GET /api/status/nearby?lat=37.5&lng=127.0&radius=500
      */
@@ -183,7 +189,7 @@ public class StatusLogController {
     // ────────────────────────────────────────
 
     /**
-     * [2-1] 관리자 전용 전체 StatusLog 목록 조회 API
+     * [1] 관리자 전용 전체 StatusLog 목록 조회 API
      * - URL: GET /api/status/all
      * - 조건: 로그인한 사용자가 관리자일 경우에만 전체 로그 반환
      * - 반환: 모든 상태 로그 리스트 (StatusLogDto)

@@ -2,6 +2,7 @@ package com.realcheck.request.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.realcheck.request.entity.Request;
+import com.realcheck.request.entity.RequestCategory;
 import com.realcheck.user.entity.User;
 
 import jakarta.validation.constraints.NotBlank;
@@ -32,6 +33,8 @@ public class RequestDto {
     // 요청에 걸린 포인트
     @NotNull(message = "포인트는 필수입니다.")
     private Integer point;
+
+    private RequestCategory category;
 
     // 유저가 직접 입력한 장소 이름 (ex. "문방구 앞 붕어빵")
     private String customPlaceName;
@@ -64,8 +67,9 @@ public class RequestDto {
         if (placeName == null && (customPlaceName == null || lat == null || lng == null)) {
             throw new IllegalArgumentException("장소 정보가 누락되었습니다.");
         }
-        
+
         return Request.builder()
+                .category(category)
                 .user(user)
                 .title(title)
                 .content(content)
@@ -92,6 +96,7 @@ public class RequestDto {
                 .placeName(r.getPlace() != null ? r.getPlace().getName() : null)
                 .lat(r.getLat())
                 .lng(r.getLng())
+                .category(r.getCategory())
                 .isClosed(r.isClosed())
                 .createdAt(r.getCreatedAt())
                 .requesterId(r.getUser() != null ? r.getUser().getId() : null)

@@ -47,9 +47,6 @@ public class PlaceDto {
     /**
      * DTO → Entity 변환
      * - 등록 시 사용
-     *
-     * @param owner 등록자 (User 객체)
-     * @return Place 엔티티
      */
     public Place toEntity(User owner) {
         return Place.builder()
@@ -64,9 +61,6 @@ public class PlaceDto {
     /**
      * Entity → DTO 변환
      * - 조회 시 사용
-     *
-     * @param place Place 엔티티
-     * @return DTO
      */
     public static PlaceDto fromEntity(Place place) {
         return PlaceDto.builder()

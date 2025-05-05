@@ -31,7 +31,8 @@ public class UserService {
     // ─────────────────────────────────────────────
 
     /**
-     * [1-1] 회원가입 처리
+     * RegisterController: register
+     * [1] 회원가입 처리
      * - 이메일, 닉네임 중복 확인
      * - 비밀번호 암호화 후 저장
      * 
@@ -46,32 +47,26 @@ public class UserService {
         userRepository.findByNickname(dto.getNickname()).ifPresent(u -> {
             throw new RuntimeException("이미 사용 중인 닉네임입니다.");
         });
-
         // 3. DTO → Entity 변환
         User user = dto.toEntity();
-
         // 4. 비밀번호 암호화 적용
         String encodedPassword = passwordEncoder.encode(dto.getPassword());
         user.setPassword(encodedPassword);
-
-        // 4. 기본 정보 세팅 (역할, 포인트, 활성 상태)
+        // 5. 기본 정보 세팅 (역할, 포인트, 활성 상태)
         user.setRole(UserRole.USER); // 회원가입은 기본적으로 일반 사용자로 설정
         user.setPoints(0); // 기본 포인트는 0
         user.setActive(true); // 계정은 기본적으로 활성화 상태
 
-        // 5. DB에 저장
+        // 6. DB에 저장
         userRepository.save(user);
     }
 
     /**
-     * [1-2] 로그인 처리
+     * LoginController: login
+     * [2] 로그인 처리
      * - 이메일로 사용자 조회
      * - 비밀번호 비교 (암호화된 비밀번호와 비교)
      * - 성공 시 DTO 반환
-     *
-     * @param email       사용자가 입력한 이메일
-     * @param rawPassword 사용자가 입력한 평문 비밀번호
-     * @return 로그인에 성공한 사용자 정보를 담은 UserDto (비밀번호는 포함하지 않음)
      */
     public UserDto login(String email, String rawPassword) {
         // 1. 이메일로 사용자 조회 (존재하지 않으면 예외 발생)
@@ -92,26 +87,25 @@ public class UserService {
     // ─────────────────────────────────────────────
 
     /**
-     * [2-1] 이메일 중복 여부 확인
+     * UserController: checkEmail
+     * [1] 이메일 중복 여부 확인
      */
     public boolean isEmailExists(String email) {
         return userRepository.findByEmail(email).isPresent();
     }
 
     /**
-     * [2-2] 닉네임 중복 여부 확인
+     * UserController: checkNickname
+     * [2] 닉네임 중복 여부 확인
      */
     public boolean isNicknameExists(String nickname) {
         return userRepository.findByNickname(nickname).isPresent();
     }
 
     /**
-     * [2-3] 사용자 프로필 수정
+     * [3] 사용자 프로필 수정
      * - 닉네임 또는 비밀번호 변경
      * - 닉네임은 단순 대체, 비밀번호는 암호화 후 저장
-     *
-     * @param id  수정할 사용자 ID
-     * @param dto 클라이언트에서 전달된 수정 정보 (닉네임, 비밀번호 중 하나 이상)
      */
     public void updateProfile(Long id, UserDto dto) {
         // 1. 해당 ID의 사용자 정보 조회 (없으면 예외 발생)
@@ -133,11 +127,9 @@ public class UserService {
     }
 
     /**
-     * [2-4] 비밀번호 변경
+     * UserController: changePassword
+     * [4] 비밀번호 변경
      * - 현재 비밀번호 확인 후 새 비밀번호로 변경
-     * 
-     * @param userId 로그인된 사용자 ID
-     * @param dto    비밀번호 변경 요청 (현재/새 비밀번호)
      */
     public void changePassword(Long userId, PasswordUpdateRequestDto dto) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
@@ -153,7 +145,7 @@ public class UserService {
 
     @PostConstruct
     public void insertAdminAccount() {
-        System.out.println("⚙️ insertAdminAccount 실행됨");
+        System.out.println("insertAdminAccount 실행됨");
 
         if (userRepository.findByEmail("admin@example.com").isEmpty()) {
             User admin = new User();

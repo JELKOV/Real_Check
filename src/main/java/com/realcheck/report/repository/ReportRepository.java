@@ -5,12 +5,22 @@ import com.realcheck.report.entity.Report;
 
 public interface ReportRepository extends JpaRepository<Report, Long> {
     /**
-     * 특정 StatusLog에 대해 신고된 횟수를 조회
-     *
-     * @param statusLogId 신고 대상 상태 로그 ID
-     * @return 해당 로그에 대한 신고 개수
+     * ReportAdminService: countReportsByStatusLogId
+     * [1] 특정 StatusLog에 대해 신고된 횟수를 조회
+     * - 신고 수 조회용
+     * - SQL:
+     * SELECT COUNT(*) FROM reports WHERE status_log_id = ?;
      */
-    long countByStatusLogId(Long statusLogId); // 신고 수 조회용
+    long countByStatusLogId(Long statusLogId);
 
-    long countByStatusLogReporterId(Long userId); // 신고 당한 횟수
+    /**
+     * 
+     * [2] 특정 ID의 신고당한 횟수 조회
+     * - 신고 당한 횟수
+     * - SQL:
+     * SELECT COUNT(*) FROM reports r
+     * JOIN status_log s ON r.status_log_id = s.id
+     * WHERE s.reporter_id = ?;
+     */
+    long countByStatusLogReporterId(Long userId);
 }

@@ -16,26 +16,31 @@ public class PageController {
     // [1] 사용자 일반 페이지
     // ─────────────────────────────────────────────
 
+    // 메인페이지 (진입페이지)
     @GetMapping
     public String mainPage() {
         return "index";
     }
 
+    // 마이페이지 - page: common/header.jsp
     @GetMapping("/mypage")
     public String mypage() {
         return "user/mypage";
     }
 
+    // 내 응답 관련 페이지 - page: common/header.jsp
     @GetMapping("/my-logs")
     public String myLogsPage() {
         return "status/my-logs";
     }
 
+    // 마이페이지 -> 수정 - page: user/mypage.jsp
     @GetMapping("/edit-profile")
     public String editProfilePage() {
         return "user/edit-profile";
     }
 
+    // 마이페이지 -> 비밀번호 변경 - page: user/mypage.jsp
     @GetMapping("/change-password")
     public String changePasswordPage() {
         return "user/change-password";
@@ -45,25 +50,25 @@ public class PageController {
     // [2] 요청 관련 페이지
     // ─────────────────────────────────────────────
 
-    // 요청 등록 페이지 (지도에서 질문 등록) - 사용페이지 : index.jsp
+    // 요청 등록 페이지 (지도에서 질문 등록) - page : index.jsp
     @GetMapping("/request/register")
     public String requestRegisterPage() {
         return "request/register";
     }
 
-    // 요청 목록 페이지 (답변 가능한 요청 리스트) - 사용페이지 : index.jsp
+    // 요청 목록 페이지 (답변 가능한 요청 리스트) - page : index.jsp
     @GetMapping("/request/list")
     public String requestListPage() {
         return "request/list";
     }
 
-    // 요청 상세 페이지 - 사용페이지: (1) request/list.jsp (2) map/request-list.jsp
+    // 요청 상세 페이지 - page: (1) request/list.jsp (2) map/request-list.jsp (3) request/my-requests.jsp
     @GetMapping("/request/{id}")
     public String requestDetailPage() {
         return "request/detail";
     }
 
-    // 내 요청 관련 페이지 -  구현 check
+    // 내 요청 관련 페이지 - page: header.jsp
     @GetMapping("/my-requests")
     public String myRequestsPage() {
         return "request/my-requests";
@@ -73,13 +78,13 @@ public class PageController {
     // [3] 지도 관련 페이지
     // ─────────────────────────────────────────────
 
-    // 주변 졍보 확인 (답변 달린 내용) - 사용페이지: index.jsp
+    // 주변 졍보 확인 (답변 달린 내용) - page: index.jsp
     @GetMapping("/nearby")
     public String nearbyPage() {
         return "map/nearby";
     }
 
-    // 주변 요청 확인 (답변할 요청) - 사용페이지: index.jsp
+    // 주변 요청 확인 (답변할 요청) - page: index.jsp
     @GetMapping("/nearby/request-list")
     public String nearbyRequestListPage() {
         return "map/request-list";
@@ -89,21 +94,25 @@ public class PageController {
     // [4] 관리자 페이지
     // ─────────────────────────────────────────────
 
+    // 관라자페이지 이동 - page: common/header.jsp
     @GetMapping("/admin")
     public String adminPage(HttpSession session) {
         return isAdmin(session) ? "admin/admin" : "redirect:/login?error=unauthorized";
     }
 
+    // 관리자 통계보기 페이지 - page: admin/admin.jsp
     @GetMapping("/admin/stats")
     public String adminStatsPage(HttpSession session) {
         return isAdmin(session) ? "admin/stats" : "redirect:/login?error=unauthorized";
     }
 
+    // 관리자 사용자관리 페이지 - page: admin/admin.jsp
     @GetMapping("/admin/users")
     public String adminUsersPage(HttpSession session) {
         return isAdmin(session) ? "admin/users" : "redirect:/login?error=unauthorized";
     }
 
+    // 관리자 신고관리 페이지 - page: admin/admin.jsp
     @GetMapping("/admin/reports")
     public String adminReportsPage(HttpSession session) {
         return isAdmin(session) ? "admin/reports" : "redirect:/login?error=unauthorized";

@@ -26,13 +26,11 @@ public class UploadController {
     private static final String UPLOAD_DIR = "uploads/";
 
     /**
-     * 파일 업로드 처리
+     * page: status/my-logs.jsp
+     * [1] 파일 업로드 처리
      * - 클라이언트로부터 MultipartFile을 받아 서버에 저장
      * - 저장 경로: uploads/ 폴더
      * - 성공 시 저장된 파일의 URL (/uploads/파일명) 반환
-     *
-     * @param file 업로드할 파일
-     * @return 업로드 결과 (성공 시 파일 URL, 실패 시 에러 메시지)
      */
     @PostMapping
     public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) {

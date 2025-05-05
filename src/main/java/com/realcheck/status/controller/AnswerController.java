@@ -21,7 +21,8 @@ public class AnswerController {
     private final StatusLogService statusLogService;
 
     /**
-     * 요청에 대한 답변 등록 → StatusLog(type: ANSWER)에 저장 - 사용페이지: request/detail.jsp
+     * page: request/detail.jsp
+     * [1] 요청에 대한 답변 등록 → StatusLog(type: ANSWER)에 저장
      * - 사용자가 요청(Request)에 대해 답변(StatusLog)을 등록하는 컨트롤러
      */
     @PostMapping("/{requestId}")

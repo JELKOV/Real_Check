@@ -28,11 +28,10 @@ public class UserAdminService {
     // ────────────────────────────────────────
 
     /**
-     * [1-1] 비활성화된 사용자 목록 조회
+     * UserAdminController: getBlockedUsers
+     * [1] 비활성화된 사용자 목록 조회
      * - 사용자 엔티티에서 isActive가 false인 사용자만 필터링
      * - 엔티티를 UserDto로 변환하여 컨트롤러로 전달
-     *
-     * @return 비활성화된 사용자 목록 (UserDto 리스트)
      */
     public List<UserDto> getBlockedUsers() {
         return userRepository.findByIsActiveFalse().stream() // 비활성 사용자만 조회
@@ -41,10 +40,9 @@ public class UserAdminService {
     }
 
     /**
-     * [1-2] 사용자 차단 해제 기능
+     * UserAdminController: unblockUser
+     * [2] 사용자 차단 해제 기능
      * - isActive = true 로 변경하여 활성화
-     *
-     * @param userId 해제할 사용자 ID
      */
     public void unblockUser(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("사용자를 찾을수 없습니다."));
@@ -58,11 +56,9 @@ public class UserAdminService {
     // ────────────────────────────────────────
 
     /**
-     * [2-1] 이메일 또는 닉네임으로 사용자 검색
+     * UserAdminController: searchUsers
+     * [1] 이메일 또는 닉네임으로 사용자 검색
      * - keyword가 포함된 사용자 리스트 반환
-     *
-     * @param keyword 검색어
-     * @return 검색 결과 사용자 리스트
      */
     public List<UserDto> searchUsers(String keyword) {
         return userRepository.searchByEmailOrNickname(keyword).stream()

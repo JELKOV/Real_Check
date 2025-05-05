@@ -27,7 +27,8 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
     List<Request> findByIsClosedFalse();
 
     /**
-     * [2] 미마감 요청 중 답변이 3개 미만인 경우 조회 - RequestService: findOpenRequests
+     * RequestService: findOpenRequests
+     * [2] 미마감 요청 중 답변이 3개 미만인 경우 조회
      * - 홈화면, 응답 대기 요청 리스트에 사용
      * 
      * SQL:
@@ -38,7 +39,8 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
     List<Request> findOpenRequestsWithoutAnswer();
 
     /**
-     * [3] 현재 위치 기준, 반경 내 응답 부족 요청 조회 - RequestService: findNearbyValidRequests
+     * RequestService: findNearbyValidRequests
+     * [3] 현재 위치 기준, 반경 내 응답 부족 요청 조회
      * - 장소 정보가 있는 요청만 대상으로 함
      * - 위도/경도 null 방지 포함
      * - ST_Distance_Sphere는 MySQL 전용 함수이므로 DB 호환성 주의
@@ -62,7 +64,8 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
             @Param("timeLimit") LocalDateTime timeLimit);
 
     /**
-     * [4] UserId 요청한사람 기준으로 요청 목록 불러오기 - RequestService: findByUserId
+     * RequestService: findByUserId
+     * [4] UserId 요청한사람 기준으로 요청 목록 불러오기
      */
     List<Request> findByUserIdOrderByCreatedAtDesc(Long userId);
 }

@@ -33,7 +33,8 @@ public class RequestService {
     }
 
     /**
-     * [2] 미마감 + 답변 3개 미만 요청 조회 - RequestController: findOpenRequests
+     * RequestController: findOpenRequests
+     * [2] 미마감 + 답변 3개 미만 요청 조회
      * - 조건: isClosed = false AND statusLogs.size < 3
      */
     public List<Request> findOpenRequests() {
@@ -41,9 +42,11 @@ public class RequestService {
     }
 
     /**
-     * [3] 반경 내 열린 요청 목록 조회 - RequestController: findNearbyOpenRequests
+     * RequestController: findNearbyOpenRequests
+     * [3] 반경 내 열린 요청 목록 조회
      * - 위도, 경도 기준으로 radius(m) 이내
      * - 장소 좌표가 존재하며 답변 수가 3개 미만인 요청 필터
+     * - [FIX] 3시간 이내 수정 (테스트라 48시간으로 바꿈)
      */
     public List<Request> findNearbyValidRequests(double lat, double lng, double radiusMeters) {
         LocalDateTime timeLimit = LocalDateTime.now().minusHours(48);
@@ -51,7 +54,8 @@ public class RequestService {
     }
 
     /**
-     * [4] ID로 요청 단건 조회 - RequestController: findRequestById
+     * RequestController: findRequestById
+     * [4] ID로 요청 단건 조회 
      * - 상세 보기 등에서 사용
      */
     public Optional<Request> findById(Long id) {
@@ -70,7 +74,8 @@ public class RequestService {
     }
 
     /**
-     * [6] 특정 사용자(userId)의 요청 목록 조회 - RequestController: findMyRequests
+     * RequestController: findMyRequests
+     * [6] 특정 사용자(userId)의 요청 목록 조회
      */
     public List<Request> findByUserId(Long userId) {
         return requestRepository.findByUserIdOrderByCreatedAtDesc(userId);

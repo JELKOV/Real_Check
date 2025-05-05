@@ -61,7 +61,7 @@
             <td>${"${status}${alertText}"}</td>
             <td>${"${formattedDate}"}</td>
             <td>
-              <a href="#" class="btn btn-outline-primary btn-sm mt-2 view-detail" data-id="${"${req.id}"}">상세보기</a>
+              <a href="#" class="btn btn-outline-primary btn-sm mt-2 view-detail" data-id=${"${req.id}"}>상세보기</a>
             </td>
           </tr>
         `;

@@ -16,9 +16,6 @@ public class ReportDto {
     /**
      * DTO -> Entity 변환
      * - Controller -> Service -> Entity 저장할 때 사용용
-     * @param reporter 신고한 사용자 객체
-     * @param statusLog 신고 대상 상태 로그 객체
-     * @return Report 엔티티
      */
 
     public Report toEntity(User reporter, StatusLog statusLog) {
