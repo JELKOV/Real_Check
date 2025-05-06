@@ -196,9 +196,20 @@ public class StatusLogService {
             throw new RuntimeException("해당 로그를 수정할 권한이 없습니다.");
         }
 
+        // 업데이트: 기존 엔티티에 DTO 값만 갱신
         log.setContent(dto.getContent());
-        log.setWaitCount(dto.getWaitCount());
         log.setImageUrl(dto.getImageUrl());
+        log.setWaitCount(dto.getWaitCount());
+        log.setHasBathroom(dto.getHasBathroom());
+        log.setMenuInfo(dto.getMenuInfo());
+        log.setWeatherNote(dto.getWeatherNote());
+        log.setVendorName(dto.getVendorName());
+        log.setPhotoNote(dto.getPhotoNote());
+        log.setNoiseNote(dto.getNoiseNote());
+        log.setIsParkingAvailable(dto.getIsParkingAvailable());
+        log.setIsOpen(dto.getIsOpen());
+        log.setSeatCount(dto.getSeatCount());
+
         statusLogRepository.save(log);
     }
 

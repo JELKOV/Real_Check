@@ -23,7 +23,6 @@ public class StatusLogDto {
 
     private Long id;
     private String content; // 대기 상황 설명 (예: "현재 3명 대기 중")
-    private int waitCount; // 대기 인원 수
     private String imageUrl; // 이미지 URL (선택 사항)
     private boolean isSelected;
 
@@ -38,6 +37,19 @@ public class StatusLogDto {
     private Long requestOwnerId;
     private String nickname;
 
+    private String category;
+
+    // 유연 필드들 (nullable 가능)
+    private Boolean hasBathroom;
+    private Integer waitCount;
+    private String menuInfo;
+    private String weatherNote;
+    private String vendorName;
+    private String photoNote;
+    private String noiseNote;
+    private Boolean isParkingAvailable;
+    private Boolean isOpen;
+    private Integer seatCount;
 
     /**
      * DTO → Entity 변환 메서드
@@ -46,7 +58,6 @@ public class StatusLogDto {
     public StatusLog toEntity(User user, Place place) {
         StatusLog log = new StatusLog();
         log.setContent(this.content);
-        log.setWaitCount(this.waitCount);
         log.setImageUrl(this.imageUrl);
         log.setSelected(this.isSelected);
         log.setReporter(user);
@@ -61,6 +72,18 @@ public class StatusLogDto {
             log.setLng(this.lng);
         }
 
+        // 유연 필드 설정
+        log.setWaitCount(this.waitCount);
+        log.setHasBathroom(this.hasBathroom);
+        log.setMenuInfo(this.menuInfo);
+        log.setWeatherNote(this.weatherNote);
+        log.setVendorName(this.vendorName);
+        log.setPhotoNote(this.photoNote);
+        log.setNoiseNote(this.noiseNote);
+        log.setIsParkingAvailable(this.isParkingAvailable);
+        log.setIsOpen(this.isOpen);
+        log.setSeatCount(this.seatCount);
+
         return log;
     }
 
@@ -72,7 +95,6 @@ public class StatusLogDto {
         return StatusLogDto.builder()
                 .id(log.getId())
                 .content(log.getContent())
-                .waitCount(log.getWaitCount())
                 .isSelected(log.isSelected())
                 .imageUrl(log.getImageUrl())
                 .placeId(log.getPlace() != null ? log.getPlace().getId() : null)
@@ -83,9 +105,27 @@ public class StatusLogDto {
                 .requestId(log.getRequest() != null ? log.getRequest().getId() : null)
                 .nickname(log.getReporter() != null ? log.getReporter().getNickname() : null)
                 .requestOwnerId(
-                    log.getRequest() != null && log.getRequest().getUser() != null
-                        ? log.getRequest().getUser().getId()
-                        : null)
+                        log.getRequest() != null && log.getRequest().getUser() != null
+                                ? log.getRequest().getUser().getId()
+                                : null)
+
+                // 유연 필드 포함
+                .category(
+                        log.getRequest() != null && log.getRequest().getCategory() != null
+                                ? log.getRequest().getCategory().name()
+                                : null)
+                                
+                .hasBathroom(log.getHasBathroom())
+                .waitCount(log.getWaitCount())
+                .menuInfo(log.getMenuInfo())
+                .weatherNote(log.getWeatherNote())
+                .vendorName(log.getVendorName())
+                .photoNote(log.getPhotoNote())
+                .noiseNote(log.getNoiseNote())
+                .isParkingAvailable(log.getIsParkingAvailable())
+                .isOpen(log.getIsOpen())
+                .seatCount(log.getSeatCount())
+
                 .build();
     }
 }

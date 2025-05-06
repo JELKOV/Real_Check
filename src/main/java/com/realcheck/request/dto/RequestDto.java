@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 /**
  * RequestDto
  * - 클라이언트 ↔ 서버 간 요청 정보를 주고받기 위한 DTO 클래스
- * - Request Entity와 분리된 구조로, 필요한 필드만 직렬화/역직렬화
+ * - Request 엔티티와 1:1 매핑되며, 유연 필드 포함
  */
 @Getter
 @Setter
@@ -59,6 +59,19 @@ public class RequestDto {
     // 해당 요청에 달린 답변 수
     private int answerCount;
 
+    // 카테고리별 확장 필드
+    private Integer waitCount; // WAITING_STATUS, CROWD_LEVEL
+    private Boolean hasBathroom; // BATHROOM
+    private String menuInfo; // FOOD_MENU
+    private String weatherNote; // WEATHER_LOCAL
+    private String vendorName; // STREET_VENDOR
+    private String photoNote; // PHOTO_REQUEST
+    private String noiseNote; // NOISE_LEVEL
+    private Boolean isParkingAvailable; // PARKING
+    private Boolean isOpen; // BUSINESS_STATUS
+    private Integer seatCount; // OPEN_SEAT
+    private String extra; // ETC or 확장 JSON
+
     /**
      * DTO → Entity 변환 메서드
      * - 클라이언트가 보낸 데이터를 실제 DB에 저장 가능한 형태로 변환
@@ -79,6 +92,19 @@ public class RequestDto {
                 .lng(lng)
                 .createdAt(LocalDateTime.now())
                 .isClosed(false)
+
+                .waitCount(waitCount)
+                .hasBathroom(hasBathroom)
+                .menuInfo(menuInfo)
+                .weatherNote(weatherNote)
+                .vendorName(vendorName)
+                .photoNote(photoNote)
+                .noiseNote(noiseNote)
+                .isParkingAvailable(isParkingAvailable)
+                .isOpen(isOpen)
+                .seatCount(seatCount)
+                .extra(extra)
+
                 .build();
     }
 
@@ -103,6 +129,19 @@ public class RequestDto {
                 .requesterEmail(r.getUser() != null ? r.getUser().getEmail() : null)
                 .requesterNickname(r.getUser() != null ? r.getUser().getNickname() : null)
                 .answerCount(r.getStatusLogs() != null ? r.getStatusLogs().size() : 0)
+
+                .waitCount(r.getWaitCount())
+                .hasBathroom(r.getHasBathroom())
+                .menuInfo(r.getMenuInfo())
+                .weatherNote(r.getWeatherNote())
+                .vendorName(r.getVendorName())
+                .photoNote(r.getPhotoNote())
+                .noiseNote(r.getNoiseNote())
+                .isParkingAvailable(r.getIsParkingAvailable())
+                .isOpen(r.getIsOpen())
+                .seatCount(r.getSeatCount())
+                .extra(r.getExtra())
+
                 .build();
     }
 }

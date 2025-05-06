@@ -30,7 +30,6 @@ public class StatusLog {
     private Long id;
 
     private String content; // 상태 설명 (예: "현재 대기 3명")
-    private int waitCount; // 대기 인원 수
     private String imageUrl; // 이미지 경로 (선택적)
 
     @Column(nullable = false)
@@ -51,6 +50,38 @@ public class StatusLog {
 
     @Column
     private Double lng;
+
+    // ──────────────── 추가된 유연 필드들 ────────────────
+
+    @Column
+    private Boolean hasBathroom; // 화장실 여부
+
+    @Column
+    private String menuInfo; // 음식 메뉴
+
+    @Column
+    private Integer waitCount; // 대기 인원 수
+
+    @Column
+    private String weatherNote; // 날씨 상태
+
+    @Column
+    private String vendorName; // 노점 이름
+
+    @Column
+    private String photoNote; // 사진 요청 메모
+
+    @Column
+    private String noiseNote; // 소음 상태
+
+    @Column
+    private Boolean isParkingAvailable; // 주차 가능 여부
+
+    @Column
+    private Boolean isOpen; // 영업 여부
+
+    @Column
+    private Integer seatCount; // 남은 좌석 수
 
     // ─────────────────────────────────────────────
     // 관계 매핑

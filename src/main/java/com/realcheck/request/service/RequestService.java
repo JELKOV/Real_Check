@@ -29,6 +29,17 @@ public class RequestService {
      * - 변환 로직은 DTO 내부에 캡슐화되어 있음 (toEntity)
      */
     public Request createRequest(RequestDto dto, User user) {
+
+        if (dto.getCategory() == null) {
+            throw new IllegalArgumentException("질문의 카테고리를 선택해주세요.");
+        }
+        if (dto.getTitle() == null || dto.getTitle().isBlank()) {
+            throw new IllegalArgumentException("질문의 제목을 입력해주세요.");
+        }
+        if (dto.getContent() == null || dto.getContent().isBlank()) {
+            throw new IllegalArgumentException("질문의 내용을 입력해주세요.");
+        }
+
         return requestRepository.save(dto.toEntity(user));
     }
 
@@ -55,7 +66,7 @@ public class RequestService {
 
     /**
      * RequestController: findRequestById
-     * [4] ID로 요청 단건 조회 
+     * [4] ID로 요청 단건 조회
      * - 상세 보기 등에서 사용
      */
     public Optional<Request> findById(Long id) {
