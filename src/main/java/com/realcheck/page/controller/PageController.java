@@ -1,9 +1,12 @@
 package com.realcheck.page.controller;
 
 import com.realcheck.user.dto.UserDto;
+
+import org.springframework.ui.Model;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 /**
  * PageController
@@ -62,9 +65,14 @@ public class PageController {
         return "request/list";
     }
 
-    // 요청 상세 페이지 - page: (1) request/list.jsp (2) map/request-list.jsp (3) request/my-requests.jsp
+    // 요청 상세 페이지
+    // page:
+    // (1) request/list.jsp
+    // (2) map/request-list.jsp
+    // (3) request/my-requests.jsp
     @GetMapping("/request/{id}")
-    public String requestDetailPage() {
+    public String requestDetailPage(@PathVariable Long id, Model model) {
+        model.addAttribute("requestId", id);
         return "request/detail";
     }
 

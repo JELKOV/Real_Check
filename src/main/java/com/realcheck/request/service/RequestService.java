@@ -49,7 +49,7 @@ public class RequestService {
      * - 조건: isClosed = false AND statusLogs.size < 3
      */
     public List<Request> findOpenRequests() {
-        return requestRepository.findOpenRequestsWithoutAnswer();
+        return requestRepository.findOpenRequestsWithLocation();
     }
 
     /**

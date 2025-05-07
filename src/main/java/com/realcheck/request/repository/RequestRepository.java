@@ -39,6 +39,31 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
     List<Request> findOpenRequestsWithoutAnswer();
 
     /**
+     * RequestService: findOpenRequests
+     * [2-2] 미마감 + 답변 3개 미만 + 위치(lat/lng) 존재하는 요청 조회
+     * - 지도 기반 필터링 기능에서 사용됨
+     * 
+     * TODO: 운영 시점에는 createdAt <= now() - 3시간 조건도 추가 필요
+     * 
+     * SQL:
+     * SELECT r.* FROM request r
+     * LEFT JOIN status_log s ON r.id = s.request_id
+     * WHERE r.is_closed = false
+     * AND r.lat IS NOT NULL
+     * AND r.lng IS NOT NULL
+     * GROUP BY r.id
+     * HAVING COUNT(s.id) < 3;
+     */
+    @Query("""
+                SELECT r FROM Request r
+                WHERE r.isClosed = false
+                  AND r.lat IS NOT NULL
+                  AND r.lng IS NOT NULL
+                  AND SIZE(r.statusLogs) < 3
+            """)
+    List<Request> findOpenRequestsWithLocation();
+
+    /**
      * RequestService: findNearbyValidRequests
      * [3] 현재 위치 기준, 반경 내 응답 부족 요청 조회
      * - 장소 정보가 있는 요청만 대상으로 함
