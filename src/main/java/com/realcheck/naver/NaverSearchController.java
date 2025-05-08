@@ -20,7 +20,7 @@ public class NaverSearchController {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    // list.jsp (지도 검색 : 키워드 검색)
+    // 네이버 지역 검색 API - page: list.jsp
     // API 규정상 5개로 제약되어 있음
     @GetMapping
     public ResponseEntity<?> searchNaver(@RequestParam("query") String query) {

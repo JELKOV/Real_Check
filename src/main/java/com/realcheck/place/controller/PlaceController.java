@@ -36,7 +36,7 @@ public class PlaceController {
     // ─────────────────────────────────────────────
 
     /**
-     * [1-1] 장소 등록 API (POST /api/place)
+     * [1] 장소 등록 API (POST /api/place)
      * - 프론트엔드에서 장소 정보를 JSON으로 보내면 등록됨
      */
     @PostMapping
@@ -50,8 +50,9 @@ public class PlaceController {
     // ─────────────────────────────────────────────
 
     /**
-     * [2-1] 전체 장소 목록 조회 API (GET /api/place)
+     * [1] 전체 장소 목록 조회 API (GET /api/place)
      * - 모든 등록된 장소 조회
+     * - 관리자 전용
      */
     @GetMapping
     public ResponseEntity<List<PlaceDto>> getAll() {
@@ -59,7 +60,7 @@ public class PlaceController {
     }
 
     /**
-     * [2-2] 내 장소 목록 조회 API (GET /api/place/my)
+     * [2] 내 장소 목록 조회 API (GET /api/place/my)
      * - 로그인된 사용자가 등록한 장소만 조회
      */
     @GetMapping("/my")
@@ -75,7 +76,7 @@ public class PlaceController {
     }
 
     /**
-     * [2-3] 현재 위치 기반 주변 장소 조회 API
+     * [3] 현재 위치 기반 주변 장소 조회 API
      * - 위도, 경도, 반경을 기반으로 인근 장소 필터링
      */
     @GetMapping("/nearby")
@@ -84,5 +85,16 @@ public class PlaceController {
             @RequestParam double lng,
             @RequestParam(defaultValue = "500") double radiusMeters) {
         return ResponseEntity.ok(placeService.findNearbyPlaces(lat, lng, radiusMeters));
+    }
+
+    /**
+     * page: request/register.jsp
+     * [4] 장소 검색 API (검색어 기반)
+     * - 등록시 협력 지정위치의 업체 조회
+     */
+    @GetMapping("/search")
+    public ResponseEntity<List<PlaceDto>> searchApprovedPlaces(@RequestParam String query) {
+        List<PlaceDto> places = placeService.searchApprovedPlaces(query);
+        return ResponseEntity.ok(places);
     }
 }

@@ -28,7 +28,7 @@ public class PlaceService {
     // ─────────────────────────────────────────────
 
     /**
-     * [1-1] 장소 등록 메서드
+     * [1] 장소 등록 메서드
      * - 등록자의 ID(ownerId)를 기반으로 User 객체를 조회하고,
      * - PlaceDto를 Place Entity로 변환하여 DB에 저장함
      *
@@ -49,10 +49,8 @@ public class PlaceService {
     // ─────────────────────────────────────────────
 
     /**
-     * [2-1] 전체 장소 목록 조회
+     * [1] 전체 장소 목록 조회
      * - DB에서 모든 Place 엔티티를 조회하고, PlaceDto로 변환하여 반환
-     *
-     * @return 전체 장소 리스트
      */
     public List<PlaceDto> findAll() {
         return placeRepository.findAll().stream()
@@ -61,10 +59,8 @@ public class PlaceService {
     }
 
     /**
-     * [2-2] 특정 사용자가 등록한 장소 조회
-     *
-     * @param ownerId 사용자(등록자)의 ID
-     * @return 해당 사용자가 등록한 장소 리스트
+     * [2] 특정 사용자가 등록한 장소 조회
+     * -
      */
     public List<PlaceDto> findByOwner(Long ownerId) {
         return placeRepository.findByOwnerId(ownerId).stream()
@@ -73,13 +69,9 @@ public class PlaceService {
     }
 
     /**
-     * [2-3] 현재 위치 기준 반경 내 장소 조회
+     * [3] 현재 위치 기준 반경 내 장소 조회
      * - 사용자의 위도(lat), 경도(lng)를 기반으로 주변 장소 조회
-     *
-     * @param lat          위도
-     * @param lng          경도
-     * @param radiusMeters 검색 반경 (미터 단위)
-     * @return 반경 내 장소 리스트
+     * -
      */
     public List<PlaceDto> findNearbyPlaces(double lat, double lng, double radiusMeters) {
         return placeRepository.findNearbyPlaces(lat, lng, radiusMeters).stream()
@@ -88,16 +80,24 @@ public class PlaceService {
     }
 
     /**
-     * [2-4] 승인된 장소만 필터링
+     * [4] 승인된 장소만 필터링
      * - 사용자에게 보여줄 장소를 제한함
-     * @param lat
-     * @param lng
-     * @param radiusMeters
-     * @return
+     * 
      */
     public List<PlaceDto> findApprovedNearby(double lat, double lng, double radiusMeters) {
         return placeRepository.findApprovedNearby(lat, lng, radiusMeters)
                 .stream()
+                .map(PlaceDto::fromEntity)
+                .toList();
+    }
+
+    /**
+     * PlaceController: searchApprovedPlaces
+     * [5] 장소 검색 로직 (검색어 기반)
+     * - 승인된 장소 & 검색어 기반 조회
+     */
+    public List<PlaceDto> searchApprovedPlaces(String query) {
+        return placeRepository.findApprovedByNameContaining(query).stream()
                 .map(PlaceDto::fromEntity)
                 .toList();
     }
