@@ -1,0 +1,30 @@
+.sticky-container {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background-color: white;
+  padding-bottom: 10px;
+}
+
+.map-area {
+  height: 500px;
+}
+
+.filter-area select {
+  margin-bottom: 10px;
+}
+
+/* 모달 스타일 */
+#searchResultModal .modal-body {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.modal .list-group-item {
+  cursor: pointer;
+}
+
+/* 로딩 인디케이터 기본적으로 숨김 */
+#loadingIndicator {
+  display: none;
+}

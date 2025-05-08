@@ -2,10 +2,15 @@ package com.realcheck.request.service;
 
 import com.realcheck.request.dto.RequestDto;
 import com.realcheck.request.entity.Request;
+import com.realcheck.request.entity.RequestCategory;
 import com.realcheck.request.repository.RequestRepository;
 import com.realcheck.user.entity.User;
 
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -45,11 +50,30 @@ public class RequestService {
 
     /**
      * RequestController: findOpenRequests
-     * [2] 미마감 + 답변 3개 미만 요청 조회
-     * - 조건: isClosed = false AND statusLogs.size < 3
+     * [2] 미마감 + 답변 3개 미만 + 3시간 지난 요청 + 위치(lat/lng) 존재하는 요청 조회 (페이지네이션)
      */
-    public List<Request> findOpenRequests() {
-        return requestRepository.findOpenRequestsWithLocation();
+    public List<RequestDto> findOpenRequests(int page, int size, double lat, double lng, double radius,
+            String category) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+        LocalDateTime threshold = LocalDateTime.now().minusHours(3);
+
+        RequestCategory categoryEnum = null;
+        if (category != null && !category.isBlank()) {
+            try {
+                categoryEnum = RequestCategory.valueOf(category);
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Invalid category value: " + category);
+            }
+        }
+
+        // Repository에서 필터링된 요청 조회
+        Page<Request> entities = requestRepository.findOpenRequestsWithLocation(
+                lat, lng, radius, threshold, categoryEnum, pageable);
+
+        // DTO로 변환하여 반환
+        return entities.stream()
+                .map(RequestDto::fromEntity)
+                .toList();
     }
 
     /**

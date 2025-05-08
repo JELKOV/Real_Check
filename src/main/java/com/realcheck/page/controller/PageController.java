@@ -4,6 +4,8 @@ import com.realcheck.user.dto.UserDto;
 
 import org.springframework.ui.Model;
 import jakarta.servlet.http.HttpSession;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,6 +16,9 @@ import org.springframework.web.bind.annotation.PathVariable;
  */
 @Controller
 public class PageController {
+
+    @Value("${naver.map.client.id}")
+    private String naverMapClientId;
 
     // ─────────────────────────────────────────────
     // [1] 사용자 일반 페이지
@@ -55,13 +60,16 @@ public class PageController {
 
     // 요청 등록 페이지 (지도에서 질문 등록) - page : index.jsp
     @GetMapping("/request/register")
-    public String requestRegisterPage() {
+    public String requestRegisterPage(Model model) {
+        model.addAttribute("naverMapClientId", naverMapClientId);
         return "request/register";
     }
 
     // 요청 목록 페이지 (답변 가능한 요청 리스트) - page : index.jsp
     @GetMapping("/request/list")
-    public String requestListPage() {
+    public String requestListPage(Model model) {
+        model.addAttribute("naverMapClientId", naverMapClientId);
+
         return "request/list";
     }
 
@@ -73,6 +81,8 @@ public class PageController {
     @GetMapping("/request/{id}")
     public String requestDetailPage(@PathVariable Long id, Model model) {
         model.addAttribute("requestId", id);
+        model.addAttribute("naverMapClientId", naverMapClientId);
+
         return "request/detail";
     }
 
@@ -88,13 +98,17 @@ public class PageController {
 
     // 주변 졍보 확인 (답변 달린 내용) - page: index.jsp
     @GetMapping("/nearby")
-    public String nearbyPage() {
+    public String nearbyPage(Model model) {
+        model.addAttribute("naverMapClientId", naverMapClientId);
+
         return "map/nearby";
     }
 
     // 주변 요청 확인 (답변할 요청) - page: index.jsp
     @GetMapping("/nearby/request-list")
-    public String nearbyRequestListPage() {
+    public String nearbyRequestListPage(Model model) {
+        model.addAttribute("naverMapClientId", naverMapClientId);
+
         return "map/request-list";
     }
 

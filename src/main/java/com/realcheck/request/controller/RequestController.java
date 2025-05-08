@@ -28,7 +28,7 @@ public class RequestController {
 
     /**
      * page: request/register.jsp
-     * [1] 요청 등록 API 
+     * [1] 요청 등록 API
      * - 세션 로그인 사용자만 가능
      * - RequestDto → Entity 변환은 Service 내부에서 처리
      */
@@ -45,15 +45,19 @@ public class RequestController {
 
     /**
      * page: request/list.jsp
-     * [2] 미마감 + 답변 3개 미만 요청 조회
+     * [2] 미마감 + 답변 3개 미만 + 3시간 지난 요청 + 위치(lat/lng) 존재하는 요청 조회 (페이지네이션)
      * - 리스트 조회용
      */
     @GetMapping("/open")
-    public ResponseEntity<List<RequestDto>> findOpenRequests() {
-        List<Request> entities = requestService.findOpenRequests();
-        List<RequestDto> dtoList = entities.stream()
-                .map(RequestDto::fromEntity)
-                .toList();
+    public ResponseEntity<List<RequestDto>> findOpenRequests(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam double lat,
+            @RequestParam double lng,
+            @RequestParam double radius,
+            @RequestParam(required = false) String category) {
+    
+        List<RequestDto> dtoList = requestService.findOpenRequests(page, size, lat, lng, radius, category);
         return ResponseEntity.ok(dtoList);
     }
 
