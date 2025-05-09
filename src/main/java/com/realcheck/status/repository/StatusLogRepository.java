@@ -4,6 +4,7 @@ import com.realcheck.admin.dto.MonthlyStatDto;
 import com.realcheck.status.entity.StatusLog;
 import java.time.LocalDateTime;
 import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -33,7 +34,7 @@ public interface StatusLogRepository extends JpaRepository<StatusLog, Long> {
 
         /**
          * StatusLogService: registerInternal
-         * [2] 특정 사용자의 당일 등록 횟수 조회 
+         * [2] 특정 사용자의 당일 등록 횟수 조회
          * - 포인트 지급 조건 체크용
          * - SQL:
          * SELECT COUNT(*) FROM status_logs
@@ -113,7 +114,8 @@ public interface StatusLogRepository extends JpaRepository<StatusLog, Long> {
         StatusLog findTopByPlaceIdAndIsHiddenFalseOrderByCreatedAtDesc(Long placeId);
 
         /**
-         * [4] 특정 요청(Request)에 등록된 답변(StatusLog)의 개수 조회 - StatusLogService: registerAnswer
+         * [4] 특정 요청(Request)에 등록된 답변(StatusLog)의 개수 조회 - StatusLogService:
+         * registerAnswer
          * - 요청당 최대 3개의 답변만 허용하기 위한 제약 조건 검사 시 사용
          * - SQL:
          * SELECT COUNT(*) FROM status_logs
@@ -122,7 +124,8 @@ public interface StatusLogRepository extends JpaRepository<StatusLog, Long> {
         long countByRequestId(Long requestId);
 
         /**
-         * [5] 특정 요청(Request)에 연결된 모든 상태 로그 조회 (상세 조회) - StatusLogService: getAnswersByRequestId
+         * [5] 특정 요청(Request)에 연결된 모든 상태 로그 조회 (상세 조회) - StatusLogService:
+         * getAnswersByRequestId
          * getAnswersByRequestId
          * - 요청 상세 페이지에서 답변(StatusLog) 목록 표시용
          * - SQL:

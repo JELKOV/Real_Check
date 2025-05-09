@@ -3,16 +3,24 @@
   height: 400px;
   margin-bottom: 20px;
   border: 1px solid #ccc;
-  display: block;
-  transition: height 0.3s ease;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
-#placeMap,
-#customMap {
-  width: 100%;
-  height: 100%;
-  min-height: 400px;
-  transition: height 0.3s ease;
+#placeSearchResults {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.place-item {
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.place-item.selected {
+  background-color: #e0f3ff;
+  font-weight: bold;
+  border-left: 4px solid #007bff;
 }
 
 #requestForm {
@@ -20,33 +28,12 @@
   margin: 0 auto;
 }
 
-#requestForm .form-label {
-  font-weight: bold;
-}
-
-#requestForm .form-control {
-  border-radius: 5px;
-}
-
-#requestForm button {
-  background-color: #007bff;
-  border: none;
-  border-radius: 5px;
-  font-size: 16px;
-  padding: 10px 15px;
-  transition: background-color 0.3s;
-}
-
-#requestForm button:hover {
-  background-color: #0056b3;
-}
-
 /* Hover 시 파란색 배경 제거 (Bootstrap 기본 버튼) */
 .btn-primary:hover {
   background-color: #000000 !important;
   color: #ebf3f8 !important;
   border-color: #2a00fd !important;
-  transform: scale(1.05); /* 확대 효과 */
+  transform: scale(1.05);
   transition: transform 0.2s ease, background-color 0.2s ease;
 }
 
@@ -54,45 +41,24 @@
   background-color: #ffffff !important;
   color: #050506 !important;
   border-color: #2a00fd !important;
-  transform: scale(1.05); /* 확대 효과 */
+  transform: scale(1.05);
   transition: transform 0.2s ease, background-color 0.2s ease;
 }
 
-/* 클릭 시 약간 축소되는 효과 */
-.btn-primary:active,
-.btn-outline-primary:active {
-  transform: scale(0.98); /* 클릭 시 약간 축소 */
+.selected-place-input {
+  transition: box-shadow 0.3s, background-color 0.3s;
 }
 
-/* 검색 값 마우스 오버 효과 */
-.place-item {
-  cursor: pointer;
-  transition: background-color 0.3s;
+.selected-place-input.selected {
+  box-shadow: 0 0 5px 2px #4caf50;
+  background-color: #e6ffe6;
 }
 
-/* 선택된 장소 시각적 강조 */
-.place-item.selected {
-  background-color: #e0f3ff;
-  font-weight: bold;
-  border-left: 4px solid #007bff;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-/* 클릭 시 반짝임 효과 */
-.place-item.flash {
-  animation: flash-effect 0.3s ease-in-out;
-}
-
-/* 반짝임 효과 (애니메이션) */
-@keyframes flash-effect {
-  0% {
-    background-color: #e0f3ff;
-  }
-  50% {
-    background-color: #ffd700;
-  }
-  100% {
-    background-color: #e0f3ff;
-  }
+.selected-marker {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  font-size: 1.5rem;
+  color: #4caf50;
 }

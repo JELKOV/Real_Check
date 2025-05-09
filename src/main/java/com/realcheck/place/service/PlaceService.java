@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.realcheck.place.dto.PlaceDetailsDto;
 import com.realcheck.place.dto.PlaceDto;
 import com.realcheck.place.entity.Place;
 import com.realcheck.place.repository.PlaceRepository;
@@ -100,5 +101,17 @@ public class PlaceService {
         return placeRepository.findApprovedByNameContaining(query).stream()
                 .map(PlaceDto::fromEntity)
                 .toList();
+    }
+
+
+    /**
+     * PlaceController: getPlaceDetails
+     * [6] 장소 상세 정보 조회 로직 (공식 장소)
+     * Todo: placeCommunity 내용 주소 수정 
+     */
+    public PlaceDetailsDto getPlaceDetails(Long id) {
+        Place place = placeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("해당 장소를 찾을 수 없습니다."));
+        return PlaceDetailsDto.fromEntity(place);
     }
 }

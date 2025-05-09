@@ -25,7 +25,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
       <!-- 장소 선택 방식 -->
       <div class="mb-3">
-        <label class="form-label">장소 선택 방식</label>
+        <label class="form-label" for="btnPlace">장소 선택 방식</label>
         <div class="btn-group w-100">
           <button type="button" class="btn btn-primary w-50" id="btnPlace">
             공식 장소
@@ -40,10 +40,10 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
         </div>
       </div>
 
-      <!-- 협력업체 장소 (Place) 선택 -->
+      <!-- 장소 검색 / 사용자 지정 -->
       <div id="placeSection">
-        <div class="mb-3">
-          <label class="form-label">공식 장소 검색</label>
+        <div class="mb-3" id="searchSection">
+          <label for="placeSearch" class="form-label">공식 장소 검색</label>
           <input
             type="text"
             class="form-control"
@@ -53,37 +53,40 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
           <ul id="placeSearchResults" class="list-group mt-2"></ul>
         </div>
 
-        <div id="placeMap" class="map-container"></div>
+        <!-- 통합 지도 -->
+        <div id="mainMap" class="map-container"></div>
 
-        <div class="mb-3">
-          <label class="form-label">선택된 장소 정보</label>
-          <input
-            type="text"
-            class="form-control"
-            id="selectedPlaceName"
-            readonly
-          />
+        <div class="mb-3 mt-3">
+          <label for="selectedPlaceName" class="form-label"
+            >선택된 장소 정보</label
+          >
+          <div class="position-relative">
+            <input
+              type="text"
+              class="form-control selected-place-input"
+              id="selectedPlaceName"
+              readonly
+              placeholder="선택된 장소가 없습니다."
+            />
+            <span
+              class="selected-marker"
+              id="selectedMarker"
+              style="display: none"
+            >
+              ✔️
+            </span>
+          </div>
+          <!-- 공식 장소 추가 정보 -->
+          <div id="infoSection" class="mt-3" style="display: none">
+            <h5>공식 장소 추가 정보</h5>
+            <p><strong>주소:</strong> <span id="infoAddress"></span></p>
+            <p><strong>관리자 공지:</strong> <span id="infoRecent"></span></p>
+            <p><a href="#" target="_blank" id="infoLink">커뮤니티 페이지</a></p>
+          </div>
           <input type="hidden" id="placeId" name="placeId" />
           <input type="hidden" id="lat" name="lat" />
           <input type="hidden" id="lng" name="lng" />
         </div>
-      </div>
-
-      <!-- 사용자 지정 장소 (Custom Place) 선택 -->
-      <div id="customSection" style="display: none">
-        <div class="mb-3">
-          <label class="form-label">사용자 지정 장소 이름</label>
-          <input
-            type="text"
-            class="form-control"
-            id="customPlaceName"
-            placeholder="예: 강남역 근처"
-          />
-        </div>
-
-        <div id="customMap" class="map-container"></div>
-        <input type="hidden" id="latCustom" name="lat" />
-        <input type="hidden" id="lngCustom" name="lng" />
       </div>
 
       <!-- 요청 정보 -->
@@ -122,6 +125,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
         <textarea
           class="form-control"
           id="content"
+          name="content"
           rows="3"
           required
         ></textarea>
@@ -133,6 +137,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
           type="number"
           class="form-control"
           id="point"
+          name="point"
           min="1"
           value="10"
           required

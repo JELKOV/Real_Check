@@ -1,71 +1,14 @@
 $(document).ready(function () {
-  let placeMap = initializeMap("placeMap");
-  let customMap = initializeMap("customMap");
-  let placeMarker = null;
-  let customMarker = null;
+  let mainMap = initializeMap("mainMap");
+  let mainMarker = null;
   let currentFocus = -1;
 
+  // 지도 초기화 함수
   function initializeMap(target, lat = 37.5665, lng = 126.978, zoom = 13) {
     return new naver.maps.Map(target, {
       center: new naver.maps.LatLng(lat, lng),
       zoom: zoom,
     });
-  }
-
-  // 버튼 스타일 전환 함수
-  function toggleButtonStyles(active, inactive) {
-    $(active).addClass("btn-primary").removeClass("btn-outline-primary");
-    $(inactive).addClass("btn-outline-primary").removeClass("btn-primary");
-  }
-
-  // 선택된 장소 초기화
-  function resetSelectedPlace() {
-    $("#selectedPlaceName").val("");
-    $("#placeId").val("");
-    $("#lat").val("");
-    $("#lng").val("");
-    $(".place-item").removeClass("selected");
-    currentFocus = -1;
-  }
-
-  // 장소 선택 방식 전환
-  $("#btnPlace").click(() => {
-    $("#placeSection").show();
-    $("#customSection").hide();
-    if (customMarker) customMarker.setMap(null);
-    // resizeMap(placeMap);
-    resetSelectedPlace();
-    toggleButtonStyles("#btnPlace", "#btnCustom");
-  });
-
-  $("#btnCustom").click(() => {
-    $("#placeSection").hide();
-    $("#customSection").show();
-    if (placeMarker) placeMarker.setMap(null);
-    // resizeMap(customMap);
-    resetSelectedPlace();
-    toggleButtonStyles("#btnCustom", "#btnPlace");
-  });
-
-  // 마커 설정 (공식 장소)
-  function setPlaceMarker(lat, lng, name = "", id = "") {
-    if (!placeMarker) {
-      placeMarker = new naver.maps.Marker({
-        map: placeMap,
-        position: new naver.maps.LatLng(lat, lng),
-      });
-    } else {
-      placeMarker.setPosition(new naver.maps.LatLng(lat, lng));
-    }
-
-    placeMap.setCenter(new naver.maps.LatLng(lat, lng));
-
-    // 선택된 장소 정보 설정
-    $("#selectedPlaceName").val(name);
-    $("#placeId").val(id);
-    $("#lat").val(lat);
-    $("#lng").val(lng);
-    $("#placeSearch").val(name); // 검색창에 선택된 이름 자동 표시
   }
 
   // 장소 검색
@@ -80,62 +23,28 @@ $(document).ready(function () {
     $.get("/api/place/search", { query }, function (places) {
       $("#placeSearchResults").empty().show();
       if (places.length === 0) {
-        $("#placeSearchResults").append(
+        $("#placeSearchResults").html(
           `<li class="list-group-item">검색 결과가 없습니다.</li>`
         );
         return;
       }
 
-      places.forEach((place) => {
-        $("#placeSearchResults").append(`
+      let resultsHtml = "";
+      places.forEach((place, index) => {
+        resultsHtml += `
           <li class="list-group-item place-item" 
               data-id="${place.id}" 
               data-lat="${place.lat}" 
               data-lng="${place.lng}"
               data-name="${place.name}">
             ${place.name}
-          </li>
-        `);
+          </li>`;
       });
 
-      // 클릭 이벤트 바인딩 (중복 방지)
-      $(".place-item")
-        .off("click")
-        .on("click", function () {
-          selectPlace($(this));
-        });
-
-      // 마우스 호버 시 하이라이트 적용
-      $(".place-item")
-        .off("mouseenter")
-        .on("mouseenter", function () {
-          highlightItem($(this));
-        });
+      $("#placeSearchResults").html(resultsHtml);
+      currentFocus = -1; // 검색할 때마다 초기화 (선택되지 않은 상태)
     });
   });
-
-  // 장소 선택 함수 (검색 목록에서)
-  function selectPlace(item) {
-    const lat = parseFloat(item.data("lat"));
-    const lng = parseFloat(item.data("lng"));
-    const placeName = item.data("name");
-    const placeId = item.data("id");
-
-    $(".place-item").removeClass("selected flash");
-    item.addClass("selected flash");
-
-    setPlaceMarker(lat, lng, placeName, placeId);
-
-    // 검색 결과 자동 닫기
-    $("#placeSearchResults").hide();
-    $("#placeSearch").val(placeName);
-  }
-
-  // 강조된 아이템 하이라이트 (키보드 탐색 + 마우스)
-  function highlightItem(item) {
-    $(".place-item").removeClass("selected");
-    item.addClass("selected");
-  }
 
   // 키보드 탐색 (위/아래 + 엔터)
   $("#placeSearch").on("keydown", function (e) {
@@ -145,16 +54,48 @@ $(document).ready(function () {
     if (e.key === "ArrowDown") {
       e.preventDefault();
       currentFocus = (currentFocus + 1) % items.length;
-      highlightItem($(items[currentFocus]));
+      updateSelection(items);
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       currentFocus = (currentFocus - 1 + items.length) % items.length;
-      highlightItem($(items[currentFocus]));
-    } else if (e.key === "Enter") {
+      updateSelection(items);
+    } else if (e.key === "Enter" && currentFocus >= 0) {
       e.preventDefault();
-      if (currentFocus >= 0) {
-        selectPlace($(items[currentFocus]));
-      }
+      selectPlace($(items[currentFocus]));
+    }
+  });
+
+  // 선택된 항목 강조 (키보드 탐색, 클릭 등)
+  function updateSelection(items) {
+    items.removeClass("selected");
+    if (currentFocus >= 0 && currentFocus < items.length) {
+      $(items[currentFocus]).addClass("selected");
+      $(items[currentFocus])[0].scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    }
+  }
+
+  // 마우스 호버 시 하이라이트 (선택 중복 방지)
+  $("#placeSearchResults").on("mouseenter", ".place-item", function (e) {
+    e.preventDefault();
+    // 클릭 중이 아닐 때만 하이라이트
+    $(".place-item").removeClass("selected");
+    $(this).addClass("selected");
+    currentFocus = $(".place-item").index($(this));
+  });
+
+  // 마우스 하이라이트
+  $("#placeSearchResults").on("mousedown", ".place-item", function (e) {
+    e.preventDefault();
+    selectPlace($(this));
+  });
+
+  // ESC 누를시에 자동닫기
+  $(document).on("keydown", function (e) {
+    if (e.key === "Escape") {
+      $("#placeSearchResults").hide();
     }
   });
 
@@ -166,26 +107,105 @@ $(document).ready(function () {
   });
 
   // 사용자 지정 장소 - 지도 클릭 시 마커 설정
-  naver.maps.Event.addListener(customMap, "click", function (e) {
-    if (!$("#customSection").is(":visible")) return;
+  naver.maps.Event.addListener(mainMap, "click", function (e) {
+    if ($("#searchSection").is(":visible")) return; // 사용자 지정일 때만 동작
     const lat = e.coord.lat();
     const lng = e.coord.lng();
 
-    if (!customMarker) {
-      customMarker = new naver.maps.Marker({
-        map: customMap,
+    setMainMarker(lat, lng, "사용자 지정 장소", "");
+  });
+
+  // 선택된 장소 초기화
+  function resetSelectedPlace() {
+    $("#selectedPlaceName").val("").removeClass("selected");
+    $("#selectedMarker").hide();
+    $("#placeId").val("");
+    $("#lat").val("");
+    $("#lng").val("");
+    $(".place-item").removeClass("selected");
+    currentFocus = -1;
+
+    // 마커 초기화 (숨기기)
+    if (mainMarker) {
+      mainMarker.setMap(null);
+      mainMarker = null;
+    }
+  }
+
+  // 장소 선택 함수 (검색 목록에서)
+  function selectPlace(item) {
+    const lat = parseFloat(item.data("lat"));
+    const lng = parseFloat(item.data("lng"));
+    const placeName = item.data("name");
+    const placeId = item.data("id");
+
+    $(".place-item").removeClass("selected");
+    item.addClass("selected");
+
+    $("#selectedPlaceName").val(placeName).show();
+    $("#selectedPlaceName").addClass("selected");
+    $("#selectedMarker").show(); // 마킹 활성화
+    setMainMarker(lat, lng, placeName, placeId);
+
+    if (placeId) {
+      loadPlaceDetails(placeId);
+    } else {
+      $("#infoSection").hide();
+    }
+
+    $("#placeSearch").val(placeName);
+  }
+
+  // API 요청 (register.js)
+  function loadPlaceDetails(placeId) {
+    $.get(`/api/place/${placeId}/details`, function (data) {
+      console.log("API Response:", data); // 여기서 응답 확인
+      $("#infoSection").show();
+      $("#infoAddress").text(data.fullAddress || "주소 정보 없음");
+      $("#infoRecent").text(data.recentInfo || "최근 정보 없음");
+      $("#infoLink").attr("href", data.communityLink).text("커뮤니티 페이지");
+    }).fail(function (xhr) {
+      console.error("API Error:", xhr.responseText);
+    });
+  }
+
+  // 마커 설정 함수 (지도 하나로 통합)
+  function setMainMarker(lat, lng, name = "", id = "") {
+    if (!mainMarker) {
+      mainMarker = new naver.maps.Marker({
+        map: mainMap,
         position: new naver.maps.LatLng(lat, lng),
       });
     } else {
-      customMarker.setPosition(new naver.maps.LatLng(lat, lng));
+      mainMarker.setPosition(new naver.maps.LatLng(lat, lng));
+      mainMarker.setMap(mainMap); // 마커 다시 표시
     }
 
-    $("#selectedPlaceName").val("사용자 지정 장소");
-    $("#placeId").val("");
+    mainMap.setCenter(new naver.maps.LatLng(lat, lng));
+
+    // 장소 정보 설정 (lat, lng, placeId)
     $("#lat").val(lat);
     $("#lng").val(lng);
-    $("#placeSearch").val("사용자 지정 장소");
-    $("#placeSearchResults").hide(); // 사용자 지정 선택 시 검색 결과 닫기
+    $("#placeId").val(id || "");
+  }
+
+  // 버튼 스타일 전환 함수
+  function toggleButtonStyles(active, inactive) {
+    $(active).addClass("btn-primary").removeClass("btn-outline-primary");
+    $(inactive).addClass("btn-outline-primary").removeClass("btn-primary");
+  }
+
+  // 장소 선택 방식 전환
+  $("#btnPlace").click(() => {
+    $("#searchSection").show();
+    resetSelectedPlace();
+    toggleButtonStyles("#btnPlace", "#btnCustom");
+  });
+
+  $("#btnCustom").click(() => {
+    $("#searchSection").hide();
+    resetSelectedPlace();
+    toggleButtonStyles("#btnCustom", "#btnPlace");
   });
 
   const titlePlaceholderMap = {

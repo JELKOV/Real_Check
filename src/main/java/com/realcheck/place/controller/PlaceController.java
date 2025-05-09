@@ -4,12 +4,14 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.realcheck.place.dto.PlaceDetailsDto;
 import com.realcheck.place.dto.PlaceDto;
 import com.realcheck.place.service.PlaceService;
 import com.realcheck.user.dto.UserDto;
@@ -96,5 +98,15 @@ public class PlaceController {
     public ResponseEntity<List<PlaceDto>> searchApprovedPlaces(@RequestParam String query) {
         List<PlaceDto> places = placeService.searchApprovedPlaces(query);
         return ResponseEntity.ok(places);
+    }
+
+    /**
+     * page: request/register.jsp
+     * [5] 공식 장소 상세 정보 조회 API
+     */
+    @GetMapping("/{id}/details")
+    public ResponseEntity<PlaceDetailsDto> getPlaceDetails(@PathVariable Long id) {
+        PlaceDetailsDto details = placeService.getPlaceDetails(id);
+        return ResponseEntity.ok(details);
     }
 }

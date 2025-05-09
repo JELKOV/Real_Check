@@ -44,6 +44,9 @@ public class PlaceDto {
     @NotNull(message = "등록자(ownerId)는 필수입니다.")
     private Long ownerId; // 등록자 ID (User)
 
+    private String recentInfo;  // 최근 정보 (추가)
+    private String communityLink; // 커뮤니티 링크 (추가)
+
     /**
      * DTO → Entity 변환
      * - 등록 시 사용
@@ -70,6 +73,8 @@ public class PlaceDto {
                 .lat(place.getLat())
                 .lng(place.getLng())
                 .ownerId(place.getOwner() != null ? place.getOwner().getId() : null)
+                .recentInfo(place.getRecentInfo()) // 최근 정보 매핑
+                .communityLink(place.getCommunityLink()) // 커뮤니티 링크 매핑
                 .build();
     }
 }

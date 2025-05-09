@@ -49,4 +49,12 @@ public class Place {
     @ManyToOne
     @JoinColumn(name = "owner_id")
     private User owner; // 장소 등록자 정보 (User 엔티티)
+
+    // 최근 정보
+    @Column(name = "recent_info", columnDefinition = "TEXT")
+    private String recentInfo; 
+
+    // 커뮤니티 링크
+    @Column(name = "community_link", length = 500)
+    private String communityLink; 
 }
