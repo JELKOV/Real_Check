@@ -50,8 +50,8 @@
 }
 
 .selected-place-input.selected {
-  box-shadow: 0 0 5px 2px #4caf50;
-  background-color: #e6ffe6;
+  box-shadow: 0 0 5px 2px #0454aa;
+  background-color: #ffffff;
 }
 
 .selected-marker {
@@ -60,5 +60,41 @@
   right: 10px;
   transform: translateY(-50%);
   font-size: 1.5rem;
-  color: #4caf50;
+  color: #007bff;
+}
+
+.info-card {
+  background-color: #f8f9fa;
+  border: 2px solid #007bff;
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0 4px 15px rgba(0, 123, 255, 0.2);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.info-title {
+  font-weight: bold;
+  color: #007bff;
+  margin-bottom: 10px;
+}
+
+.info-content {
+  font-size: 0.95rem;
+  color: #343a40;
+}
+
+.info-content p {
+  margin-bottom: 8px;
+}
+
+.info-link {
+  display: inline-block;
+  margin-top: 10px;
+  font-weight: bold;
+  text-decoration: none;
+  color: #080808;
+  background-color: #dfe2e6;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: background-color 0.3s;
 }

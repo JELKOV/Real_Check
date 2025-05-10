@@ -1,13 +1,19 @@
 package com.realcheck.place.service;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.realcheck.place.dto.PlaceDetailsDto;
 import com.realcheck.place.dto.PlaceDto;
+import com.realcheck.place.entity.AllowedRequestType;
 import com.realcheck.place.entity.Place;
+import com.realcheck.place.repository.AllowedRequestTypeRepository;
 import com.realcheck.place.repository.PlaceRepository;
+import com.realcheck.request.entity.RequestCategory;
 import com.realcheck.user.entity.User;
 import com.realcheck.user.repository.UserRepository;
 
@@ -23,6 +29,7 @@ import lombok.RequiredArgsConstructor;
 public class PlaceService {
     private final PlaceRepository placeRepository; // 장소 데이터를 저장/조회하는 JPA Repository
     private final UserRepository userRepository; // 장소를 등록한 사용자 정보를 조회하기 위한 Repository
+    private final AllowedRequestTypeRepository allowedRequestTypeRepository;
 
     // ─────────────────────────────────────────────
     // [1] 장소 등록 관련
@@ -103,15 +110,51 @@ public class PlaceService {
                 .toList();
     }
 
-
     /**
      * PlaceController: getPlaceDetails
      * [6] 장소 상세 정보 조회 로직 (공식 장소)
-     * Todo: placeCommunity 내용 주소 수정 
+     * Todo: placeCommunity 내용 주소 수정
      */
     public PlaceDetailsDto getPlaceDetails(Long id) {
+        // 1. Place 엔티티 조회
         Place place = placeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("해당 장소를 찾을 수 없습니다."));
-        return PlaceDetailsDto.fromEntity(place);
+
+        // 2. 허용된 요청 타입 조회 (Set<String>)
+        Set<String> allowedRequestTypes = allowedRequestTypeRepository.findByPlaceId(id).stream()
+                .map(type -> type.getRequestType().name())
+                .collect(Collectors.toSet());
+
+        // 3. PlaceDetailsDto 생성 및 반환
+        return PlaceDetailsDto.fromEntity(place, allowedRequestTypes);
     }
+
+    // ─────────────────────────────────────────────
+    // [3] 요청 카테고리 등록 및 삭제 (AllowedRequestType)
+    // ─────────────────────────────────────────────
+
+    /**
+     * [1] 특정 장소에 허용된 요청 타입 추가
+     */
+    @Transactional
+    public void addAllowedRequestType(Long placeId, String requestType) {
+        Place place = placeRepository.findById(placeId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 장소를 찾을 수 없습니다. ID: " + placeId));
+
+        boolean alreadyExists = allowedRequestTypeRepository.existsByPlaceIdAndRequestType(placeId,
+                RequestCategory.valueOf(requestType));
+
+        if (!alreadyExists) {
+            AllowedRequestType allowedType = new AllowedRequestType(place, RequestCategory.valueOf(requestType));
+            allowedRequestTypeRepository.save(allowedType);
+        }
+    }
+
+    /**
+     * [2] 특정 장소에 허용된 요청 타입 제거
+     */
+    public void removeAllowedRequestType(Long placeId, String requestType) {
+        allowedRequestTypeRepository.deleteByPlaceIdAndRequestType(placeId, RequestCategory.valueOf(requestType));
+    }
+
 }

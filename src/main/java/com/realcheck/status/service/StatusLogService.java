@@ -13,6 +13,7 @@ import com.realcheck.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -31,7 +32,6 @@ public class StatusLogService {
     private final PlaceRepository placeRepository;
     private final PointService pointService;
     private final com.realcheck.request.repository.RequestRepository requestRepository;
-    private final com.realcheck.request.service.RequestService requestService;
 
     // ─────────────────────────────────────────────
     // [1] 공통 내부 처리 메서드
@@ -51,42 +51,100 @@ public class StatusLogService {
      */
     private void registerInternal(Long userId, StatusLogDto dto, StatusType type, boolean checkLimit,
             boolean givePoint) {
+
+        User user = validateUser(userId);
+        Place place = validatePlace(dto.getPlaceId());
+
+        if (checkLimit) {
+            validateDailyLimit(userId);
+        }
+
+        // 요청 연결 시 타입 검증 및 필드 필터링
+        Request request = validateAndFilterFieldsByRequest(dto);
+        // 공식 장소일 경우 타입 검증 (허용된 타입인지)
+        if (place != null) {
+            validateAllowedRequestType(place, request);
+        }
+
+        // 상태 로그 생성 및 저장
+        StatusLog log = dto.toEntity(user, place);
+        log.setStatusType(type);
+        log.setRequest(request);
+        statusLogRepository.save(log);
+
+        // 포인트 지급
+        if (givePoint) {
+            giveUserPoint(user, 10, "정보 공유");
+        }
+    }
+
+    /**
+     * [A] 사용자 검증 (활성 사용자)
+     */
+    private User validateUser(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("사용자 없음"));
-
         if (!user.isActive()) {
             throw new RuntimeException("해당 사용자는 신고 누적으로 차단되었습니다.");
         }
+        return user;
+    }
 
-        Place place = null;
-        if (dto.getPlaceId() != null) {
-            place = placeRepository.findById(dto.getPlaceId())
-                    .orElseThrow(() -> new RuntimeException("장소 없음"));
+    /**
+     * [B] 장소 검증 (Optional)
+     */
+    private Place validatePlace(Long placeId) {
+        if (placeId == null)
+            return null;
+        return placeRepository.findById(placeId)
+                .orElseThrow(() -> new RuntimeException("장소 없음"));
+    }
+
+    /**
+     * [C] 요청 검증 및 필드 자동 필터링
+     */
+    private Request validateAndFilterFieldsByRequest(StatusLogDto dto) {
+        if (dto.getRequestId() == null)
+            return null;
+
+        Request request = requestRepository.findById(dto.getRequestId())
+                .orElseThrow(() -> new RuntimeException("요청 없음"));
+
+        // 필드 자동 필터링 (StatusLog 엔티티에서 처리)
+        dto.filterFieldsByCategory(request.getCategory());
+        return request;
+    }
+
+    /**
+     * [D] 공식 장소의 허용된 질문 타입 검증
+     */
+    private void validateAllowedRequestType(Place place, Request request) {
+        if (request == null)
+            return; // 요청 없이 자발적 공유일 경우 패스
+        boolean isAllowed = place.getAllowedRequestTypes().stream()
+                .anyMatch(type -> type.getRequestType().equals(request.getCategory()));
+        if (!isAllowed) {
+            throw new RuntimeException("해당 장소에서는 선택한 요청 카테고리를 사용할 수 없습니다.");
         }
+    }
 
-        if (checkLimit) {
-            LocalDateTime start = LocalDate.now().atStartOfDay();
-            LocalDateTime end = start.plusDays(1);
-            int count = statusLogRepository.countByReporterIdAndCreatedAtBetween(userId, start, end);
-            if (count >= 3) {
-                throw new RuntimeException("하루 3회까지만 등록 가능합니다.");
-            }
+    /**
+     * [E] 일일 등록 횟수 제한 확인
+     */
+    private void validateDailyLimit(Long userId) {
+        LocalDateTime start = LocalDate.now().atStartOfDay();
+        LocalDateTime end = start.plusDays(1);
+        int count = statusLogRepository.countByReporterIdAndCreatedAtBetween(userId, start, end);
+        if (count >= 3) {
+            throw new RuntimeException("하루 3회까지만 등록 가능합니다.");
         }
+    }
 
-        StatusLog log = dto.toEntity(user, place);
-        log.setStatusType(type);
-
-        if (type == StatusType.ANSWER && dto.getRequestId() != null) {
-            Request request = requestService.findById(dto.getRequestId())
-                    .orElseThrow(() -> new RuntimeException("요청 없음"));
-            log.setRequest(request);
-        }
-
-        statusLogRepository.save(log);
-
-        if (givePoint) {
-            pointService.givePoint(user, 10, "정보 공유");
-        }
+    /**
+     * [F] 포인트 지급 처리
+     */
+    private void giveUserPoint(User user, int points, String reason) {
+        pointService.givePoint(user, points, reason);
     }
 
     // ─────────────────────────────────────────────
@@ -101,18 +159,20 @@ public class StatusLogService {
      * - 하루 3회 등록 제한 적용 (checkLimit = true)
      * - 포인트 지급 있음
      */
+    @Transactional
     public void register(Long userId, StatusLogDto dto) {
         registerInternal(userId, dto, StatusType.ANSWER, true, true);
     }
 
     /**
      * AnswerController: createAnswer
-     * [2] 요청 기반 답변 등록 
+     * [2] 요청 기반 답변 등록
      * - 누군가 등록한 요청(Request)에 대해 다른 사용자가 답변(상태 정보)을 등록할 때 사용
      * - 장소 정보는 optional (placeId가 null일 수 있음 – custom location 허용)
      * - 하루 횟수 제한 없음 (checkLimit = false)
      * - 포인트 지급 없음 (givePoint = false)
      */
+    @Transactional
     public void registerAnswer(Long userId, StatusLogDto dto) {
         if (statusLogRepository.countByRequestId(dto.getRequestId()) >= 3) {
             throw new RuntimeException("해당 요청은 이미 3개의 답변이 등록되었습니다.");
@@ -125,22 +185,9 @@ public class StatusLogService {
      * - 요청 없이 사용자가 직접 공유
      * - 조회수 기반 보상 구조로 활용 가능
      */
+    @Transactional
     public void registerFreeShare(Long userId, StatusLogDto dto) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("사용자 없음"));
-        if (!user.isActive()) {
-            throw new RuntimeException("해당 사용자는 신고 누적으로 차단되었습니다.");
-        }
-
-        Place place = placeRepository.findById(dto.getPlaceId())
-                .orElseThrow(() -> new RuntimeException("장소 없음"));
-
-        StatusLog log = dto.toEntity(user, place);
-        log.setStatusType(StatusType.FREE_SHARE); // 자유 공유로 설정
-        log.setRequest(null); // 연결 요청 없음
-        statusLogRepository.save(log);
-
-        // 조회수 기반 포인트 지급 예정
+        registerInternal(userId, dto, StatusType.FREE_SHARE, false, true);
     }
 
     /**

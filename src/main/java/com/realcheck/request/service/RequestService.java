@@ -1,5 +1,8 @@
 package com.realcheck.request.service;
 
+import com.realcheck.place.entity.Place;
+import com.realcheck.place.repository.AllowedRequestTypeRepository;
+import com.realcheck.place.repository.PlaceRepository;
 import com.realcheck.request.dto.RequestDto;
 import com.realcheck.request.entity.Request;
 import com.realcheck.request.entity.RequestCategory;
@@ -12,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,14 +31,42 @@ import java.util.Optional;
 public class RequestService {
 
     private final RequestRepository requestRepository;
+    private final PlaceRepository placeRepository;
+    private final AllowedRequestTypeRepository allowedRequestTypeRepository;
 
     /**
      * [1] 요청 등록
      * - RequestDto를 엔티티로 변환하고 DB에 저장
      * - 변환 로직은 DTO 내부에 캡슐화되어 있음 (toEntity)
      */
+    @Transactional
     public Request createRequest(RequestDto dto, User user) {
+        // [1] 기본 유효성 검사
+        validateRequestDto(dto);
 
+        // [2] Place 확인 (공식 장소인 경우)
+        Place place = null;
+        if (dto.getPlaceId() != null) {
+            place = placeRepository.findById(dto.getPlaceId())
+                    .orElseThrow(() -> new IllegalArgumentException("공식 장소를 찾을 수 없습니다."));
+        }
+
+        // [3] Request 엔티티로 변환
+        Request request = dto.toEntity(user, place);
+
+        // [4] 공식 장소일 경우 타입 검증
+        if (place != null && !isValidForPlace(place, request.getCategory())) {
+            throw new IllegalArgumentException("해당 장소에서는 선택한 요청 카테고리를 사용할 수 없습니다.");
+        }
+
+        // [5] 저장
+        return requestRepository.save(request);
+    }
+
+    /**
+     * [1-1] 기본 요청 유효성 검사
+     */
+    private void validateRequestDto(RequestDto dto) {
         if (dto.getCategory() == null) {
             throw new IllegalArgumentException("질문의 카테고리를 선택해주세요.");
         }
@@ -44,8 +76,6 @@ public class RequestService {
         if (dto.getContent() == null || dto.getContent().isBlank()) {
             throw new IllegalArgumentException("질문의 내용을 입력해주세요.");
         }
-
-        return requestRepository.save(dto.toEntity(user));
     }
 
     /**
@@ -114,5 +144,20 @@ public class RequestService {
      */
     public List<Request> findByUserId(Long userId) {
         return requestRepository.findByUserIdOrderByCreatedAtDesc(userId);
+    }
+
+    /**
+     * [7] 공식 장소 타입 검증 로직 (서비스 계층)
+     * - 지정된 장소(Place)에 허용된 요청 타입인지 확인
+     * - 사용자가 지정한 장소는 무조건 허용
+     */
+    public boolean isValidForPlace(Place place, RequestCategory category) {
+        // [1] 사용자 지정 장소인 경우 (place == null) → 항상 허용
+        if (place == null) {
+            return true;
+        }
+
+        // [2] 공식 장소일 경우 → Repository 직접 검증
+        return allowedRequestTypeRepository.existsByPlaceIdAndRequestType(place.getId(), category);
     }
 }

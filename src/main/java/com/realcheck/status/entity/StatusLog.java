@@ -7,6 +7,7 @@ import com.realcheck.request.entity.Request;
 import com.realcheck.user.entity.User;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 /**
@@ -29,7 +30,11 @@ public class StatusLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String content; // 상태 설명 (예: "현재 대기 3명")
+    @Column(columnDefinition = "TEXT")
+    @NotBlank(message = "답변 내용은 필수입니다.")
+    private String content; // 상태 설명
+
+    @Column(nullable = true)
     private String imageUrl; // 이미지 경로 (선택적)
 
     @Column(nullable = false)

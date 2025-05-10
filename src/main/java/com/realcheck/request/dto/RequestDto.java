@@ -1,6 +1,7 @@
 package com.realcheck.request.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.realcheck.place.entity.Place;
 import com.realcheck.request.entity.Request;
 import com.realcheck.request.entity.RequestCategory;
 import com.realcheck.user.entity.User;
@@ -38,6 +39,9 @@ public class RequestDto {
 
     // 유저가 직접 입력한 장소 이름 (ex. "문방구 앞 붕어빵")
     private String customPlaceName;
+
+    // 공식 장소 ID (공식 장소 선택 시)
+    private Long placeId;
     // 등록된 Place 객체의 이름 (공식 장소 이름)
     private String placeName;
     // 위도 / 경도 정보 (지도에 표시하기 위함)
@@ -76,7 +80,7 @@ public class RequestDto {
      * DTO → Entity 변환 메서드
      * - 클라이언트가 보낸 데이터를 실제 DB에 저장 가능한 형태로 변환
      */
-    public Request toEntity(User user) {
+    public Request toEntity(User user, Place place) {
         if (placeName == null && (customPlaceName == null || lat == null || lng == null)) {
             throw new IllegalArgumentException("장소 정보가 누락되었습니다.");
         }
@@ -85,6 +89,7 @@ public class RequestDto {
                 .category(category)
                 .user(user)
                 .title(title)
+                .place(place)
                 .content(content)
                 .point(point)
                 .customPlaceName(customPlaceName)
@@ -119,6 +124,7 @@ public class RequestDto {
                 .content(r.getContent())
                 .point(r.getPoint())
                 .customPlaceName(r.getCustomPlaceName())
+                .placeId(r.getPlace() != null ? r.getPlace().getId() : null)
                 .placeName(r.getPlace() != null ? r.getPlace().getName() : null)
                 .lat(r.getLat())
                 .lng(r.getLng())

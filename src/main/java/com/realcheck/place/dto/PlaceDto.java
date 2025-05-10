@@ -30,22 +30,17 @@ public class PlaceDto {
 
     @NotBlank(message = "주소는 필수입니다.")
     private String address; // 도로명 주소
-    
-    
+
     @DecimalMin(value = "-90.0", message = "위도는 -90 이상이어야 합니다.")
     @DecimalMax(value = "90.0", message = "위도는 90 이하여야 합니다.")
     private double lat; // 위도
 
-    
     @DecimalMin(value = "-180.0", message = "경도는 -180 이상이어야 합니다.")
     @DecimalMax(value = "180.0", message = "경도는 180 이하여야 합니다.")
     private double lng; // 경도
 
     @NotNull(message = "등록자(ownerId)는 필수입니다.")
     private Long ownerId; // 등록자 ID (User)
-
-    private String recentInfo;  // 최근 정보 (추가)
-    private String communityLink; // 커뮤니티 링크 (추가)
 
     /**
      * DTO → Entity 변환
@@ -73,8 +68,6 @@ public class PlaceDto {
                 .lat(place.getLat())
                 .lng(place.getLng())
                 .ownerId(place.getOwner() != null ? place.getOwner().getId() : null)
-                .recentInfo(place.getRecentInfo()) // 최근 정보 매핑
-                .communityLink(place.getCommunityLink()) // 커뮤니티 링크 매핑
                 .build();
     }
 }

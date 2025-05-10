@@ -123,13 +123,15 @@ $(document).ready(function () {
     $("#lat").val("");
     $("#lng").val("");
     $(".place-item").removeClass("selected");
-    currentFocus = -1;
 
     // 마커 초기화 (숨기기)
     if (mainMarker) {
       mainMarker.setMap(null);
       mainMarker = null;
     }
+
+    // 장소 정보 숨기기 (infoSection)
+    $("#infoSection").hide();
   }
 
   // 장소 선택 함수 (검색 목록에서)
@@ -138,6 +140,9 @@ $(document).ready(function () {
     const lng = parseFloat(item.data("lng"));
     const placeName = item.data("name");
     const placeId = item.data("id");
+
+    // 기존 선택 초기화
+    resetSelectedPlace();
 
     $(".place-item").removeClass("selected");
     item.addClass("selected");
@@ -161,7 +166,7 @@ $(document).ready(function () {
     $.get(`/api/place/${placeId}/details`, function (data) {
       console.log("API Response:", data); // 여기서 응답 확인
       $("#infoSection").show();
-      $("#infoAddress").text(data.fullAddress || "주소 정보 없음");
+      $("#infoAddress").text(data.address || "주소 정보 없음");
       $("#infoRecent").text(data.recentInfo || "최근 정보 없음");
       $("#infoLink").attr("href", data.communityLink).text("커뮤니티 페이지");
     }).fail(function (xhr) {

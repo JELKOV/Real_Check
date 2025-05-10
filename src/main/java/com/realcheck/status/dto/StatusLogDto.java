@@ -1,8 +1,10 @@
 package com.realcheck.status.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.realcheck.place.entity.Place;
+import com.realcheck.request.entity.RequestCategory;
 import com.realcheck.status.entity.StatusLog;
 import com.realcheck.status.entity.StatusType;
 import com.realcheck.user.entity.User;
@@ -56,6 +58,12 @@ public class StatusLogDto {
      * - 컨트롤러/서비스에서 DTO를 받아 실제 DB에 저장할 수 있도록 Entity로 변환
      */
     public StatusLog toEntity(User user, Place place) {
+        // 카테고리 필터링 (String → RequestCategory 변환)
+        if (this.category != null) {
+            RequestCategory categoryEnum = convertToCategory();
+            filterFieldsByCategory(categoryEnum);
+        }
+
         StatusLog log = new StatusLog();
         log.setContent(this.content);
         log.setImageUrl(this.imageUrl);
@@ -114,7 +122,7 @@ public class StatusLogDto {
                         log.getRequest() != null && log.getRequest().getCategory() != null
                                 ? log.getRequest().getCategory().name()
                                 : null)
-                                
+
                 .hasBathroom(log.getHasBathroom())
                 .waitCount(log.getWaitCount())
                 .menuInfo(log.getMenuInfo())
@@ -127,5 +135,83 @@ public class StatusLogDto {
                 .seatCount(log.getSeatCount())
 
                 .build();
+    }
+
+    /**
+     * 카테고리 기반 필드 필터링 (RequestCategory로 수정)
+     */
+    public void filterFieldsByCategory(RequestCategory category) {
+        if (category == null) {
+            clearAllFlexibleFields();
+            return;
+        }
+
+        switch (category) {
+            case WAITING_STATUS -> clearExcept("waitCount");
+            case BATHROOM -> clearExcept("hasBathroom");
+            case FOOD_MENU -> clearExcept("menuInfo");
+            case WEATHER_LOCAL -> clearExcept("weatherNote");
+            case STREET_VENDOR -> clearExcept("vendorName");
+            case PHOTO_REQUEST -> clearExcept("photoNote");
+            case NOISE_LEVEL -> clearExcept("noiseNote");
+            case PARKING -> clearExcept("isParkingAvailable");
+            case BUSINESS_STATUS -> clearExcept("isOpen");
+            case OPEN_SEAT -> clearExcept("seatCount");
+            default -> clearAllFlexibleFields();
+        }
+    }
+
+    /**
+     * 카테고리 변환 (String → RequestCategory)
+     */
+    private RequestCategory convertToCategory() {
+        try {
+            return RequestCategory.valueOf(this.category);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("잘못된 카테고리: " + this.category);
+        }
+    }
+
+    /**
+     * 유연 필드 초기화 (필요한 필드만 유지)
+     */
+    private void clearExcept(String... keepFields) {
+        List<String> keepList = List.of(keepFields);
+        if (!keepList.contains("waitCount"))
+            this.waitCount = null;
+        if (!keepList.contains("hasBathroom"))
+            this.hasBathroom = null;
+        if (!keepList.contains("menuInfo"))
+            this.menuInfo = null;
+        if (!keepList.contains("weatherNote"))
+            this.weatherNote = null;
+        if (!keepList.contains("vendorName"))
+            this.vendorName = null;
+        if (!keepList.contains("photoNote"))
+            this.photoNote = null;
+        if (!keepList.contains("noiseNote"))
+            this.noiseNote = null;
+        if (!keepList.contains("isParkingAvailable"))
+            this.isParkingAvailable = null;
+        if (!keepList.contains("isOpen"))
+            this.isOpen = null;
+        if (!keepList.contains("seatCount"))
+            this.seatCount = null;
+    }
+
+    /**
+     * 모든 유연 필드 초기화
+     */
+    private void clearAllFlexibleFields() {
+        this.waitCount = null;
+        this.hasBathroom = null;
+        this.menuInfo = null;
+        this.weatherNote = null;
+        this.vendorName = null;
+        this.photoNote = null;
+        this.noiseNote = null;
+        this.isParkingAvailable = null;
+        this.isOpen = null;
+        this.seatCount = null;
     }
 }

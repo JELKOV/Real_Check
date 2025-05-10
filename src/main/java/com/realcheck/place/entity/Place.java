@@ -1,7 +1,9 @@
 package com.realcheck.place.entity;
 
-import com.realcheck.user.entity.User;
+import java.util.HashSet;
+import java.util.Set;
 
+import com.realcheck.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -40,21 +42,24 @@ public class Place {
     private double lng;
 
     // 장소가 관리자에게 승인되었는지 여부 (기본은 false)
-    // 추후 관리자가 검토 후 true로 변경 가능
     @Builder.Default
     private boolean isApproved = false;
 
     // 하나의 사용자가 여러 장소를 등록할 수 있으므로 다대일 관계
-    // DB에서 외래키로 사용될 컬럼 이름은 "owner_id"
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id")
     private User owner; // 장소 등록자 정보 (User 엔티티)
 
-    // 최근 정보
+    // 최근 정보 (선택적)
     @Column(name = "recent_info", columnDefinition = "TEXT")
-    private String recentInfo; 
+    private String recentInfo;
 
-    // 커뮤니티 링크
+    // 커뮤니티 링크 (선택적)
     @Column(name = "community_link", length = 500)
-    private String communityLink; 
+    private String communityLink;
+
+    // 허용된 요청 타입 (공식 장소에서만 사용)
+    @Builder.Default
+    @OneToMany(mappedBy = "place", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private final Set<AllowedRequestType> allowedRequestTypes = new HashSet<>();
 }

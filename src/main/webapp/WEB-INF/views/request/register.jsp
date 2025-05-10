@@ -77,11 +77,21 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
             </span>
           </div>
           <!-- 공식 장소 추가 정보 -->
-          <div id="infoSection" class="mt-3" style="display: none">
-            <h5>공식 장소 추가 정보</h5>
-            <p><strong>주소:</strong> <span id="infoAddress"></span></p>
-            <p><strong>관리자 공지:</strong> <span id="infoRecent"></span></p>
-            <p><a href="#" target="_blank" id="infoLink">커뮤니티 페이지</a></p>
+          <div id="infoSection" class="info-card mt-3" style="display: none">
+            <h5 class="info-title">📌 공식 장소 추가 정보</h5>
+            <div class="info-content">
+              <p>
+                <strong>📍 주소:</strong>
+                <span id="infoAddress">정보 없음</span>
+              </p>
+              <p>
+                <strong>📢 관리자 공지:</strong>
+                <span id="infoRecent">정보 없음</span>
+              </p>
+              <a href="#" target="_blank" id="infoLink" class="info-link">
+                🌐 커뮤니티 페이지 바로가기
+              </a>
+            </div>
           </div>
           <input type="hidden" id="placeId" name="placeId" />
           <input type="hidden" id="lat" name="lat" />

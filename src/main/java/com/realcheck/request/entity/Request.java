@@ -101,4 +101,5 @@ public class Request {
     // (선택) 기타 확장 정보 - JSON 형식 등으로 활용 가능
     @Column(columnDefinition = "TEXT")
     private String extra;
+    
 }
