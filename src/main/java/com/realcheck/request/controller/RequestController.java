@@ -5,6 +5,8 @@ import com.realcheck.request.entity.Request;
 import com.realcheck.request.service.RequestService;
 import com.realcheck.user.dto.UserDto;
 import com.realcheck.user.entity.User;
+import com.realcheck.user.service.UserService;
+
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +27,7 @@ import java.util.Optional;
 public class RequestController {
 
     private final RequestService requestService;
+    private final UserService userService;
 
     /**
      * page: request/register.jsp
@@ -34,10 +37,13 @@ public class RequestController {
      */
     @PostMapping
     public ResponseEntity<?> createRequest(@Valid @RequestBody RequestDto dto, HttpSession session) {
-        User loginUser = (User) session.getAttribute("loginUser");
-        if (loginUser == null) {
+        UserDto loginUserDto = (UserDto) session.getAttribute("loginUser");
+        if (loginUserDto == null) {
             return ResponseEntity.status(401).body("로그인이 필요합니다.");
         }
+
+        // UserDto를 User로 변환
+        User loginUser = userService.convertToUser(loginUserDto);
 
         Request savedRequest = requestService.createRequest(dto, loginUser);
         return ResponseEntity.ok(RequestDto.fromEntity(savedRequest));
@@ -56,7 +62,7 @@ public class RequestController {
             @RequestParam double lng,
             @RequestParam double radius,
             @RequestParam(required = false) String category) {
-    
+
         List<RequestDto> dtoList = requestService.findOpenRequests(page, size, lat, lng, radius, category);
         return ResponseEntity.ok(dtoList);
     }

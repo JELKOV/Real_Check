@@ -82,6 +82,15 @@ public class UserService {
         return UserDto.fromEntity(user);
     }
 
+    /**
+     * RequestController: createRequest
+     * [3] UserDto → User 변환 (DB에서 조회하여 변환)
+     */
+    public User convertToUser(UserDto dto) {
+        return userRepository.findById(dto.getId())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+    }
+
     // ─────────────────────────────────────────────
     // [2] 사용자 정보 관련 기능 (마이페이지)
     // ─────────────────────────────────────────────

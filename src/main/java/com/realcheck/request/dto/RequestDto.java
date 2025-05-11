@@ -81,8 +81,17 @@ public class RequestDto {
      * - 클라이언트가 보낸 데이터를 실제 DB에 저장 가능한 형태로 변환
      */
     public Request toEntity(User user, Place place) {
-        if (placeName == null && (customPlaceName == null || lat == null || lng == null)) {
-            throw new IllegalArgumentException("장소 정보가 누락되었습니다.");
+        // 장소 검증 로직
+        if (placeId != null) { // 공식 장소 선택
+            if (place == null || lat == null || lng == null) {
+                throw new IllegalArgumentException("공식 장소 정보가 누락되었습니다.");
+            }
+        } else if (customPlaceName != null) { // 사용자 지정 장소
+            if (lat == null || lng == null) {
+                throw new IllegalArgumentException("사용자 지정 장소의 좌표가 누락되었습니다.");
+            }
+        } else {
+            throw new IllegalArgumentException("장소 정보가 선택되지 않았습니다.");
         }
 
         return Request.builder()
