@@ -22,7 +22,10 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
     <div class="container mt-5" style="max-width: 700px">
       <h3 class="text-center mb-4">요청 등록</h3>
-
+      <!-- 지도 위치 (공식 장소 / 사용자 지정 장소 공통 사용) -->
+      <div class="mb-3 mt-3">
+        <div id="mainMap" class="map-container"></div>
+      </div>
       <!-- 요청 등록 폼 -->
       <form id="requestForm">
         <!-- 장소 선택 방식 -->
@@ -76,13 +79,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
               </button>
             </div>
             <p class="text-muted">지도를 클릭하거나 주소를 입력하세요.</p>
-            <div id="mainMap" class="map-container"></div>
-            <input type="hidden" id="lat" name="lat" />
-            <input type="hidden" id="lng" name="lng" />
           </div>
-
-          <!-- 통합 지도 -->
-          <div id="mainMap" class="map-container"></div>
 
           <div class="mb-3 mt-3">
             <label for="selectedPlaceName" class="form-label"

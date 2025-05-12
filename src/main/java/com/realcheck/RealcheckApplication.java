@@ -19,6 +19,7 @@ public class RealcheckApplication {
 
         // NAVER 환경 변수 강제 로드
         System.setProperty("NAVER_MAP_CLIENT_ID", dotenv.get("NAVER_MAP_CLIENT_ID"));
+        System.setProperty("NAVER_MAP_CLIENT_SECRET", dotenv.get("NAVER_MAP_CLIENT_SECRET"));
         System.setProperty("NAVER_SEARCH_CLIENT_ID", dotenv.get("NAVER_SEARCH_CLIENT_ID"));
         System.setProperty("NAVER_SEARCH_CLIENT_SECRET", dotenv.get("NAVER_SEARCH_CLIENT_SECRET"));
         System.setProperty("NAVER_SEARCH_API_URL", dotenv.get("NAVER_SEARCH_API_URL"));

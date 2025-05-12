@@ -2,6 +2,7 @@ package com.realcheck.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.NonNull;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -16,9 +17,9 @@ public class WebConfig implements WebMvcConfigurer {
     /**
      * 정적 리소스 매핑 설정
      * - /uploads/** 로 들어오는 URL 요청을
-     *   프로젝트 루트 디렉토리의 /uploads/ 폴더 안 파일로 매핑함
+     * 프로젝트 루트 디렉토리의 /uploads/ 폴더 안 파일로 매핑함
      * - 예시:
-     *   - /uploads/test.png 요청 → 실제 서버의 uploads/test.png 파일 반환
+     * - /uploads/test.png 요청 → 실제 서버의 uploads/test.png 파일 반환
      *
      * @param registry ResourceHandlerRegistry 스프링이 제공하는 리소스 등록 객체
      */
@@ -26,5 +27,14 @@ public class WebConfig implements WebMvcConfigurer {
     public void addResourceHandlers(@NonNull ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/uploads/**") // 웹 요청 패턴
                 .addResourceLocations("file:uploads/"); // 실제 물리 경로
+    }
+
+    @Override
+    public void addCorsMappings(@NonNull CorsRegistry registry) {
+        registry.addMapping("/api/reverse-geocode")
+                .allowedOrigins("http://localhost:8080") // 클라이언트 주소
+                .allowedMethods("GET")
+                .allowedHeaders("*")
+                .allowCredentials(true);
     }
 }

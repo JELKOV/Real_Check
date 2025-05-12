@@ -7,6 +7,7 @@ $(document).ready(function () {
 // [1] 지도 초기화
 let mainMap;
 let mainMarker = null;
+let customMarker = null; // 사용자 지정 장소 마커
 let currentFocus = -1;
 
 function initializeMap() {
@@ -17,8 +18,9 @@ function initializeMap() {
 
   // 사용자 지정 장소 - 지도 클릭 시 마커 설정
   naver.maps.Event.addListener(mainMap, "click", function (e) {
-    if ($("#searchSection").is(":visible")) return;
-    setMainMarker(e.coord.lat(), e.coord.lng(), "사용자 지정 장소");
+    if ($("#customPlaceSection").is(":visible")) {
+      setCustomPlace(e.coord.lat(), e.coord.lng());
+    }
   });
 }
 
@@ -33,11 +35,15 @@ function initializePage() {
 function bindEventListeners() {
   // 장소 검색
   $("#placeSearch").on("input", debounce(handlePlaceSearch, 300));
-  $("#placeSearch").on("keydown", handleKeyboardNavigation);
   $("#placeSearchResults").on("mousedown", ".place-item", handlePlaceSelect);
   $("#placeSearchResults").on("mouseenter", ".place-item", highlightItem);
-  $(document).on("keydown", handleGlobalKeyDown);
+  $("#placeSearch").on("keydown", handleKeyboardNavigation);
   $(document).click(handleDocumentClick);
+
+  // 사용자 지정 장소 주소 검색
+  $("#searchAddressBtn").click(handleCustomAddressSearch);
+  // 사용자 지정 주소 Enter 키 검색
+  $("#customAddress").on("keydown", handleEnterKeyForCustomAddress);
 
   // 카테고리 및 요청 등록
   $("#category").on("change", updatePlaceholders);
@@ -112,27 +118,27 @@ function updateSelection(items) {
   }
 }
 
-// [8] 마우스 탐색 (클릭)
+// [8-1] 마우스 탐색 (클릭)
 function handlePlaceSelect(e) {
   e.preventDefault();
   selectPlace($(e.target));
 }
 
-// [8] 마우스 탐색 (호버)
+// [8-2] 마우스 탐색 (호버)
 function highlightItem() {
   $(".place-item").removeClass("selected");
   $(this).addClass("selected");
   currentFocus = $(".place-item").index($(this));
 }
 
-// [9] ESC 키로 검색 결과 닫기
+// [9-1] ESC 키로 검색 결과 닫기
 function handleGlobalKeyDown(e) {
   if (e.key === "Escape") {
     $("#placeSearchResults").hide();
   }
 }
 
-// [9] 외부 클릭으로 검색 결과 닫기
+// [9-2] 외부 클릭으로 검색 결과 닫기
 function handleDocumentClick(e) {
   if (!$(e.target).closest("#placeSearch, #placeSearchResults").length) {
     $("#placeSearchResults").hide();
@@ -205,31 +211,161 @@ function resetSelectedPlace() {
     mainMarker = null;
   }
 
+  // 사용자 지정 마커 숨기기
+  if (customMarker) {
+    customMarker.setMap(null);
+    customMarker = null;
+  }
+
   // 장소 정보 숨기기 (infoSection)
   $("#infoSection").hide();
 }
 
-// [13] 장소 마커 설정
-function setMainMarker(lat, lng, id = "") {
-  if (!mainMarker) {
-    mainMarker = new naver.maps.Marker({
+// [13] 마커 생성/갱신 공통 함수
+function createOrUpdateMarker(type, lat, lng) {
+  let marker = type === "main" ? mainMarker : customMarker;
+  if (!marker) {
+    marker = new naver.maps.Marker({
       map: mainMap,
       position: new naver.maps.LatLng(lat, lng),
     });
-  } else {
-    mainMarker.setPosition(new naver.maps.LatLng(lat, lng));
-    mainMarker.setMap(mainMap); // 마커 다시 표시
-  }
 
+    if (type === "main") {
+      mainMarker = marker;
+    } else {
+      customMarker = marker;
+    }
+  } else {
+    marker.setPosition(new naver.maps.LatLng(lat, lng));
+  }
+}
+
+// [14] 장소 마커 설정 (공식 장소)
+function setMainMarker(lat, lng, id = "") {
+  createOrUpdateMarker("main", lat, lng);
   mainMap.setCenter(new naver.maps.LatLng(lat, lng));
 
   // 장소 정보 설정 (lat, lng, placeId)
   $("#lat").val(lat);
   $("#lng").val(lng);
   $("#placeId").val(id || "");
+
+  // 사용자 지정 마커 숨기기
+  if (customMarker) customMarker.setMap(null);
 }
 
-// [14] 카테고리 및 Placeholder 설정
+// [15] 사용자 지정 장소 설정 (도로명 주소 자동 표시)
+function setCustomPlace(lat, lng) {
+  createOrUpdateMarker("custom", lat, lng);
+  mainMap.setCenter(new naver.maps.LatLng(lat, lng));
+
+  // 위도/경도 값 저장
+  $("#lat").val(lat);
+  $("#lng").val(lng);
+
+  $("#customAddress").val("");
+
+  // 도로명 주소 자동 검색 (handleCustomAddressSearch 로직 사용)
+  reverseGeocodeByLatLng(lat, lng);
+}
+
+// [15-1] 도로명 주소 조회 (좌표 → 주소 변환)
+function reverseGeocodeByLatLng(lat, lng) {
+  // 서버에서 프록시된 API 경로로 요청
+  $.ajax({
+    url: `/api/reverse-geocode?lat=${lat}&lng=${lng}`,
+    method: "GET",
+    success: function (response) {
+      const data =
+        typeof response === "string" ? JSON.parse(response) : response;
+      console.log("Reverse Geocode 응답:", data);
+
+      if (!data.results || data.results.length === 0) {
+        alert("도로명 주소를 찾을 수 없습니다.");
+        $("#selectedPlaceName").val(
+          `사용자 지정 위치 (${lat.toFixed(6)}, ${lng.toFixed(6)})`
+        );
+        $("#customAddress").val("");
+        return;
+      }
+
+      // 도로명 주소 우선 처리
+      const roadResult = data.results.find((r) => r.name === "roadaddr");
+      const addrResult = data.results.find((r) => r.name === "addr");
+
+      let selectedAddress = "사용자 지정 위치";
+
+      if (roadResult) {
+        selectedAddress = `${roadResult.region.area1.name} ${
+          roadResult.region.area2.name
+        } ${roadResult.region.area3.name} ${roadResult.land?.name || ""} ${
+          roadResult.land?.number1 || ""
+        }`.trim();
+      } else if (addrResult) {
+        selectedAddress = `${addrResult.region.area1.name} ${addrResult.region.area2.name} ${addrResult.region.area3.name}`;
+      }
+
+      // 도로명 주소 또는 지번 주소 자동 적용
+      $("#selectedPlaceName").val(selectedAddress);
+      $("#selectedPlaceName").addClass("selected");
+      $("#selectedMarker").show(); // 마킹 활성화
+    },
+    error: function () {
+      alert("도로명 주소 조회 중 오류가 발생했습니다.");
+      $("#selectedPlaceName").val(
+        `사용자 지정 위치 (${lat.toFixed(6)}, ${lng.toFixed(6)})`
+      );
+      $("#customAddress").val("");
+    },
+  });
+}
+
+// [16] 사용자 지정 주소 검색 (Naver Geocoder API 사용)
+function handleCustomAddressSearch() {
+  const query = $("#customAddress").val().trim();
+  if (!query) {
+    alert("주소를 입력하세요.");
+    return;
+  }
+
+  naver.maps.Service.geocode({ query }, function (status, response) {
+    console.log("Geocode 응답:", response);
+
+    if (
+      status !== naver.maps.Service.Status.OK ||
+      !response.v2.addresses.length
+    ) {
+      alert("주소 검색에 실패했습니다.");
+      return;
+    }
+
+    const result = response.v2.addresses[0];
+    if (!result) {
+      alert("검색된 주소가 없습니다.");
+      return;
+    }
+
+    const lat = parseFloat(result.y);
+    const lng = parseFloat(result.x);
+    if (isNaN(lat) || isNaN(lng)) {
+      alert("검색된 주소의 좌표를 읽을 수 없습니다.");
+      return;
+    }
+
+    // 주소 정보를 직접 설정
+    setCustomPlace(lat, lng);
+  });
+}
+
+// [17] 사용자 지정 주소 엔터 키 검색 (함수화)
+function handleEnterKeyForCustomAddress(e) {
+  if (e.key === "Enter" && $("#customAddress").is(":focus")) {
+    e.preventDefault(); // 기본 엔터 동작 막기 (폼 제출 방지)
+    handleCustomAddressSearch(); // 검색 함수 실행
+  }
+}
+
+// [18] 카테고리 및 Placeholder 설정
 function updateCategoryDropdown(allowedCategories) {
   const categoryDropdown = $("#category").empty();
   categoryDropdown.append('<option value="">카테고리를 선택하세요</option>');
@@ -243,12 +379,12 @@ function updateCategoryDropdown(allowedCategories) {
   resetPlaceholders();
 }
 
-// [15] 카테고리 드롭다운 초기화 함수
+// [19] 카테고리 드롭다운 초기화 함수
 function resetCategoryDropdown() {
   updateCategoryDropdown(allCategories.map((cat) => cat.value));
 }
 
-// [16] Placeholder 초기화
+// [20] Placeholder 초기화
 function resetPlaceholders() {
   const defaultTitle = "예: 궁금한 점을 입력하세요";
   const defaultContent = "요청 내용을 입력하세요";
@@ -256,28 +392,30 @@ function resetPlaceholders() {
   $("#content").attr("placeholder", defaultContent);
 }
 
-// [17] 토글 버튼 (검색/사용자 지정)
+// [21] 토글 버튼 (검색/사용자 지정)
 function togglePlaceMode(mode) {
   if (mode === "search") {
+    $("#customPlaceSection").hide();
     $("#searchSection").show();
     resetSelectedPlace();
-    resetPlaceholders();
+    resetCategoryDropdown();
     toggleButtonStyles("#btnPlace", "#btnCustom");
   } else {
+    $("#customPlaceSection").show();
     $("#searchSection").hide();
     resetSelectedPlace();
-    resetPlaceholders();
+    resetCategoryDropdown();
     toggleButtonStyles("#btnCustom", "#btnPlace");
   }
 }
 
-// [18] 버튼 스타일 전환 함수
+// [22] 버튼 스타일 전환 함수
 function toggleButtonStyles(active, inactive) {
   $(active).addClass("btn-primary").removeClass("btn-outline-primary");
   $(inactive).addClass("btn-outline-primary").removeClass("btn-primary");
 }
 
-// [19] Placeholder 초기화 및 자동 설정
+// [23] Placeholder 초기화 및 자동 설정
 function updatePlaceholders() {
   const cat = $("#category").val();
   $("#title").attr(
@@ -290,10 +428,13 @@ function updatePlaceholders() {
   );
 }
 
-// [20] 요청 등록 (AJAX)
+// [24] 요청 등록 (AJAX)
 function submitRequest(e) {
   console.log("클릭됨");
   e.preventDefault();
+
+  const isCustomPlace = $("#customPlaceSection").is(":visible");
+  console.log(isCustomPlace)
 
   const requestData = {
     title: $("#title").val(),
@@ -303,6 +444,7 @@ function submitRequest(e) {
     placeId: $("#placeId").val() || null,
     lat: $("#lat").val() ? parseFloat($("#lat").val()) : null,
     lng: $("#lng").val() ? parseFloat($("#lng").val()) : null,
+    customPlaceName: isCustomPlace ? $("#selectedPlaceName").val() : null,
   };
 
   // 요청 유효성 검사
@@ -311,11 +453,19 @@ function submitRequest(e) {
     return;
   }
 
+  if (
+    isCustomPlace &&
+    (!requestData.lat || !requestData.lng || !requestData.customPlaceName)
+  ) {
+    alert("사용자 지정 장소의 주소 또는 좌표가 정확하지 않습니다.");
+    return;
+  }
+
   $.ajax({
-    url: "/api/request",  // 실제 API 경로에 맞게 수정
+    url: "/api/request", // 실제 API 경로에 맞게 수정
     method: "POST",
-    contentType: "application/json",  // JSON 형식으로 전송
-    data: JSON.stringify(requestData),  // JSON 문자열로 변환
+    contentType: "application/json", // JSON 형식으로 전송
+    data: JSON.stringify(requestData), // JSON 문자열로 변환
     success: function () {
       alert("요청이 등록되었습니다!");
       location.href = "/request/list";
@@ -326,7 +476,7 @@ function submitRequest(e) {
   });
 }
 
-// [21] Debounce 함수 (입력 지연 제어)
+// [25] Debounce 함수 (입력 지연 제어)
 function debounce(func, delay) {
   let timeout;
   return function () {
@@ -335,7 +485,7 @@ function debounce(func, delay) {
   };
 }
 
-// [22] 기본 카테고리 설정
+// [26] 기본 카테고리 설정
 const allCategories = [
   { value: "PARKING", text: "🅿️ 주차 가능 여부" },
   { value: "WAITING_STATUS", text: "⏳ 대기 상태" },
