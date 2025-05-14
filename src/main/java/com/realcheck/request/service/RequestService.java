@@ -35,37 +35,36 @@ public class RequestService {
     private final AllowedRequestTypeRepository allowedRequestTypeRepository;
 
     /**
+     * RequestController: createRequest
      * [1] 요청 등록
-     * - RequestDto를 엔티티로 변환하고 DB에 저장
-     * - 변환 로직은 DTO 내부에 캡슐화되어 있음 (toEntity)
+     * 각종 유효성 검사
+     * 요청의 종류에 따라 분기한 서비스 메서드 (공식 장소에 대한 요청 질문 / 커스텀 장소에 대한 요청 질문)
      */
     @Transactional
     public Request createRequest(RequestDto dto, User user) {
-        // [1] 기본 유효성 검사
+        // (1) 기본 유효성 검사
         validateRequestDto(dto);
 
-        // [2] Place 확인 (공식 장소인 경우)
+        // (2) Place 확인 (공식 장소인 경우)
         Place place = null;
         if (dto.getPlaceId() != null) {
             place = placeRepository.findById(dto.getPlaceId())
                     .orElseThrow(() -> new IllegalArgumentException("공식 장소를 찾을 수 없습니다."));
         }
 
-        // [3] Request 엔티티로 변환
+        // (3) Request 엔티티로 변환
         Request request = dto.toEntity(user, place);
 
-        // [4] 공식 장소일 경우 타입 검증
+        // (4) 공식 장소일 경우 타입 검증
         if (place != null && !isValidForPlace(place, request.getCategory())) {
             throw new IllegalArgumentException("해당 장소에서는 선택한 요청 카테고리를 사용할 수 없습니다.");
         }
 
-        // [5] 저장
+        // (5) 저장
         return requestRepository.save(request);
     }
 
-    /**
-     * [1-1] 기본 요청 유효성 검사
-     */
+    // [1-A] 기본 요청 유효성 검사
     private void validateRequestDto(RequestDto dto) {
         if (dto.getCategory() == null) {
             throw new IllegalArgumentException("질문의 카테고리를 선택해주세요.");
@@ -78,9 +77,57 @@ public class RequestService {
         }
     }
 
+    // [1-B] 공식 장소 타입 검증 로직 / 지정된 장소(Place)에 허용된 요청 타입인지 확인 / 사용자가 지정한 장소는 무조건 허용
+    public boolean isValidForPlace(Place place, RequestCategory category) {
+        // (1) 사용자 지정 장소인 경우 (place == null) → 항상 허용
+        if (place == null) {
+            return true;
+        }
+
+        // (2) 공식 장소일 경우 → Repository 직접 검증
+        return allowedRequestTypeRepository.existsByPlaceIdAndRequestType(place.getId(), category);
+    }
+
+    /**
+     * RequestController: closeRequest
+     * [2] 요청 마감 처리
+     * 답변 채택 시
+     */
+    @Transactional
+    public void closeRequest(Long requestId, Long userId) {
+        Request request = requestRepository.findById(requestId)
+                .orElseThrow(() -> new RuntimeException("요청 없음"));
+
+        // 요청 마감 (이미 마감된 경우 예외 발생)
+        if (request.isClosed()) {
+            throw new RuntimeException("이미 마감된 요청입니다.");
+        }
+
+        // 수동 마감인 경우 사용자 권한 확인
+        if (userId != null && !request.getUser().getId().equals(userId)) {
+            throw new RuntimeException("해당 요청을 마감할 권한이 없습니다.");
+        }
+
+        // 요청 마감 처리
+        request.setClosed(true);
+        requestRepository.save(request);
+    }
+
+    /**
+     * RequestController: findRequestById
+     * [3] 요청 단건 조회 (ID로 조회)
+     */
+    @Transactional
+    public Optional<Request> findById(Long id) {
+        return requestRepository.findById(id);
+    }
+
     /**
      * RequestController: findOpenRequests
-     * [2] 미마감 + 답변 3개 미만 + 3시간 지난 요청 + 위치(lat/lng) 존재하는 요청 조회 (페이지네이션)
+     * [4] 지역 기반 요청이 3시간이 지나서 오픈된 요청 조회
+     * 미마감
+     * 답변 3개 미만
+     * 3시간 지난 요청
      */
     public List<RequestDto> findOpenRequests(int page, int size, double lat, double lng, double radius,
             String category) {
@@ -108,10 +155,10 @@ public class RequestService {
 
     /**
      * RequestController: findNearbyOpenRequests
-     * [3] 반경 내 열린 요청 목록 조회
-     * - 위도, 경도 기준으로 radius(m) 이내
-     * - 장소 좌표가 존재하며 답변 수가 3개 미만인 요청 필터
-     * - [FIX] 3시간 이내 수정 (테스트라 48시간으로 바꿈)
+     * [5] 최신 요청 조회 (현재 사용자 위치 기준 / 지도 반경 기반)
+     * 위도, 경도 기준으로 radius(m) 이내
+     * 장소 좌표가 존재하며 답변 수가 3개 미만인 요청 필터
+     * [FIX] 3시간 이내 수정 (테스트라 48시간으로 바꿈)
      */
     public List<Request> findNearbyValidRequests(double lat, double lng, double radiusMeters) {
         LocalDateTime timeLimit = LocalDateTime.now().minusHours(48);
@@ -119,45 +166,31 @@ public class RequestService {
     }
 
     /**
-     * RequestController: findRequestById
-     * [4] ID로 요청 단건 조회
-     * - 상세 보기 등에서 사용
-     */
-    public Optional<Request> findById(Long id) {
-        return requestRepository.findById(id);
-    }
-
-    /**
-     * (미사용)
-     * [5] 요청 마감 처리
-     * - isClosed = true 설정 후 저장
-     * - 답변 채택 후 호출되며, 요청을 닫기 위한 메서드
-     */
-    public void closeRequest(Request request) {
-        request.setClosed(true);
-        requestRepository.save(request);
-    }
-
-    /**
      * RequestController: findMyRequests
      * [6] 특정 사용자(userId)의 요청 목록 조회
+     * 내 요청리스트를 조회
      */
     public List<Request> findByUserId(Long userId) {
         return requestRepository.findByUserIdOrderByCreatedAtDesc(userId);
     }
 
     /**
-     * [7] 공식 장소 타입 검증 로직 (서비스 계층)
-     * - 지정된 장소(Place)에 허용된 요청 타입인지 확인
-     * - 사용자가 지정한 장소는 무조건 허용
+     * AutoCloseRequestService: autoCloseExpiredRequests
+     * [7] 자동 마감 대상 조회
+     * 6시간 기준으로 자동 마감에 해당되는 요청글이 있는 지 조회
      */
-    public boolean isValidForPlace(Place place, RequestCategory category) {
-        // [1] 사용자 지정 장소인 경우 (place == null) → 항상 허용
-        if (place == null) {
-            return true;
-        }
-
-        // [2] 공식 장소일 경우 → Repository 직접 검증
-        return allowedRequestTypeRepository.existsByPlaceIdAndRequestType(place.getId(), category);
+    @Transactional(readOnly = true)
+    public List<Request> findOpenRequestsWithAnswers(LocalDateTime threshold) {
+        return requestRepository.findAllByIsClosedFalseAndCreatedAtBefore(threshold);
     }
+
+    /**
+     * AutoCloseRequestService: autoCloseExpiredRequests
+     * [7-A] 요청 저장 메서드
+     */
+    @Transactional
+    public Request save(Request request) {
+        return requestRepository.save(request);
+    }
+
 }

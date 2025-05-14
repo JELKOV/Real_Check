@@ -83,23 +83,31 @@ public class Request {
     @OneToMany(mappedBy = "request", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<StatusLog> statusLogs = new ArrayList<>();
 
+    // 자동 동기화 로직 (답변 선택 시 자동 마감)
+    @PreUpdate
+    private void syncClosedWithSelected() {
+        if (statusLogs != null && statusLogs.stream().anyMatch(StatusLog::isSelected)) {
+            this.isClosed = true;
+        }
+    }
+
     // ─────────────────────────────────────────────
     // 카테고리별 유연 필드 (nullable 허용)
     // ─────────────────────────────────────────────
 
-    private Integer waitCount;         // WAITING_STATUS, CROWD_LEVEL
-    private Boolean hasBathroom;       // BATHROOM
-    private String menuInfo;           // FOOD_MENU
-    private String weatherNote;        // WEATHER_LOCAL
-    private String vendorName;         // STREET_VENDOR
-    private String photoNote;          // PHOTO_REQUEST
-    private String noiseNote;          // NOISE_LEVEL
-    private Boolean isOpen;            // BUSINESS_STATUS
-    private Integer seatCount;         // OPEN_SEAT
+    private Integer waitCount; // WAITING_STATUS, CROWD_LEVEL
+    private Boolean hasBathroom; // BATHROOM
+    private String menuInfo; // FOOD_MENU
+    private String weatherNote; // WEATHER_LOCAL
+    private String vendorName; // STREET_VENDOR
+    private String photoNote; // PHOTO_REQUEST
+    private String noiseNote; // NOISE_LEVEL
+    private Boolean isOpen; // BUSINESS_STATUS
+    private Integer seatCount; // OPEN_SEAT
     private Boolean isParkingAvailable; // PARKING
 
     // (선택) 기타 확장 정보 - JSON 형식 등으로 활용 가능
     @Column(columnDefinition = "TEXT")
     private String extra;
-    
+
 }

@@ -107,4 +107,16 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
          * [4] UserId 요청한사람 기준으로 요청 목록 불러오기
          */
         List<Request> findByUserIdOrderByCreatedAtDesc(Long userId);
+
+        /**
+         * RequestService: findOpenRequestsWithAnswers
+         * [5] 요청 자동 마감 쿼리
+         */
+        @Query("""
+                        SELECT r FROM Request r
+                        WHERE r.isClosed = false
+                          AND r.createdAt <= :threshold
+                          AND SIZE(r.statusLogs) > 0
+                        """)
+        List<Request> findAllByIsClosedFalseAndCreatedAtBefore(@Param("threshold") LocalDateTime threshold);
 }

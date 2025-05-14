@@ -122,4 +122,17 @@ public class RequestController {
         return ResponseEntity.ok(dtoList);
     }
 
+    /**
+     * page: request/detail.jsp
+     * [6] 수동 마감 API (사용자 권한 체크)
+     * - 사용자가 질문이 한개도 안달린 상태에서 직접 취소 처리
+     */
+    @PatchMapping("/{id}/close")
+    public ResponseEntity<?> closeRequest(
+            @PathVariable Long id,
+            @RequestParam Long userId) {
+        requestService.closeRequest(id, userId);
+        return ResponseEntity.ok("요청이 수동으로 마감되었습니다.");
+    }
+
 }

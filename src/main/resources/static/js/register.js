@@ -468,7 +468,7 @@ function submitRequest(e) {
     data: JSON.stringify(requestData), // JSON 문자열로 변환
     success: function () {
       alert("요청이 등록되었습니다!");
-      location.href = "/request/list";
+      location.href = "/my-requests";
     },
     error: function (xhr) {
       alert("등록 실패: " + xhr.responseText);

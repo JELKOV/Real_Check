@@ -6,6 +6,7 @@ import com.realcheck.status.entity.StatusType;
 import com.realcheck.status.repository.StatusLogRepository;
 import com.realcheck.place.entity.Place;
 import com.realcheck.place.repository.PlaceRepository;
+import com.realcheck.point.entity.PointType;
 import com.realcheck.point.service.PointService;
 import com.realcheck.request.entity.Request;
 import com.realcheck.user.entity.User;
@@ -49,8 +50,7 @@ public class StatusLogService {
      * - 상태 로그 저장
      * - 포인트 지급 여부 처리 (givePoint)
      */
-    private void registerInternal(Long userId, StatusLogDto dto, StatusType type, boolean checkLimit,
-            boolean givePoint) {
+    private void registerInternal(Long userId, StatusLogDto dto, StatusType type, boolean checkLimit) {
 
         User user = validateUser(userId);
         Place place = validatePlace(dto.getPlaceId());
@@ -71,15 +71,10 @@ public class StatusLogService {
         log.setStatusType(type);
         log.setRequest(request);
         statusLogRepository.save(log);
-
-        // 포인트 지급
-        if (givePoint) {
-            giveUserPoint(user, 10, "정보 공유");
-        }
     }
 
     /**
-     * [A] 사용자 검증 (활성 사용자)
+     * [1-A] 사용자 검증 (활성 사용자)
      */
     private User validateUser(Long userId) {
         User user = userRepository.findById(userId)
@@ -91,7 +86,7 @@ public class StatusLogService {
     }
 
     /**
-     * [B] 장소 검증 (Optional)
+     * [1-B] 장소 검증 (Optional)
      */
     private Place validatePlace(Long placeId) {
         if (placeId == null)
@@ -101,7 +96,7 @@ public class StatusLogService {
     }
 
     /**
-     * [C] 요청 검증 및 필드 자동 필터링
+     * [1-C] 요청 검증 및 필드 자동 필터링
      */
     private Request validateAndFilterFieldsByRequest(StatusLogDto dto) {
         if (dto.getRequestId() == null)
@@ -116,7 +111,14 @@ public class StatusLogService {
     }
 
     /**
-     * [D] 공식 장소의 허용된 질문 타입 검증
+     * [1-D] 사용자가 동일 요청에 이미 답변을 등록했는지 확인
+     */
+    public boolean hasUserAnswered(Long requestId, Long userId) {
+        return statusLogRepository.existsByRequestIdAndUserId(requestId, userId);
+    }
+
+    /**
+     * [1-E] 공식 장소의 허용된 질문 타입 검증
      */
     private void validateAllowedRequestType(Place place, Request request) {
         if (request == null)
@@ -129,7 +131,7 @@ public class StatusLogService {
     }
 
     /**
-     * [E] 일일 등록 횟수 제한 확인
+     * [1-F] 일일 등록 횟수 제한 확인
      */
     private void validateDailyLimit(Long userId) {
         LocalDateTime start = LocalDate.now().atStartOfDay();
@@ -140,28 +142,19 @@ public class StatusLogService {
         }
     }
 
-    /**
-     * [F] 포인트 지급 처리
-     */
-    private void giveUserPoint(User user, int points, String reason) {
-        pointService.givePoint(user, points, reason);
-    }
-
     // ─────────────────────────────────────────────
     // [2] 사용자 기능
     // ─────────────────────────────────────────────
 
     /**
      * StatusLogController: register
-     * [1] 등록된 장소에 대한 답변 - 장소 기반 정보 공유 등록 (공식 장소 + 실시간 현황)
+     * [1] 등록된 장소에 대한 답변 - 장소 기반 정보 공유 등록 (공식 장소)
      * - 공식 등록된 장소(placeId 있음)
      * - 위치 기반 정보 등록 시 사용
-     * - 하루 3회 등록 제한 적용 (checkLimit = true)
-     * - 포인트 지급 있음
      */
     @Transactional
     public void register(Long userId, StatusLogDto dto) {
-        registerInternal(userId, dto, StatusType.ANSWER, true, true);
+        registerInternal(userId, dto, StatusType.ANSWER, false);
     }
 
     /**
@@ -169,25 +162,25 @@ public class StatusLogService {
      * [2] 요청 기반 답변 등록
      * - 누군가 등록한 요청(Request)에 대해 다른 사용자가 답변(상태 정보)을 등록할 때 사용
      * - 장소 정보는 optional (placeId가 null일 수 있음 – custom location 허용)
-     * - 하루 횟수 제한 없음 (checkLimit = false)
-     * - 포인트 지급 없음 (givePoint = false)
      */
     @Transactional
     public void registerAnswer(Long userId, StatusLogDto dto) {
         if (statusLogRepository.countByRequestId(dto.getRequestId()) >= 3) {
             throw new RuntimeException("해당 요청은 이미 3개의 답변이 등록되었습니다.");
         }
-        registerInternal(userId, dto, StatusType.ANSWER, false, false);
+        registerInternal(userId, dto, StatusType.ANSWER, false);
+
     }
 
     /**
+     * StatusLogController: registerFreeShare
      * [3] 자발적 정보 공유 등록 (FREE_SHARE)
      * - 요청 없이 사용자가 직접 공유
      * - 조회수 기반 보상 구조로 활용 가능
      */
     @Transactional
     public void registerFreeShare(Long userId, StatusLogDto dto) {
-        registerInternal(userId, dto, StatusType.FREE_SHARE, false, true);
+        registerInternal(userId, dto, StatusType.FREE_SHARE, true);
     }
 
     /**
@@ -202,9 +195,25 @@ public class StatusLogService {
             throw new RuntimeException("자발적 공유가 아닙니다.");
         }
 
+        // 조회수 증가
         log.setViewCount(log.getViewCount() + 1);
         statusLogRepository.save(log);
+
+        // 조회수 기반 포인트 지급 (10회 이상)
+        if (log.getViewCount() >= 10 && !log.isRewarded()) {
+            giveUserPoint(log.getReporter(), 10, "자발적 정보 조회수 보상");
+            log.setRewarded(true); // 중복 지급 방지
+            statusLogRepository.save(log);
+        }
+
         return StatusLogDto.fromEntity(log);
+    }
+
+    /**
+     * [4-A] 포인트 지급 처리 (FREE_SHARE에만 사용)
+     */
+    private void giveUserPoint(User user, int points, String reason) {
+        pointService.givePoint(user, points, reason, PointType.EARN);
     }
 
     /**
@@ -303,6 +312,7 @@ public class StatusLogService {
      * StatusLogController: getAnswersByRequest
      * [11] 특정 요청에 대한 답변 리스트(상세 조회)
      */
+    @Transactional(readOnly = true)
     public List<StatusLogDto> getAnswersByRequestId(Long requestId) {
         return statusLogRepository.findByRequestId(requestId).stream()
                 .map(StatusLogDto::fromEntity)
@@ -315,23 +325,41 @@ public class StatusLogService {
      * - 요청 작성자가 본인 요청에 연결된 답변을 선택
      * - 상태 로그의 selected = true, 요청 마감 처리
      */
+    @Transactional
     public void selectAnswer(Long statusLogId, Long loginUserId) {
+        // [1] 답변 조회
         StatusLog log = statusLogRepository.findById(statusLogId)
                 .orElseThrow(() -> new RuntimeException("답변 없음"));
         Request request = log.getRequest();
 
+        // [2] 답변과 연결된 요청 확인
         if (request == null || !request.getUser().getId().equals(loginUserId)) {
             throw new RuntimeException("채택 권한이 없습니다.");
         }
 
+        // [3] 이미 마감된 요청은 채택 불가
         if (request.isClosed()) {
             throw new RuntimeException("이미 마감된 요청입니다.");
         }
 
+        // [4] 답변을 선택하고 자동으로 요청 마감 (연결된 Request)
         log.setSelected(true);
-        request.setClosed(true);
+        // 답변 상태 저장 (PreUpdate 자동 실행)
         statusLogRepository.save(log);
+
+        // [5] 자동으로 연결된 요청 마감 처리 (PreUpdate로 자동)
         requestRepository.save(request);
+
+        // [6] 포인트 지급/차감 처리 (트랜잭션)
+        User answerer = log.getReporter(); // 답변 작성자
+        User requester = request.getUser(); // 요청 작성자
+        int points = request.getPoint();
+
+        // [7] 요청자 포인트 차감 (요청 생성 시 지급한 포인트)
+        pointService.givePoint(requester, -points, "답변 채택으로 포인트 차감", PointType.DEDUCT);
+
+        // [8] 답변자 포인트 지급 (답변 채택 보상)
+        pointService.givePoint(answerer, points, "답변 채택 보상", PointType.EARN);
     }
 
     // ────────────────────────────────────────

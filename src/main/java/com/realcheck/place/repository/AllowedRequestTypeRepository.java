@@ -46,6 +46,7 @@ public interface AllowedRequestTypeRepository extends JpaRepository<AllowedReque
     void deleteByPlaceId(@Param("placeId") Long placeId);
 
     /**
+     * RequestService: isValidForPlace
      * [4] 특정 장소에서 특정 요청 타입 존재 여부 확인
      * - 성능 최적화를 위해 DB에서 직접 확인
      */

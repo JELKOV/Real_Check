@@ -5,9 +5,6 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
-/**
- * 포인트 정보를 API 응답용으로 가공하기 위한 DTO 클래스
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -15,12 +12,14 @@ public class PointDto {
     private int amount;
     private String reason;
     private LocalDateTime earnedAt;
+    private String type; // EARN, DEDUCT, REWARD 등
 
     public static PointDto fromEntity(Point point) {
         return new PointDto(
                 point.getAmount(),
                 point.getReason(),
-                point.getEarnedAt()
+                point.getEarnedAt(),
+                point.getType().name()
         );
     }
 }

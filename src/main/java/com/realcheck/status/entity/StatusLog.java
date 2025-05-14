@@ -34,6 +34,8 @@ public class StatusLog {
     @NotBlank(message = "답변 내용은 필수입니다.")
     private String content; // 상태 설명
 
+    private boolean rewarded = false; // 조회수 기반 보상 지급 여부
+
     @Column(nullable = true)
     private String imageUrl; // 이미지 경로 (선택적)
 
@@ -104,4 +106,11 @@ public class StatusLog {
     @JoinColumn(name = "place_id", nullable = true)
     private Place place; // 관련 장소
 
+    // 자동 동기화 로직 (답변 채택 시)
+    @PreUpdate
+    private void syncRequestOnSelection() {
+        if (this.isSelected && this.request != null) {
+            this.request.setClosed(true);
+        }
+    }
 }

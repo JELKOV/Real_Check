@@ -115,7 +115,7 @@ public interface StatusLogRepository extends JpaRepository<StatusLog, Long> {
 
         /**
          * StatusLogService: registerAnswer
-         * [4] 특정 요청(Request)에 등록된 답변(StatusLog)의 개수 조회 
+         * [4] 특정 요청(Request)에 등록된 답변(StatusLog)의 개수 조회
          * - 요청당 최대 3개의 답변만 허용하기 위한 제약 조건 검사 시 사용
          * - SQL:
          * SELECT COUNT(*) FROM status_logs
@@ -124,8 +124,21 @@ public interface StatusLogRepository extends JpaRepository<StatusLog, Long> {
         long countByRequestId(Long requestId);
 
         /**
+         * StatusLogRepository: registerAnswer
+         * [5] 특정 요청(Request)에 동일 사용자가 이미 답변을 등록했는지 확인
+         * - 중복 답변 방지를 위한 제약 조건 검사에 사용
+         * - SQL:
+         * SELECT EXISTS (
+         * SELECT 1 FROM status_logs
+         * WHERE request_id = ? AND user_id = ?
+         * );
+         */
+        @Query("SELECT COUNT(s) > 0 FROM StatusLog s WHERE s.request.id = :requestId AND s.reporter.id = :userId")
+        boolean existsByRequestIdAndUserId(@Param("requestId") Long requestId, @Param("userId") Long userId);
+
+        /**
          * StatusLogService: getAnswersByRequestId
-         * [5] 특정 요청(Request)에 연결된 모든 상태 로그 조회 (상세 조회) 
+         * [6] 특정 요청(Request)에 연결된 모든 상태 로그 조회 (상세 조회)
          * - 요청 상세 페이지에서 답변(StatusLog) 목록 표시용
          * - SQL:
          * SELECT * FROM status_logs
@@ -135,7 +148,7 @@ public interface StatusLogRepository extends JpaRepository<StatusLog, Long> {
 
         /**
          * StatusLogService: findNearbyStatusLogs
-         * [6] 현재 위치 기준 반경 - 상태 로그 조회 
+         * [7] 현재 위치 기준 반경 - 상태 로그 조회
          * - 사용자의 위도(lat), 경도(lng)를 기반으로 일정 반경 내에 존재하는 상태 로그를 조회
          * - 숨김 여부와 관계없이 최근 생성된 로그를 대상으로 함
          * 

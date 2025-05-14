@@ -34,6 +34,9 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
       <!-- 지도 표시 -->
       <div id="map" style="height: 300px" class="mb-5"></div>
 
+      <!-- 자동 마감 안내 -->
+      <div id="autoCloseNotice"></div>
+
       <!-- 답변 리스트 -->
       <h4 class="mt-5 mb-3">등록된 답변</h4>
       <ul id="answerList" class="list-group mb-4"></ul>
@@ -42,6 +45,9 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
       <div id="answerFormSection">
         <h5>답변 등록</h5>
         <form id="answerForm" enctype="multipart/form-data">
+          <!-- 카테고리별 추가 입력 필드: JavaScript로 동적 생성 -->
+          <div id="dynamicAnswerFields"></div>
+
           <div class="mb-3">
             <textarea
               class="form-control"
@@ -52,9 +58,6 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
               required
             ></textarea>
           </div>
-
-          <!-- 카테고리별 추가 입력 필드: JavaScript로 동적 생성 -->
-          <div id="dynamicAnswerFields"></div>
 
           <div class="mb-3">
             <input type="file" name="file" class="form-control" />
