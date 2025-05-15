@@ -8,6 +8,7 @@ import com.realcheck.request.entity.RequestCategory;
 import com.realcheck.status.entity.StatusLog;
 import com.realcheck.status.entity.StatusType;
 import com.realcheck.user.entity.User;
+
 import lombok.*;
 
 /**
@@ -16,42 +17,85 @@ import lombok.*;
  * - Entity와는 다르게 DB와 직접 연결되지 않으며, 필요한 데이터만 추려서 담는다
  * - 주로 컨트롤러와 서비스 간 전달, 응답 포맷 구성에 사용
  */
-
-@Data // 모든 필드에 대해 Getter, Setter, equals, hashCode, toString 메서드를 자동 생성
-@NoArgsConstructor // 기본 생성자 (파라미터 없는 생성자) 자동 생성
-@AllArgsConstructor // 모든 필드를 인자로 받는 생성자 자동 생성
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class StatusLogDto {
 
+    // ─────────────────────────────────────────────
+    // [1] 기본 필드 (ID, 내용, 이미지, 선택 여부)
+    // ─────────────────────────────────────────────
+
     private Long id;
-    private String content; // 대기 상황 설명 (예: "현재 3명 대기 중")
-    private String imageUrl; // 이미지 URL (선택 사항)
+    // 대기 상황 설명 (예: "현재 3명 대기 중")
+    private String content;
+    // 이미지 URL (선택 사항)
+    private String imageUrl;
+    // 답변 채택 여부 (요청 답변일 경우)
     private boolean isSelected;
 
-    private Long placeId; // 공식 장소 ID (null 가능)
-    private Double lat; // 위치 위도 (커스텀 장소 대응)
-    private Double lng; // 위치 경도
+    // ─────────────────────────────────────────────
+    // [2] 사용자 및 위치 정보
+    // ─────────────────────────────────────────────
 
-    private LocalDateTime createdAt; // 등록 일시
-    private StatusType type;
-    private Long requestId;
-
-    private Long requestOwnerId;
+    // 답변 작성자
+    private Long userId;
+    // 답변 작성자 닉네임 (익명 가능)
     private String nickname;
 
+    // 공식 장소 ID (null 가능)
+    private Long placeId;
+    // 장소 위도
+    private Double lat;
+    // 장소 경도
+    private Double lng;
+
+    // 연결된 요청 ID (답변형일 경우)
+    private Long requestId;
+    // 요청 작성자 ID (답변 채택용)
+    private Long requestOwnerId;
+
+    // 등록 일시
+    private LocalDateTime createdAt;
+    // 상태 타입 (ANSWER, FREE_SHARE 등)
+    private StatusType type;
+    // 요청 카테고리 (12가지 중 하나, String)
     private String category;
 
-    // 유연 필드들 (nullable 가능)
+    // ─────────────────────────────────────────────
+    // [3] 유연 필드 (카테고리별 동적 사용)
+    // 각 카테고리에 따라 동적으로 사용됨
+    // ─────────────────────────────────────────────
+
+    // 화장실 여부 (BATHROOM)
     private Boolean hasBathroom;
-    private Integer waitCount;
+    // 메뉴 정보 (FOOD_MENU)
     private String menuInfo;
+    // 대기 인원 (WAITING_STATUS, CROWD_LEVEL)
+    private Integer waitCount;
+    // 날씨 상태 (WEATHER_LOCAL)
     private String weatherNote;
+    // 노점 이름 (STREET_VENDOR)
     private String vendorName;
+    // 사진 요청 메모 (PHOTO_REQUEST)
     private String photoNote;
+    // 소음 상태 (NOISE_LEVEL)
     private String noiseNote;
+    // 주차 가능 여부 (PARKING)
     private Boolean isParkingAvailable;
+    // 영업 여부 (BUSINESS_STATUS)
     private Boolean isOpen;
+    // 남은 좌석 수 (OPEN_SEAT)
     private Integer seatCount;
+    // 혼잡도 (CROWD_LEVEL)
+    private Integer crowdLevel;
+    // 기타 정보 (ETC) - 사용자 자유 입력
+    private String extra;
+
+    // ─────────────────────────────────────────────
+    // [4] DTO → Entity 변환 메서드
+    // ─────────────────────────────────────────────
 
     /**
      * DTO → Entity 변환 메서드
@@ -91,9 +135,15 @@ public class StatusLogDto {
         log.setIsParkingAvailable(this.isParkingAvailable);
         log.setIsOpen(this.isOpen);
         log.setSeatCount(this.seatCount);
+        log.setCrowdLevel(this.crowdLevel);
+        log.setExtra(extra);
 
         return log;
     }
+
+    // ─────────────────────────────────────────────
+    // [5] Entity → DTO 변환 메서드
+    // ─────────────────────────────────────────────
 
     /**
      * Entity → DTO 변환 메서드
@@ -105,6 +155,7 @@ public class StatusLogDto {
                 .content(log.getContent())
                 .isSelected(log.isSelected())
                 .imageUrl(log.getImageUrl())
+                .userId(log.getReporter() != null ? log.getReporter().getId() : null)
                 .placeId(log.getPlace() != null ? log.getPlace().getId() : null)
                 .lat(log.getLat())
                 .lng(log.getLng())
@@ -123,6 +174,7 @@ public class StatusLogDto {
                                 ? log.getRequest().getCategory().name()
                                 : null)
 
+                // 유연 필드 설정
                 .hasBathroom(log.getHasBathroom())
                 .waitCount(log.getWaitCount())
                 .menuInfo(log.getMenuInfo())
@@ -133,13 +185,16 @@ public class StatusLogDto {
                 .isParkingAvailable(log.getIsParkingAvailable())
                 .isOpen(log.getIsOpen())
                 .seatCount(log.getSeatCount())
+                .crowdLevel(log.getCrowdLevel())
+                .extra(log.getExtra())
 
                 .build();
     }
 
-    /**
-     * 카테고리 기반 필드 필터링 (RequestCategory로 수정)
-     */
+    // ─────────────────────────────────────────────
+    // [6] 카테고리 기반 필드 필터링
+    // ─────────────────────────────────────────────
+
     public void filterFieldsByCategory(RequestCategory category) {
         if (category == null) {
             clearAllFlexibleFields();
@@ -157,6 +212,8 @@ public class StatusLogDto {
             case PARKING -> clearExcept("isParkingAvailable");
             case BUSINESS_STATUS -> clearExcept("isOpen");
             case OPEN_SEAT -> clearExcept("seatCount");
+            case CROWD_LEVEL -> clearExcept("crowdLevel");
+            case ETC -> clearExcept("extra");
             default -> clearAllFlexibleFields();
         }
     }
@@ -197,10 +254,14 @@ public class StatusLogDto {
             this.isOpen = null;
         if (!keepList.contains("seatCount"))
             this.seatCount = null;
+        if (!keepList.contains("crowdLevel"))
+            this.crowdLevel = null;
+        if (!keepList.contains("extra"))
+            this.extra = null;
     }
 
     /**
-     * 모든 유연 필드 초기화
+     * 모든 유연 필드 초기화 (12개 필드 전체)
      */
     private void clearAllFlexibleFields() {
         this.waitCount = null;
@@ -213,5 +274,7 @@ public class StatusLogDto {
         this.isParkingAvailable = null;
         this.isOpen = null;
         this.seatCount = null;
+        this.crowdLevel = null;
+        this.extra = null;
     }
 }

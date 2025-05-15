@@ -3,6 +3,8 @@ package com.realcheck.status.controller;
 import com.realcheck.status.dto.StatusLogDto;
 import com.realcheck.status.service.StatusLogService;
 import com.realcheck.user.dto.UserDto;
+import com.realcheck.user.entity.User;
+import com.realcheck.user.service.UserService;
 
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -22,43 +24,55 @@ import java.util.List;
 public class StatusLogController {
 
     private final StatusLogService statusLogService;
+    private final UserService userService;
 
-    // ────────────────────────────────────────
-    // [1] 사용자 기능
-    // ────────────────────────────────────────
+    // ─────────────────────────────────────────────
+    // [1] 사용자 기능 - 질문 없는 정보 상태 로그 등록 (CREATE)
+    // ─────────────────────────────────────────────
 
     /**
-     * [1] 장소 기반 상태 등록 (placeId 필요)
+     * [1-1] 공식 장소 상태 등록 API (REGISTER)
+     * 장소 소유자나 관리자가 직접 상태 등록
      */
     @PostMapping
     public ResponseEntity<String> register(@RequestBody StatusLogDto dto, HttpSession session) {
-        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
-        if (loginUser == null)
+        UserDto loginUserDto = (UserDto) session.getAttribute("loginUser");
+        if (loginUserDto == null)
             return ResponseEntity.status(401).body("로그인이 필요합니다");
+
+        // UserDto → User 변환 (유효성 검사)
+        User loginUser = userService.convertToUser(loginUserDto);
 
         statusLogService.register(loginUser.getId(), dto);
         return ResponseEntity.ok("등록 완료");
     }
 
     /**
-     * [2] 자발적 공유 등록 API (FREE_SHARE)
-     * - 로그인한 사용자가 장소 상태를 자유롭게 공유
-     * - StatusLog 타입: FREE_SHARE
+     * [1-2] 자발적 공유 등록 API (FREE_SHARE)
+     * 로그인한 사용자가 장소 상태를 자유롭게 공유
+     * StatusLog 타입: FREE_SHARE
      */
     @PostMapping("/free-share")
     public ResponseEntity<?> registerFreeShare(@RequestBody StatusLogDto dto, HttpSession session) {
-        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
-        if (loginUser == null) {
+        UserDto loginUserDto = (UserDto) session.getAttribute("loginUser");
+        if (loginUserDto == null) {
             return ResponseEntity.status(401).body("로그인이 필요합니다.");
         }
+
+        // UserDto → User 변환 (유효성 검사)
+        User loginUser = userService.convertToUser(loginUserDto);
 
         statusLogService.registerFreeShare(loginUser.getId(), dto);
         return ResponseEntity.ok("자발적 공유 등록 완료");
     }
 
+    // ─────────────────────────────────────────────
+    // [2] 사용자 기능 - 상태 로그 조회 (READ)
+    // ─────────────────────────────────────────────
+
     /**
-     * [3] 장소별 최근 3시간 이내 상태 조회
-     * - 해당 장소 ID로 3시간 이내의 최신 상태 목록 조회
+     * [2-1] 장소별 최근 3시간 이내 상태 조회
+     * 해당 장소 ID로 3시간 이내의 최신 상태 목록 조회
      */
     @GetMapping("/place/{placeId}")
     public ResponseEntity<List<StatusLogDto>> getByPlace(@PathVariable Long placeId) {
@@ -66,9 +80,8 @@ public class StatusLogController {
     }
 
     /**
-     * [4] 특정 장소의 최신 상태 로그 1건
-     * - 숨김 처리되지 않은 로그 중 최신 1개만 반환
-     * - 예: GET /api/status/latest?placeId=3
+     * [2-2] 특정 장소의 최신 상태 로그 1건
+     * 숨김 처리되지 않은 로그 중 최신 1개만 반환
      */
     @GetMapping("/latest")
     public ResponseEntity<StatusLogDto> getLatestStatusLog(@RequestParam Long placeId) {
@@ -81,8 +94,8 @@ public class StatusLogController {
 
     /**
      * page: status/my-logs.jsp
-     * [5] 내가 등록한 상태 로그 목록 조회 API
-     * - 세션 사용자 ID 기반으로 내 기록만 조회
+     * [2-3] 내가 등록한 상태 로그 목록 조회
+     * 세션 사용자 ID 기반으로 내 기록만 조회
      */
     @GetMapping("/my")
     public ResponseEntity<List<StatusLogDto>> getMyStatusLogs(HttpSession session) {
@@ -95,51 +108,8 @@ public class StatusLogController {
     }
 
     /**
-     * page: status/my-logs.jsp
-     * [6] 상태 로그 수정 API
-     * - 로그인한 사용자가 본인이 작성한 상태 로그를 수정
-     */
-    @PutMapping("/{id}")
-    public ResponseEntity<String> updateStatusLog(@PathVariable Long id, @RequestBody StatusLogDto dto,
-            HttpSession session) {
-        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
-        if (loginUser == null) {
-            return ResponseEntity.status(401).body("로그인이 필요합니다");
-        }
-
-        try {
-            statusLogService.updateStatusLog(id, loginUser.getId(), dto);
-            return ResponseEntity.ok("수정 완료");
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(403).body(e.getMessage());
-        }
-    }
-
-    /**
-     * page: status/my-logs.jsp
-     * [7] 상태 로그 삭제 API
-     * - 로그인한 사용자가 본인이 작성한 로그만 삭제 가능
-     */
-    @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteStatusLog(@PathVariable Long id,
-            HttpSession session) {
-        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
-        if (loginUser == null) {
-            return ResponseEntity.status(401).body("로그인이 필요합니다.");
-        }
-
-        try {
-            statusLogService.deleteStatusLog(id, loginUser.getId());
-            return ResponseEntity.ok("삭제 완료");
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(403).body(e.getMessage());
-        }
-    }
-
-    /**
      * page: request/detail.jsp
-     * [8] 요청 ID로 연결된 답변 목록 조회
-     * - GET /api/status/by-request/5
+     * [2-4] 요청 ID로 연결된 답변 목록 조회 API
      */
     @GetMapping("/by-request/{requestId}")
     public ResponseEntity<List<StatusLogDto>> getAnswersByRequest(@PathVariable Long requestId) {
@@ -148,31 +118,9 @@ public class StatusLogController {
     }
 
     /**
-     * page: request/detail.jsp
-     * [9] 요청 기반 답변 채택 API
-     * - 요청 작성자만 자신이 받은 답변 중 하나를 채택 가능 
-     * - 해당 StatusLog에 isSelected = true, 요청 마감 처리
-     */
-    @PostMapping("/select/{statusLogId}")
-    public ResponseEntity<?> selectAnswer(@PathVariable Long statusLogId, HttpSession session) {
-        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
-        if (loginUser == null) {
-            return ResponseEntity.status(401).body("로그인이 필요합니다.");
-        }
-
-        try {
-            statusLogService.selectAnswer(statusLogId, loginUser.getId());
-            return ResponseEntity.ok("답변이 채택되었습니다.");
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(403).body(e.getMessage());
-        }
-    }
-
-    /**
      * page: map/nearby.jsp
-     * [10] 현재 위치 기반 근처 상태 로그 조회 API
-     * - 위도, 경도, 반경(m)을 기준으로 3시간 이내 상태 로그 조회
-     * - 예: GET /api/status/nearby?lat=37.5&lng=127.0&radius=500
+     * [2-5] 현재 위치 기반 근처 상태 로그 조회 API
+     * 위도, 경도, 반경(m)을 기준으로 3시간 이내 상태 로그 조회
      */
     @GetMapping("/nearby")
     public ResponseEntity<List<StatusLogDto>> getNearbyStatusLogs(
@@ -184,15 +132,97 @@ public class StatusLogController {
         return ResponseEntity.ok(logs);
     }
 
+    // ─────────────────────────────────────────────
+    // [3] 사용자 기능 - 상태 로그 수정 (UPDATE)
+    // ─────────────────────────────────────────────
+
+    /**
+     * page: request/detail.jsp
+     * [3-1] 상태 로그 수정 API
+     * 로그인한 사용자가 본인이 작성한 상태 로그를 수정
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<String> updateStatusLog(
+            @PathVariable Long id,
+            @RequestBody StatusLogDto dto,
+            HttpSession session) {
+        UserDto loginUserDto = (UserDto) session.getAttribute("loginUser");
+        if (loginUserDto == null) {
+            return ResponseEntity.status(401).body("로그인이 필요합니다");
+        }
+
+        try {
+            // UserDto → User 변환 (전체 정보 조회)
+            User loginUser = userService.convertToUser(loginUserDto);
+            statusLogService.updateStatusLog(id, loginUser.getId(), dto);
+            return ResponseEntity.ok("수정 완료");
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(403).body(e.getMessage());
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        }
+    }
+
+    /**
+     * page: request/detail.jsp
+     * [3-2] 요청 기반 답변 채택 API
+     * 요청 작성자만 자신이 받은 답변 중 하나를 채택 가능
+     * 해당 StatusLog에 isSelected = true, 요청 마감 처리
+     */
+    @PostMapping("/select/{statusLogId}")
+    public ResponseEntity<?> selectAnswer(@PathVariable Long statusLogId, HttpSession session) {
+        UserDto loginUserDto = (UserDto) session.getAttribute("loginUser");
+        if (loginUserDto == null) {
+            return ResponseEntity.status(401).body("로그인이 필요합니다.");
+        }
+
+        try {
+            // UserDto → User 변환 (전체 정보 조회)
+            User loginUser = userService.convertToUser(loginUserDto);
+            statusLogService.selectAnswer(statusLogId, loginUser.getId());
+            return ResponseEntity.ok("답변이 채택되었습니다.");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(403).body(e.getMessage());
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // [4] 사용자 기능 - 상태 로그 삭제 (DELETE)
+    // ─────────────────────────────────────────────
+
+    /**
+     * page: request/detail.jsp
+     * [4-1] 상태 로그 삭제 API
+     * 로그인한 사용자가 본인이 작성한 로그만 삭제 가능
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteStatusLog(
+            @PathVariable Long id,
+            HttpSession session) {
+        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            return ResponseEntity.status(401).body("로그인이 필요합니다.");
+        }
+
+        try {
+            statusLogService.deleteStatusLog(id, loginUser.getId());
+            return ResponseEntity.ok("삭제 완료");
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(403).body(e.getMessage());
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        }
+    }
+
     // ────────────────────────────────────────
-    // [2] 관리자 기능
+    // [5] 관리자 기능
     // ────────────────────────────────────────
 
     /**
-     * [1] 관리자 전용 전체 StatusLog 목록 조회 API
-     * - URL: GET /api/status/all
-     * - 조건: 로그인한 사용자가 관리자일 경우에만 전체 로그 반환
-     * - 반환: 모든 상태 로그 리스트 (StatusLogDto)
+     * [5-1] 관리자 전용 전체 StatusLog 목록 조회 API
+     * URL: GET /api/status/all
+     * 조건: 로그인한 사용자가 관리자일 경우에만 전체 로그 반환
+     * 반환: 모든 상태 로그 리스트 (StatusLogDto)
      */
     @GetMapping("/all")
     public ResponseEntity<List<StatusLogDto>> getAllLogs(HttpSession session) {

@@ -19,14 +19,18 @@ import lombok.*;
  * - 회원 정보를 저장하는 테이블 (users)과 매핑됨
  * - 일반 사용자, 제휴 업체, 관리자 역할을 포함
  */
-@Entity // 해당 클래스가 JPA에서 사용할 Entity 클래스임을 명시 (테이블과 매핑됨)
-@Table(name = "users") // 실제 DB에 생성될 테이블 이름 지정 (기본은 클래스명)
-@Getter // 모든 필드에 대해 getter 메서드 자동 생성
-@Setter // 모든 필드에 대해 setter 메서드 자동 생성
-@NoArgsConstructor // 파라미터 없는 기본 생성자 자동 생성
-@AllArgsConstructor // 모든 필드를 매개변수로 받는 생성자 자동 생성
-@ToString // toString() 메서드 자동 생성 (디버깅 용이)
+@Entity
+@Table(name = "users")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString
 public class User {
+
+    // ─────────────────────────────────────────────
+    // [1] 기본 사용자 정보 필드
+    // ─────────────────────────────────────────────
 
     // 기본 키(PK) 설정 - 각 유저를 고유하게 식별
     @Id
@@ -55,22 +59,47 @@ public class User {
     // 활성 상태 여부 - true면 정상 활동, false면 비활성화된 계정
     private boolean isActive = true;
 
-    // ──────────────────────────────
-    // 관계 설정 (양방향)
-    // ──────────────────────────────
+    // ─────────────────────────────────────────────
+    // [2] 사용자와 연관된 엔티티들 (양방향 관계)
+    // ─────────────────────────────────────────────
 
+    /**
+     * [2-1] 사용자가 등록한 요청 목록 (Request)
+     * User (1) → (N) Request
+     * 사용자 탈퇴 시 관련 요청들도 자동 삭제 (CascadeType.ALL)
+     */
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Request> requests = new ArrayList<>();
 
+    /**
+     * [2-2] 사용자가 작성한 상태 로그 (StatusLog)
+     * User (1) → (N) StatusLog
+     * 사용자 탈퇴 시 관련 로그들도 자동 삭제 (CascadeType.ALL)
+     */
     @OneToMany(mappedBy = "reporter", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<StatusLog> statusLogs = new ArrayList<>();
 
+    /**
+     * [2-3] 사용자가 작성한 신고 (Report)
+     * User (1) → (N) Report
+     * 사용자 탈퇴 시 관련 신고들도 자동 삭제 (CascadeType.ALL)
+     */
     @OneToMany(mappedBy = "reporter", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Report> reports = new ArrayList<>();
 
+    /**
+     * [2-4] 사용자 포인트 내역 (Point)
+     * User (1) → (N) Point
+     * 사용자 탈퇴 시 관련 포인트 기록들도 자동 삭제 (CascadeType.ALL)
+     */
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Point> pointLogs = new ArrayList<>();
 
+    /**
+     * [2-5] 사용자가 소유한 장소 (Place)
+     * User (1) → (N) Place
+     * 사용자 탈퇴 시 관련 장소들도 자동 삭제 (CascadeType.ALL)
+     */
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Place> places = new ArrayList<>();
 

@@ -27,22 +27,24 @@ import java.util.List;
 @AllArgsConstructor
 public class Request {
 
+    // ─────────────────────────────────────────────
+    // [1] 기본 필드 (식별자, 제목, 내용, 포인트)
+    // ─────────────────────────────────────────────
+
     // 요청 ID (기본키)
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 요청 등록한 사용자 (N:1)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
-
-    // 요청 제목 / 설명 / 요청에 걸린 포인트
+    // 요청 제목
+    @Column(nullable = false)
     private String title;
 
+    // 요청 내용
     @Column(columnDefinition = "TEXT")
     private String content;
 
+    // 요청에 걸린 포인트
     private Integer point;
 
     // 요청 카테고리 (12가지 중 하나)
@@ -50,28 +52,19 @@ public class Request {
     @Column(nullable = false)
     private RequestCategory category;
 
-    /**
-     * 장소 정보 (택 1 구조)
-     *
-     * 공식 등록된 장소인 경우 → place 객체 연결
-     * 자유입력 장소인 경우 → customPlaceName, lat/lng 필드 사용
-     * 둘 다 null일 수 없도록, 프론트 또는 컨트롤러에서 유효성 검증 필요
-     */
-    // 공식 등록 장소일 경우
+    // ─────────────────────────────────────────────
+    // [2] 연관 관계 설정 (사용자, 장소, 상태 로그)
+    // ─────────────────────────────────────────────
+
+    // 요청 등록한 사용자 (N:1)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    // 공식 등록 장소 (선택적 관계)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "place_id")
     private Place place;
-
-    // 사용자 입력 장소 정보 (자유 형식일 때)
-    private String customPlaceName;
-    private Double lat;
-    private Double lng;
-
-    // 요청 마감 여부 (답변 채택 시 true)
-    private boolean isClosed;
-
-    // 생성 시각
-    private LocalDateTime createdAt;
 
     /**
      * 연결된 상태 로그 (답변들)
@@ -83,30 +76,56 @@ public class Request {
     @OneToMany(mappedBy = "request", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<StatusLog> statusLogs = new ArrayList<>();
 
-    // 자동 동기화 로직 (답변 선택 시 자동 마감)
-    @PreUpdate
-    private void syncClosedWithSelected() {
-        if (statusLogs != null && statusLogs.stream().anyMatch(StatusLog::isSelected)) {
-            this.isClosed = true;
-        }
-    }
-
     // ─────────────────────────────────────────────
-    // 카테고리별 유연 필드 (nullable 허용)
+    // [3] 장소 정보 (사용자 지정 장소 지원)
     // ─────────────────────────────────────────────
 
-    private Integer waitCount; // WAITING_STATUS, CROWD_LEVEL
-    private Boolean hasBathroom; // BATHROOM
-    private String menuInfo; // FOOD_MENU
-    private String weatherNote; // WEATHER_LOCAL
-    private String vendorName; // STREET_VENDOR
-    private String photoNote; // PHOTO_REQUEST
-    private String noiseNote; // NOISE_LEVEL
-    private Boolean isOpen; // BUSINESS_STATUS
-    private Integer seatCount; // OPEN_SEAT
-    private Boolean isParkingAvailable; // PARKING
+    // 사용자 입력 장소 정보 (자유 형식일 때)
+    private String customPlaceName;
 
-    // (선택) 기타 확장 정보 - JSON 형식 등으로 활용 가능
+    // 사용자 지정 장소 좌표 (위도, 경도)
+    private Double lat;
+    private Double lng;
+
+    // ─────────────────────────────────────────────
+    // [4] 상태 필드 (생성 시각, 마감 여부)
+    // ─────────────────────────────────────────────
+
+    // 요청 마감 여부 (답변 채택 시 true)
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean isClosed = false;
+
+    // 요청 생성 시각
+    private LocalDateTime createdAt;
+
+    // ─────────────────────────────────────────────
+    // [5] 카테고리별 동적 필드 (nullable 허용)
+    // ─────────────────────────────────────────────
+
+    // 대기 인원 (WAITING_STATUS, CROWD_LEVEL)
+    private Integer waitCount;
+    // 혼잡도 (CROWD_LEVEL) - 대기 인원과 통합 사용 가능
+    private Integer crowdLevel;
+    // 화장실 여부 (BATHROOM)
+    private Boolean hasBathroom;
+    // 메뉴 정보 (FOOD_MENU)
+    private String menuInfo;
+    // 날씨 상태 (WEATHER_LOCAL)
+    private String weatherNote;
+    // 노점 이름 (STREET_VENDOR)
+    private String vendorName;
+    // 사진 메모 (PHOTO_REQUEST)
+    private String photoNote;
+    // 소음 상태 (NOISE_LEVEL)
+    private String noiseNote;
+    // 영업 여부 (BUSINESS_STATUS)
+    private Boolean isOpen;
+    // 남은 좌석 수 (OPEN_SEAT)
+    private Integer seatCount;
+    // 주차 가능 여부 (PARKING)
+    private Boolean isParkingAvailable;
+    // 기타 정보 (ETC) - 사용자 자유 입력
     @Column(columnDefinition = "TEXT")
     private String extra;
 

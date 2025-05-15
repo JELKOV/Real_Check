@@ -21,22 +21,22 @@ import lombok.RequiredArgsConstructor;
  * - 관리자 전용 사용자 관리 컨트롤러
  * - 차단 사용자 해제, 사용자 검색, 차단 사용자 목록 조회 API 제공
  */
-@RestController // REST API 전용 컨트롤러 (JSON 형태로 응답)
-@RequestMapping("/api/admin/users") // 이 컨트롤러의 기본 URI 경로
-@RequiredArgsConstructor // 생성자 주입을 Lombok이 자동 생성 (userAdminService를 주입)
+@RestController
+@RequestMapping("/api/admin/users")
+@RequiredArgsConstructor
 public class UserAdminController {
 
-    private final UserAdminService userAdminService; // 사용자 관리 서비스 (관리자 전용)
+    private final UserAdminService userAdminService;
 
     // ─────────────────────────────────────────────
     // [1] 사용자 검색 기능 (이메일 / 닉네임 기반)
     // ─────────────────────────────────────────────
 
     /**
-     * admin/users.jsp
-     * [1] 사용자 검색 API
-     * - 이메일 또는 닉네임에 키워드가 포함된 사용자 리스트 반환
-     * - 관리자 화면에서 검색 기능에 사용
+     * page: admin/users.jsp
+     * [1-1] 사용자 검색 API
+     * 이메일 또는 닉네임에 키워드가 포함된 사용자 리스트 반환
+     * 관리자 화면에서 검색 기능에 사용
      */
     @GetMapping("/search")
     public ResponseEntity<List<UserDto>> searchUsers(@RequestParam String keyword) {
@@ -48,20 +48,9 @@ public class UserAdminController {
     // ─────────────────────────────────────────────
 
     /**
-     * admin/users.jsp
-     * [1] 사용자 차단 해제 API
-     * - 특정 사용자 ID의 계정을 다시 활성화함 (isActive = true)
-     */
-    @PatchMapping("/{userId}/unblock")
-    public ResponseEntity<String> unblockUser(@PathVariable Long userId) {
-        userAdminService.unblockUser(userId);
-        return ResponseEntity.ok("차단 해제 완료");
-    }
-
-    /**
-     * admin/users.jsp
-     * [2] 차단된 사용자 목록 조회 API
-     * - 로그인된 관리자인지 확인 후, isActive = false인 사용자 리스트 반환
+     * page: admin/users.jsp
+     * [2-1] 차단된 사용자 목록 조회 API
+     * 로그인된 관리자인지 확인 후, isActive = false인 사용자 리스트 반환
      */
     @GetMapping("/blocked")
     public ResponseEntity<?> getBlockedUsers(HttpSession session) {
@@ -76,4 +65,16 @@ public class UserAdminController {
         // 차단된 사용자 목록 조회 후 응답
         return ResponseEntity.ok(userAdminService.getBlockedUsers());
     }
+
+    /**
+     * page: admin/users.jsp
+     * [2-2] 사용자 차단 해제 API
+     * 특정 사용자 ID의 계정을 다시 활성화함 (isActive = true)
+     */
+    @PatchMapping("/{userId}/unblock")
+    public ResponseEntity<String> unblockUser(@PathVariable Long userId) {
+        userAdminService.unblockUser(userId);
+        return ResponseEntity.ok("차단 해제 완료");
+    }
+
 }

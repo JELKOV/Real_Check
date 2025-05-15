@@ -34,6 +34,18 @@ function bindEventListeners() {
   $(document).on("click", "#closeRequestBtn", function () {
     closeRequest();
   });
+
+  // 답변 수정 버튼 클릭 (수정 모드 활성화)
+  $(document).on("click", ".edit-answer-btn", activateEditMode);
+
+  // 답변 수정 저장 버튼 클릭
+  $(document).on("click", ".save-edit-btn", saveEditedAnswer);
+
+  // 답변 수정 취소 버튼 클릭
+  $(document).on("click", ".cancel-edit-btn", cancelEditMode);
+
+  // 답변 삭제 버튼 클릭
+  $(document).on("click", ".delete-answer-btn", deleteAnswer);
 }
 
 // [2] 요청 상세 정보 로드
@@ -56,41 +68,66 @@ function renderRequestDetail(request) {
   const nickname = request.requesterNickname || "익명";
   const location =
     request.placeName || request.customPlaceName || "장소 정보 없음";
-  const closedBadge = request.closed
-    ? `<span class="badge bg-danger ms-2">🔒 마감</span>`
-    : "";
-  const categoryBadge = `<span class="badge bg-primary"> ${
-    categoryLabelMap[request.category] || request.category
-  } </span>`;
-
   const isRequester = loginUserIdNum === request.requesterId;
   const canCloseManually =
     isRequester && !request.closed && request.answerCount === 0;
+
+  const closedBadge = request.closed
+    ? `<span class="badge bg-danger ms-2">🔒 마감</span>`
+    : "";
+  const categoryBadge = `<span class="badge bg-primary">${
+    categoryLabelMap[request.category] || request.category
+  }</span>`;
 
   const html = `
     <div class="card mt-3 ${
       request.closed ? "bg-light text-muted border-start border-danger" : ""
     }">
-      <div class="card-body">
-        <h5 class="card-title d-flex justify-content-between align-items-center">
-          ${request.title} ${categoryBadge} ${closedBadge}
-        </h5>
-        <p class="card-text text-muted">${request.content}</p>
-        <ul class="list-unstyled mt-3">
-          <li><strong>포인트:</strong> ${request.point}pt</li>
-          <li><strong>장소:</strong> ${location}</li>
-          <li><strong>작성자:</strong> ${nickname}</li>
-          <li><strong>작성일:</strong> ${formattedDate}</li>
+      <div class="card-body position-relative">
+        <div class="d-flex justify-content-between align-items-start">
+          <h4 class="card-title">${request.title} ${closedBadge}</h4>
+          <div class="badge-container position-absolute top-0 end-0 mt-2 me-2">
+            ${categoryBadge}
+          </div>
+        </div>
+        <p class="card-text mt-2">${request.content}</p>
+
+        <hr class="my-3">
+
+        <ul class="list-unstyled mt-2">
+          <li class="mb-2 d-flex align-items-center">
+            <i class="bi bi-currency-exchange me-2 text-primary"></i>
+            <strong>포인트:</strong> <span class="ms-2">${
+              request.point
+            }pt</span>
+          </li>
+          <li class="mb-2 d-flex align-items-center">
+            <i class="bi bi-geo-alt-fill me-2 text-primary"></i>
+            <strong>장소:</strong> <span class="ms-2">${location}</span>
+          </li>
+          <li class="mb-2 d-flex align-items-center">
+            <i class="bi bi-person-fill me-2 text-primary"></i>
+            <strong>작성자:</strong> <span class="ms-2">${nickname}</span>
+          </li>
+          <li class="d-flex align-items-center">
+            <i class="bi bi-calendar-check-fill me-2 text-primary"></i>
+            <strong>작성일:</strong> <span class="ms-2">${formattedDate}</span>
+          </li>
         </ul>
-         ${
-           canCloseManually
-             ? '<button id="closeRequestBtn" class="btn btn-danger mt-2">마감하기</button>'
-             : ""
-         }
+
+        <div class="position-absolute bottom-0 end-0 mb-2 me-2">
+          ${
+            canCloseManually
+              ? '<button id="closeRequestBtn" class="btn btn-danger">마감하기</button>'
+              : ""
+          }
+        </div>
       </div>
-    </div>`;
+    </div>
+  `;
 
   $("#requestDetail").html(html);
+
   // 마감하기 버튼 클릭 이벤트 바인딩
   if (canCloseManually) {
     $("#closeRequestBtn").on("click", function () {
@@ -146,12 +183,25 @@ function renderAnswerFields(category) {
   container.empty();
 
   const fieldMap = {
+    PARKING: {
+      label: "주차 가능 여부",
+      name: "isParkingAvailable",
+      type: "select",
+      options: [
+        { value: "true", text: "가능" },
+        { value: "false", text: "불가능" },
+      ],
+    },
     WAITING_STATUS: {
       label: "대기 인원",
       name: "waitCount",
       type: "number",
     },
-    CROWD_LEVEL: { label: "혼잡도", name: "waitCount", type: "number" },
+    CROWD_LEVEL: {
+      label: "혼잡도",
+      name: "waitCount",
+      type: "number",
+    },
     BATHROOM: {
       label: "화장실 여부",
       name: "hasBathroom",
@@ -161,7 +211,11 @@ function renderAnswerFields(category) {
         { value: "false", text: "없음" },
       ],
     },
-    FOOD_MENU: { label: "메뉴 정보", name: "menuInfo", type: "text" },
+    FOOD_MENU: {
+      label: "메뉴 정보",
+      name: "menuInfo",
+      type: "text",
+    },
     WEATHER_LOCAL: {
       label: "날씨 상태",
       name: "weatherNote",
@@ -177,15 +231,10 @@ function renderAnswerFields(category) {
       name: "photoNote",
       type: "text",
     },
-    NOISE_LEVEL: { label: "소음 상태", name: "noiseNote", type: "text" },
-    PARKING: {
-      label: "주차 가능 여부",
-      name: "isParkingAvailable",
-      type: "select",
-      options: [
-        { value: "true", text: "가능" },
-        { value: "false", text: "불가능" },
-      ],
+    NOISE_LEVEL: {
+      label: "소음 상태",
+      name: "noiseNote",
+      type: "text",
     },
     BUSINESS_STATUS: {
       label: "영업 여부",
@@ -200,6 +249,11 @@ function renderAnswerFields(category) {
       label: "남은 좌석 수",
       name: "seatCount",
       type: "number",
+    },
+    ETC: {
+      label: "기타 메모",
+      name: "extra",
+      type: "text",
     },
   };
 
@@ -259,7 +313,7 @@ function updateAutoCloseNotice(answerCount) {
   }
 }
 
-// [3-2] 답변 행 생성 함수
+// [3-2] 답변 행 생성 함수 (버튼 위치 개선)
 function generateAnswerRow(answer, hasSelected) {
   const imageHtml = answer.imageUrl
     ? `<img src="${answer.imageUrl}" style="max-width:100px;" class="mt-2" />`
@@ -270,33 +324,44 @@ function generateAnswerRow(answer, hasSelected) {
     : "";
   const canSelect = canSelectAnswer(answer, hasSelected);
   const canEditOrDelete = canEditOrDeleteAnswer(answer);
-  console.log(answer.userId)
 
   const actionButtons = `
-    ${
-      canSelect
-        ? `<button class="btn btn-sm btn-outline-success select-answer-btn mt-2" data-id="${answer.id}">이 답변 채택</button>`
-        : ""
-    }
-    ${
-      canEditOrDelete
-        ? `
-      <button class="btn btn-sm btn-warning mt-2 edit-answer-btn" data-id="${answer.id}">✏️</button>
-      <button class="btn btn-sm btn-danger mt-2 delete-answer-btn" data-id="${answer.id}">🗑️</button>
-    `
-        : ""
-    }
+    <div class="edit-delete-buttons">
+      ${
+        canSelect
+          ? `<button class="btn btn-sm btn-outline-success select-answer-btn" data-id="${answer.id}">✅ 채택</button>`
+          : ""
+      }
+      ${
+        canEditOrDelete
+          ? `
+          <button class="btn btn-sm btn-warning edit-answer-btn" data-id="${answer.id}">✏️</button>
+          <button class="btn btn-sm btn-danger delete-answer-btn" data-id="${answer.id}">🗑️</button>
+        `
+          : ""
+      }
+    </div>
+    <div class="save-cancel-buttons">
+      <button class="btn btn-primary save-edit-btn" data-id="${
+        answer.id
+      }">저장</button>
+      <button class="btn btn-secondary cancel-edit-btn" data-id="${
+        answer.id
+      }">취소</button>
+    </div>
   `;
 
-  const formattedDate = new Date(answer.createdAt).toLocaleString();
+  const formattedDate = new Date(answer.createdAt).toLocaleString("ko-KR");
 
   return `
-    <li class="list-group-item ${
-      answer.selected ? "list-group-item-success" : ""
-    }">
+    <li class="list-group-item answer-item" data-answer-data='${JSON.stringify(
+      answer
+    )}'>
       <strong>${nickname}</strong> ${selectedBadge}
-      <p>${answer.content}</p>
-      ${renderExtraAnswerFields(answer)}
+      <p id="answer-text-${answer.id}">${answer.content}</p>
+      <div class="dynamic-fields">
+        ${renderExtraAnswerFields(answer)}
+      </div>
       ${imageHtml}
       <br><small class="text-muted">${formattedDate}</small>
       ${actionButtons}
@@ -320,55 +385,69 @@ function canEditOrDeleteAnswer(answer) {
   return true;
 }
 
-// [3-3] 답변 수정 모드 활성화
-$(document).on("click", ".edit-answer-btn", function () {
+// [3-2-2-1] 답변 수정 모드 활성화
+function activateEditMode() {
   const answerId = $(this).data("id");
-  const answerTextElement = $(`#answer-text-${answerId}`);
+  const answerRow = $(`li[data-answer-data*='"id":${answerId}']`);
+  const answerTextElement = answerRow.find(`#answer-text-${answerId}`);
   const originalText = answerTextElement.text().trim();
+  const answer = JSON.parse(answerRow.attr("data-answer-data"));
 
-  // 수정 모드로 변경 (텍스트를 입력 필드로 변경)
+  // 수정 모드로 변경
   answerTextElement.html(`
     <textarea class="form-control edit-answer-input" data-id="${answerId}">${originalText}</textarea>
-    <button class="btn btn-primary mt-2 save-edit-btn" data-id="${answerId}">저장</button>
-    <button class="btn btn-secondary mt-2 cancel-edit-btn" data-id="${answerId}">취소</button>
   `);
-});
 
-// [3-3-1] 수정 취소 처리
-$(document).on("click", ".cancel-edit-btn", function () {
+  // 동적 필드 수정 가능하게 렌더링
+  answerRow.find(".dynamic-fields").html(renderExtraAnswerFields(answer, true));
+
+  // 버튼 토글 (저장/취소 표시, 수정/삭제 숨기기)
+  answerRow.find(".edit-delete-buttons").hide();
+  answerRow.find(".save-cancel-buttons").show();
+}
+// [3-2-2-2] 수정 취소 처리
+function cancelEditMode() {
   loadAnswerList(requestId); // 원래 답변 목록으로 되돌리기
-});
+}
 
-// [3-3-2] 수정 저장 처리
-$(document).on("click", ".save-edit-btn", function () {
+// [3-2-2-3] 수정 저장 처리
+function saveEditedAnswer() {
   const answerId = $(this).data("id");
-  const newContent = $(`textarea.edit-answer-input[data-id="${answerId}"]`)
-    .val()
-    .trim();
+  const answerRow = $(`li[data-answer-data*='"id":${answerId}']`);
+  const newText = answerRow.find(".edit-answer-input").val().trim();
+  const extraFields = {};
 
-  if (!newContent) {
-    alert("답변 내용을 입력해주세요.");
+  // 동적 필드 값 수집
+  answerRow.find(".edit-extra-input").each(function () {
+    const field = $(this).data("field");
+    extraFields[field] = $(this).val();
+  });
+
+  if (!newText) {
+    alert("내용을 입력해주세요.");
     return;
   }
 
-  // 서버로 수정 요청 (PATCH)
+  // 수정 데이터 구성
+  const dto = { content: newText, ...extraFields };
+
   $.ajax({
     url: `/api/status/${answerId}`,
-    method: "PATCH",
+    method: "PUT",
     contentType: "application/json",
-    data: JSON.stringify({ content: newContent }),
+    data: JSON.stringify(dto),
     success: function () {
       alert("답변이 수정되었습니다.");
-      loadAnswerList(requestId);
+      loadAnswerList(requestId); // 수정 후 목록 새로고침
     },
     error: function (xhr) {
-      alert("답변 수정 실패: " + xhr.responseText);
+      alert("수정 실패: " + xhr.responseText);
     },
   });
-});
+}
 
-// [3-3-3] 답변 삭제 처리
-$(document).on("click", ".delete-answer-btn", function () {
+// [3-2-2-4] 답변 삭제 처리
+function deleteAnswer() {
   const answerId = $(this).data("id");
   if (!confirm("정말로 이 답변을 삭제하시겠습니까?")) return;
 
@@ -383,79 +462,87 @@ $(document).on("click", ".delete-answer-btn", function () {
       alert("답변 삭제 실패: " + xhr.responseText);
     },
   });
-});
+}
 
-// [3-2-2] 유틸 함수: 응답 필드 표시용 텍스트 생성
-function renderExtraAnswerFields(answer) {
-  const category = answer.category;
-  const fields = [];
+// [3-2-2-4] 답변 삭제 처리
+function deleteAnswer() {
+  const answerId = $(this).data("id");
+  if (!confirm("정말로 이 답변을 삭제하시겠습니까?")) return;
 
-  switch (category) {
-    case "WAITING_STATUS":
-    case "CROWD_LEVEL":
-      if (answer.waitCount != null) {
-        fields.push(`대기 인원: ${answer.waitCount}명`);
-      }
-      break;
+  $.ajax({
+    url: `/api/status/${answerId}`,
+    method: "DELETE",
+    success: function () {
+      alert("답변이 삭제되었습니다.");
+      loadAnswerList(requestId);
+    },
+    error: function (xhr) {
+      alert("답변 삭제 실패: " + xhr.responseText);
+    },
+  });
+}
 
-    case "BATHROOM":
-      if (answer.hasBathroom != null) {
-        fields.push(`화장실 여부: ${answer.hasBathroom ? "있음" : "없음"}`);
-      }
-      break;
+// [3-2-3] 유틸 함수: 응답 필드 표시용 텍스트 생성 (수정 모드 지원)
+function renderExtraAnswerFields(answer, isEditMode = false) {
+  const fieldMap = {
+    PARKING: {
+      label: "주차 가능 여부",
+      field: "isParkingAvailable",
+      boolean: true,
+    },
+    WAITING_STATUS: { label: "대기 인원", field: "waitCount", unit: "명" },
+    CROWD_LEVEL: { label: "혼잡도", field: "waitCount", unit: "명" },
+    BATHROOM: { label: "화장실 여부", field: "hasBathroom", boolean: true },
+    FOOD_MENU: { label: "메뉴 정보", field: "menuInfo" },
+    WEATHER_LOCAL: { label: "날씨 상태", field: "weatherNote" },
+    STREET_VENDOR: { label: "노점 이름", field: "vendorName" },
+    PHOTO_REQUEST: { label: "사진 메모", field: "photoNote" },
+    NOISE_LEVEL: { label: "소음 상태", field: "noiseNote" },
+    BUSINESS_STATUS: { label: "영업 여부", field: "isOpen", boolean: true },
+    OPEN_SEAT: { label: "남은 좌석 수", field: "seatCount", unit: "개" },
+    ETC: { label: "기타 메모", field: "extra" },
+  };
 
-    case "FOOD_MENU":
-      if (answer.menuInfo) {
-        fields.push(`메뉴 정보: ${answer.menuInfo}`);
-      }
-      break;
+  const config = fieldMap[answer.category];
+  if (!config) return "";
 
-    case "WEATHER_LOCAL":
-      if (answer.weatherNote) {
-        fields.push(`날씨 상태: ${answer.weatherNote}`);
-      }
-      break;
+  const value = answer[config.field];
+  if (value == null) return "";
 
-    case "STREET_VENDOR":
-      if (answer.vendorName) {
-        fields.push(`노점 이름: ${answer.vendorName}`);
-      }
-      break;
-
-    case "PHOTO_REQUEST":
-      if (answer.photoNote) {
-        fields.push(`사진 메모: ${answer.photoNote}`);
-      }
-      break;
-
-    case "NOISE_LEVEL":
-      if (answer.noiseNote) {
-        fields.push(`소음 상태: ${answer.noiseNote}`);
-      }
-      break;
-
-    case "PARKING":
-      if (answer.isParkingAvailable != null) {
-        fields.push(
-          `주차 가능 여부: ${answer.isParkingAvailable ? "가능" : "불가능"}`
-        );
-      }
-      break;
-
-    case "BUSINESS_STATUS":
-      if (answer.isOpen != null) {
-        fields.push(`영업 여부: ${answer.isOpen ? "영업 중" : "영업 종료"}`);
-      }
-      break;
-
-    case "OPEN_SEAT":
-      if (answer.seatCount != null) {
-        fields.push(`남은 좌석 수: ${answer.seatCount}`);
-      }
-      break;
+  if (isEditMode) {
+    // 수정 모드: 필드 수정 가능하게 표시
+    if (config.boolean) {
+      return `
+        <div class="mb-2">
+          <label>${config.label}</label>
+          <select class="form-select edit-extra-input" data-field="${
+            config.field
+          }">
+            <option value="true" ${value ? "selected" : ""}>있음</option>
+            <option value="false" ${!value ? "selected" : ""}>없음</option>
+          </select>
+        </div>
+      `;
+    } else {
+      return `
+        <div class="mb-2">
+          <label>${config.label}</label>
+          <input type="text" class="form-control edit-extra-input" data-field="${config.field}" value="${value}">
+        </div>
+      `;
+    }
   }
 
-  return fields.map((f) => `<div class="text-muted">${f}</div>`).join("");
+  // 일반 모드 (텍스트로 표시)
+  if (config.boolean) {
+    return `<div class="text-muted">${config.label}: ${
+      value ? "있음" : "없음"
+    }</div>`;
+  }
+
+  return `<div class="text-muted">${config.label}: ${value}${
+    config.unit || ""
+  }</div>`;
 }
 
 // [4] 요청 수동 마감 처리
@@ -489,6 +576,7 @@ function handleSelectAnswer() {
   $.post(`/api/status/select/${statusLogId}`)
     .done(() => {
       loadRequestDetail(requestId); // 요청 상태 갱신 (마감)
+      loadAnswerList(requestId); // 답변 목록 갱신
     })
     .fail((xhr) => {
       alert("채택 실패: " + xhr.responseText);
@@ -499,7 +587,7 @@ function handleSelectAnswer() {
 function submitAnswer(e) {
   e.preventDefault();
   const content = $("#answerContent").val();
-  const dto = { content };
+  const dto = { content, requestId: requestId };
 
   // 유연 필드 동적 추가 (카테고리별 필드)
   $("#dynamicAnswerFields")

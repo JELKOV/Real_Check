@@ -1,0 +1,20 @@
+.answer-item {
+  position: relative;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.edit-delete-buttons {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  z-index: 10;
+}
+
+.save-cancel-buttons {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  z-index: 10;
+  display: none; /* 기본적으로 숨기되, 수정 모드에서만 표시 */
+}

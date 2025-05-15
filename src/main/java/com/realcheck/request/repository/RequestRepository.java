@@ -20,103 +20,95 @@ import java.util.List;
  */
 public interface RequestRepository extends JpaRepository<Request, Long> {
 
-        /**
-         * (미사용)
-         * [1] 마감되지 않은 모든 요청 조회
-         * - 예: 관리자 페이지, 전체 요청 리스트
-         *
-         * SQL:
-         * SELECT * FROM request WHERE is_closed = false;
-         */
-        List<Request> findByIsClosedFalse();
+  // ─────────────────────────────────────────────
+  // [1] 기본 메소드 (CRUD 포함)
+  // ─────────────────────────────────────────────
 
-        /**
-         * RequestService: findOpenRequestsWithLocation
-         * [2] 미마감 + 답변 3개 미만 + 위치(lat/lng) 존재 + 생성 시간 기준 조회 + 카테고리 및 반경 필터 (페이지네이션)
-         * - 지도 기반 필터링 기능에서 사용됨
-         * 
-         * SQL:
-         * SELECT r.*
-         * FROM request r
-         * LEFT JOIN status_log s ON r.id = s.request_id
-         * WHERE r.is_closed = false
-         * AND r.created_at <= ? -- 지정된 시간(threshold) 이전
-         * AND r.lat IS NOT NULL
-         * AND r.lng IS NOT NULL
-         * AND (? IS NULL OR r.category = ?) -- 카테고리 필터 (NULL일 경우 모든 카테고리)
-         * AND (
-         * 6371 * acos(
-         * cos(radians(?)) * cos(radians(r.lat)) *
-         * cos(radians(r.lng) - radians(?)) +
-         * sin(radians(?)) * sin(radians(r.lat))
-         * )
-         * ) <= (? / 1000) -- 반경 필터 (미터 → 킬로미터로 변환)
-         * GROUP BY r.id
-         * HAVING COUNT(s.id) < 3;
-         */
-        @Query("""
-                        SELECT r
-                        FROM Request r
-                        WHERE r.isClosed = false
-                          AND SIZE(r.statusLogs) < 3
-                          AND r.createdAt <= :threshold
-                          AND r.lat IS NOT NULL
-                          AND r.lng IS NOT NULL
-                          AND (:category IS NULL OR r.category = :category)
-                          AND (6371 * acos(
-                                cos(radians(:lat)) * cos(radians(r.lat)) *
-                                cos(radians(r.lng) - radians(:lng)) +
-                                sin(radians(:lat)) * sin(radians(r.lat))
-                          )) <= (:radius / 1000)
-                        """)
-        Page<Request> findOpenRequestsWithLocation(
-                        @Param("lat") double lat,
-                        @Param("lng") double lng,
-                        @Param("radius") double radius,
-                        @Param("threshold") LocalDateTime threshold,
-                        @Param("category") RequestCategory category,
-                        Pageable pageable);
+  /**
+   * [1-1] 마감되지 않은 모든 요청 조회 [미사용]
+   * - 예: 관리자 페이지, 전체 요청 리스트
+   */
+  List<Request> findByIsClosedFalse();
 
-        /**
-         * RequestService: findNearbyValidRequests
-         * [3] 현재 위치 기준, 반경 내 응답 부족 요청 조회
-         * - 장소 정보가 있는 요청만 대상으로 함
-         * - 위도/경도 null 방지 포함
-         * - ST_Distance_Sphere는 MySQL 전용 함수이므로 DB 호환성 주의
-         * 
-         * SQL:
-         * SELECT * FROM request r WHERE is_closed = false
-         * AND ST_Distance_Sphere(POINT(r.lng, r.lat), POINT(:lng, :lat)) <= :radius
-         * AND SIZE(r.statusLogs) < 3
-         */
-        @Query("""
-                        SELECT r FROM Request r
-                        WHERE r.isClosed = false
-                                AND r.lat IS NOT NULL AND r.lng IS NOT NULL
-                                AND SIZE(r.statusLogs) < 3
-                                AND r.createdAt >= :timeLimit
-                                AND FUNCTION('ST_Distance_Sphere', POINT(r.lng, r.lat), POINT(:lng, :lat)) <= :radius """)
-        List<Request> findNearbyValidRequests(
-                        @Param("lat") double lat,
-                        @Param("lng") double lng,
-                        @Param("radius") double radius,
-                        @Param("timeLimit") LocalDateTime timeLimit);
+  /**
+   * RequestService: findByUserId
+   * [1-2] UserId로 사용자의 요청 목록 조회
+   * 내 요청 목록 조회
+   */
+  List<Request> findByUserIdOrderByCreatedAtDesc(Long userId);
 
-        /**
-         * RequestService: findByUserId
-         * [4] UserId 요청한사람 기준으로 요청 목록 불러오기
-         */
-        List<Request> findByUserIdOrderByCreatedAtDesc(Long userId);
+  // ─────────────────────────────────────────────
+  // [2] 위치 기반 필터링 관련 메소드
+  // ─────────────────────────────────────────────
 
-        /**
-         * RequestService: findOpenRequestsWithAnswers
-         * [5] 요청 자동 마감 쿼리
-         */
-        @Query("""
-                        SELECT r FROM Request r
-                        WHERE r.isClosed = false
-                          AND r.createdAt <= :threshold
-                          AND SIZE(r.statusLogs) > 0
-                        """)
-        List<Request> findAllByIsClosedFalseAndCreatedAtBefore(@Param("threshold") LocalDateTime threshold);
+  /**
+   * RequestService: findOpenRequestsWithLocation
+   * [2-1] 위치 기반, 카테고리 필터링된 미마감 요청 조회
+   * - 미마감
+   * - 답변 3개 미만
+   * - 위치(lat/lng) 존재
+   * - 생성 시간 기준 조회
+   * - 카테고리 및 반경 필터
+   * - 페이지네이션
+   * - 지도 기반 필터링 기능에서 사용됨
+   */
+  @Query("""
+      SELECT r
+      FROM Request r
+      WHERE r.isClosed = false
+        AND SIZE(r.statusLogs) < 3
+        AND r.createdAt <= :threshold
+        AND r.lat IS NOT NULL
+        AND r.lng IS NOT NULL
+        AND (:category IS NULL OR r.category = :category)
+        AND (6371 * acos(
+              cos(radians(:lat)) * cos(radians(r.lat)) *
+              cos(radians(r.lng) - radians(:lng)) +
+              sin(radians(:lat)) * sin(radians(r.lat))
+        )) <= (:radius / 1000)
+      """)
+  Page<Request> findOpenRequestsWithLocation(
+      @Param("lat") double lat,
+      @Param("lng") double lng,
+      @Param("radius") double radius,
+      @Param("threshold") LocalDateTime threshold,
+      @Param("category") RequestCategory category,
+      Pageable pageable);
+
+  /**
+   * RequestService: findNearbyValidRequests
+   * [2-2] 최신 요청 조회 (현재 위치 기준 / 반경 내 응답 부족 요청 조회)
+   * - 장소 정보가 있는 요청만 대상으로 함
+   * - 위도/경도 null 방지 포함
+   */
+  @Query("""
+      SELECT r FROM Request r
+      WHERE r.isClosed = false
+              AND r.lat IS NOT NULL AND r.lng IS NOT NULL
+              AND SIZE(r.statusLogs) < 3
+              AND r.createdAt >= :timeLimit
+              AND FUNCTION('ST_Distance_Sphere', POINT(r.lng, r.lat), POINT(:lng, :lat)) <= :radius """)
+  List<Request> findNearbyValidRequests(
+      @Param("lat") double lat,
+      @Param("lng") double lng,
+      @Param("radius") double radius,
+      @Param("timeLimit") LocalDateTime timeLimit);
+
+  // ─────────────────────────────────────────────
+  // [3] 자동 마감 관련 메소드
+  // ─────────────────────────────────────────────
+
+  /**
+   * RequestService: findOpenRequestsWithAnswers
+   * [3-1] 자동 마감 대상 요청 조회
+   * - 마감되지 않았고 답변이 1개 이상 존재
+   * - 생성된 지 일정 시간이 지난 요청
+   */
+  @Query("""
+      SELECT r FROM Request r
+      WHERE r.isClosed = false
+        AND r.createdAt <= :threshold
+        AND SIZE(r.statusLogs) > 0
+      """)
+  List<Request> findAllByIsClosedFalseAndCreatedAtBefore(@Param("threshold") LocalDateTime threshold);
 }

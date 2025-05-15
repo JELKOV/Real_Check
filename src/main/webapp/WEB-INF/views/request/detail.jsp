@@ -11,6 +11,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="/css/detail.css" />
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script
       type="text/javascript"
@@ -70,6 +71,6 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
     </div>
 
     <%@ include file="../common/footer.jsp" %>
-    <script src="/js/detail.js"></script>
+    <script src="/js/request/detail.js"></script>
   </body>
 </html>

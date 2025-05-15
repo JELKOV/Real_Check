@@ -113,6 +113,6 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
     </div>
 
     <%@ include file="../common/footer.jsp" %>
-    <script src="/js/list.js"></script>
+    <script src="/js/request/list.js"></script>
   </body>
 </html>

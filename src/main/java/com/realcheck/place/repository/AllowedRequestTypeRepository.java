@@ -18,37 +18,50 @@ import java.util.List;
  */
 public interface AllowedRequestTypeRepository extends JpaRepository<AllowedRequestType, Long> {
 
-    /**
-     * [1] 특정 장소에 등록된 허용된 요청 타입 목록 조회
-     * - Place ID로 허용된 요청 타입들을 조회
-     */
-    @Query("""
-            SELECT art FROM AllowedRequestType art
-            WHERE art.place.id = :placeId
-            """)
-    List<AllowedRequestType> findByPlaceId(@Param("placeId") Long placeId);
+        // ─────────────────────────────────────────────
+        // [1] 조회 관련 (허용된 요청 타입 조회)
+        // ─────────────────────────────────────────────
 
-    /**
-     * [2] 특정 장소의 특정 요청 타입 삭제
-     */
-    @Modifying
-    @Transactional
-    @Query("DELETE FROM AllowedRequestType art WHERE art.place.id = :placeId AND art.requestType = :requestType")
-    void deleteByPlaceIdAndRequestType(@Param("placeId") Long placeId,
-            @Param("requestType") RequestCategory requestType);
+        /**
+         * PlaceService: getPlaceDetails
+         * [1-1] 특정 장소에 등록된 허용된 요청 타입 목록 조회
+         * Place ID로 허용된 요청 타입들을 조회
+         */
+        @Query("""
+                        SELECT art FROM AllowedRequestType art
+                        WHERE art.place.id = :placeId
+                        """)
+        List<AllowedRequestType> findByPlaceId(@Param("placeId") Long placeId);
 
-    /**
-     * [3] 특정 장소의 모든 요청 타입 삭제 (장소 삭제 시)
-     */
-    @Modifying
-    @Transactional
-    @Query("DELETE FROM AllowedRequestType art WHERE art.place.id = :placeId")
-    void deleteByPlaceId(@Param("placeId") Long placeId);
+        /**
+         * RequestService: isValidForPlace
+         * [1-2] 특정 장소에서 특정 요청 타입 존재 여부 확인
+         * 성능 최적화를 위해 DB에서 직접 확인
+         * true/false 반환
+         */
+        boolean existsByPlaceIdAndRequestType(Long placeId, RequestCategory requestType);
 
-    /**
-     * RequestService: isValidForPlace
-     * [4] 특정 장소에서 특정 요청 타입 존재 여부 확인
-     * - 성능 최적화를 위해 DB에서 직접 확인
-     */
-    boolean existsByPlaceIdAndRequestType(Long placeId, RequestCategory requestType);
+        // ─────────────────────────────────────────────
+        // [2] 삭제 관련 (허용된 요청 타입 삭제)
+        // ─────────────────────────────────────────────
+
+        /**
+         * [2-1] 특정 장소의 특정 요청 타입 삭제 [미사용]
+         * 사용자가 지정된 요청 타입을 제거할 경우
+         */
+        @Modifying
+        @Transactional
+        @Query("DELETE FROM AllowedRequestType art WHERE art.place.id = :placeId AND art.requestType = :requestType")
+        void deleteByPlaceIdAndRequestType(@Param("placeId") Long placeId,
+                        @Param("requestType") RequestCategory requestType);
+
+        /**
+         * [2-2] 특정 장소의 모든 요청 타입 삭제 (장소 삭제 시) [미사용]
+         * 장소 삭제 또는 전체 타입 초기화 용도
+         */
+        @Modifying
+        @Transactional
+        @Query("DELETE FROM AllowedRequestType art WHERE art.place.id = :placeId")
+        void deleteByPlaceId(@Param("placeId") Long placeId);
+
 }

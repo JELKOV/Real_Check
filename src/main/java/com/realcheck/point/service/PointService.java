@@ -25,16 +25,35 @@ public class PointService {
     private final UserRepository userRepository;
 
     // ─────────────────────────────────────────────
-    // [1] 포인트 지급 처리
+    // [1] 포인트 지급 및 차감 처리
     // ─────────────────────────────────────────────
 
     /**
      * AutoCloseRequestService: distributePointsToAnswerers
      * StatusLogService: giveUserPoint / selectAnswer
-     * [1] 포인트 지급/차감 처리 (트랜잭션)
+     * [1-1] 포인트 지급/차감 처리
      */
     @Transactional
     public void givePoint(User user, int amount, String reason, PointType type) {
+        // (1) 지급할 포인트 유효성 검사
+        validatePointAmount(amount, user);
+
+        // (2) 포인트 지급 내역 생성 및 저장
+        PointDto pointDto = new PointDto(amount, reason, LocalDateTime.now(), type.name());
+        Point point = pointDto.toEntity(user, type);
+        pointRepository.save(point);
+
+        // (3) 사용자 포인트 누적 반영
+        user.setPoints(user.getPoints() + amount);
+        userRepository.save(user);
+    }
+
+    /**
+     * [1-1-A] 포인트 지급 금액 유효성 검사
+     * 0 포인트 지급 불가
+     * 차감 시 사용자의 포인트가 부족하면 예외 발생
+     */
+    private void validatePointAmount(int amount, User user) {
         if (amount == 0) {
             throw new IllegalArgumentException("지급할 포인트가 0입니다.");
         }
@@ -42,20 +61,6 @@ public class PointService {
         if (amount < 0 && user.getPoints() < Math.abs(amount)) {
             throw new IllegalArgumentException("포인트가 부족합니다.");
         }
-
-        // [1] 포인트 지급 기록
-        Point point = Point.builder()
-                .user(user)
-                .amount(amount)
-                .reason(reason)
-                .earnedAt(LocalDateTime.now())
-                .type(type)
-                .build();
-        pointRepository.save(point);
-
-        // [2] 사용자 포인트 누적 반영
-        user.setPoints(user.getPoints() + amount);
-        userRepository.save(user);
     }
 
     // ─────────────────────────────────────────────
@@ -63,7 +68,7 @@ public class PointService {
     // ─────────────────────────────────────────────
 
     /**
-     * [2] 포인트 내역 조회 메서드
+     * [2-1] 포인트 내역 조회 메서드 [미사용]
      * - 특정 사용자의 포인트 지급 이력을 모두 조회
      */
     @Transactional(readOnly = true)

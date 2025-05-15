@@ -18,9 +18,13 @@ public class RegisterController {
 
     private final UserService userService;
 
+    // ─────────────────────────────────────────────
+    // [1] 회원가입 페이지 이동
+    // ─────────────────────────────────────────────
+
     /**
      * common/header.jsp
-     * [1] 회원가입 페이지 이동
+     * [1-1] 회원가입 페이지 이동
      */
     @GetMapping("/register")
     public String showRegisterForm(@RequestParam(required = false) String error,
@@ -35,14 +39,17 @@ public class RegisterController {
             };
             model.addAttribute("errorMsg", msg);
         }
-        return "user/register"; // /WEB-INF/views/user/register.jsp
+        return "user/register";
     }
+
+    // ─────────────────────────────────────────────
+    // [2] 회원가입 처리 (폼 기반)
+    // ─────────────────────────────────────────────
 
     /**
      * page: user/register.jsp
      * [2] 회원가입 처리
-     * - 비밀번호 확인 매칭
-     * - UserService.register 호출
+     * 비밀번호 확인 매칭
      */
     @PostMapping("/register")
     public String register(@RequestParam String email,

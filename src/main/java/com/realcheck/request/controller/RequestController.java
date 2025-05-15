@@ -29,11 +29,15 @@ public class RequestController {
     private final RequestService requestService;
     private final UserService userService;
 
+    // ────────────────────────────────────────
+    // [1] 요청 등록
+    // ────────────────────────────────────────
+
     /**
      * page: request/register.jsp
-     * [1] 요청 등록 API
-     * - 세션 로그인 사용자만 가능
-     * - RequestDto → Entity 변환은 Service 내부에서 처리
+     * [1-1] 요청 등록 API
+     * 세션 로그인 사용자만 가능
+     * RequestDto → Entity 변환은 Service 내부에서 처리
      */
     @PostMapping
     public ResponseEntity<?> createRequest(@Valid @RequestBody RequestDto dto, HttpSession session) {
@@ -49,10 +53,16 @@ public class RequestController {
         return ResponseEntity.ok(RequestDto.fromEntity(savedRequest));
     }
 
+    // ────────────────────────────────────────
+    // [2] 요청 조회
+    // ────────────────────────────────────────
+
     /**
      * page: request/list.jsp
-     * [2] 미마감 + 답변 3개 미만 + 3시간 지난 요청 + 위치(lat/lng) 존재하는 요청 조회 (페이지네이션)
-     * - 리스트 조회용
+     * [2-1] 지역 기반 요청이 3시간이 지나서 오픈된 요청 조회 API
+     * 미마감
+     * 답변 3개 미만
+     * 3시간 지난 요청
      */
     @GetMapping("/open")
     public ResponseEntity<List<RequestDto>> findOpenRequests(
@@ -69,9 +79,10 @@ public class RequestController {
 
     /**
      * page: map/requset-list.jsp
-     * [3] 반경 내 요청 조회 (지도용)
-     * - 마감되지 않고 답변 3개 미만이며 위도/경도 존재하는 요청
-     * - 3시간 이내의 요청만 조회
+     * [2-2] 최신 요청 조회 (현재 사용자 위치 기준 / 지도 반경 기반) API
+     * 위도, 경도 기준으로 radius(m) 이내
+     * 장소 좌표가 존재하며 답변 수가 3개 미만인 요청 필터
+     * [FIX] 3시간 이내 수정 (테스트라 48시간으로 바꿈)
      */
     @GetMapping("/nearby")
     public ResponseEntity<List<RequestDto>> findNearbyOpenRequests(
@@ -89,9 +100,7 @@ public class RequestController {
 
     /**
      * page: request/detail.jsp
-     * [4] 특정 요청 상세 조회
-     * - URL: GET /api/request/{id}
-     * - 요청 ID를 기반으로 요청 객체 조회
+     * [2-3] 요청 단건 상세 조회 (ID로 조회) API
      */
     @GetMapping("/{id}")
     public ResponseEntity<?> findRequestById(@PathVariable Long id) {
@@ -104,8 +113,8 @@ public class RequestController {
 
     /**
      * page: request/my-requests.jsp
-     * [5] 로그인한 사용자의 요청 목록 조회
-     * - 세션에서 사용자 ID를 확인 후 해당 사용자의 요청 반환
+     * [2-4] 특정 사용자(userId)의 요청 목록 조회 API
+     * 내 요청리스트를 조회
      */
     @GetMapping("/my")
     public ResponseEntity<?> findMyRequests(HttpSession session) {
@@ -122,10 +131,14 @@ public class RequestController {
         return ResponseEntity.ok(dtoList);
     }
 
+    // ────────────────────────────────────────
+    // [3] 요청 마감
+    // ────────────────────────────────────────
+
     /**
      * page: request/detail.jsp
-     * [6] 수동 마감 API (사용자 권한 체크)
-     * - 사용자가 질문이 한개도 안달린 상태에서 직접 취소 처리
+     * [3-1] 요청자 요청취소 (스스로 마감처리) API
+     * 사용자가 질문이 한개도 안달린 상태에서 직접 취소 처리
      */
     @PatchMapping("/{id}/close")
     public ResponseEntity<?> closeRequest(

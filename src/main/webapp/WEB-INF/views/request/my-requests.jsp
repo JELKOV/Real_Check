@@ -24,6 +24,6 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
     <%@ include file="../common/footer.jsp" %>
 
-    <script src="/js/my-requests.js"></script>
+    <script src="/js/request/my-requests.js"></script>
   </body>
 </html>

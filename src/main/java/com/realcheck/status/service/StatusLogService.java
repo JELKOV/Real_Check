@@ -35,33 +35,27 @@ public class StatusLogService {
     private final com.realcheck.request.repository.RequestRepository requestRepository;
 
     // ─────────────────────────────────────────────
-    // [1] 공통 내부 처리 메서드
+    // [1] 상태 로그 등록 (내부 로직) - CREATE
     // ─────────────────────────────────────────────
 
     /**
      * StatusLogService: register
      * StatusLogService: registerAnswer
-     * [1] 요청 및 정보 상태 등록 Helper 함수 (기본 타입: ANSWER)
-     * - 사용자 유효성 검사 (userId 존재 여부, 정지 여부 등)
-     * - 장소 ID가 있는 경우 → 해당 장소 엔티티 조회
-     * - 하루 등록 횟수 제한 여부 확인 (checkLimit)
-     * - 상태 로그 생성 (StatusLog.toEntity(user, place))
-     * - 요청이 필요한 경우 → requestId로 요청 엔티티 연결
-     * - 상태 로그 저장
-     * - 포인트 지급 여부 처리 (givePoint)
+     * [1-1] 상태 로그 등록 내부 메서드 (공통 처리)
+     * 사용자 유효성 검사 (userId 존재 여부, 정지 여부 등)
+     * 장소 ID가 있는 경우 → 해당 장소 엔티티 조회
+     * 상태 로그 생성 (StatusLog.toEntity(user, place))
+     * 요청이 필요한 경우 → requestId로 요청 엔티티 연결
+     * 상태 로그 저장
      */
-    private void registerInternal(Long userId, StatusLogDto dto, StatusType type, boolean checkLimit) {
+    private void registerInternal(Long userId, StatusLogDto dto, StatusType type) {
 
+        // (1) 사용자 유효성 검사 (공통)
         User user = validateUser(userId);
+        // (2) 장소 유효성 검사 (Optional)
         Place place = validatePlace(dto.getPlaceId());
-
-        if (checkLimit) {
-            validateDailyLimit(userId);
-        }
-
-        // 요청 연결 시 타입 검증 및 필드 필터링
+        // (3) 공식 장소의 경우 허용된 요청 타입 확인 - 사용자 지정 장소이면 전체 타입 허용
         Request request = validateAndFilterFieldsByRequest(dto);
-        // 공식 장소일 경우 타입 검증 (허용된 타입인지)
         if (place != null) {
             validateAllowedRequestType(place, request);
         }
@@ -74,7 +68,7 @@ public class StatusLogService {
     }
 
     /**
-     * [1-A] 사용자 검증 (활성 사용자)
+     * [1-1-A] 사용자 검증 (활성 사용자) - 공통 유효성 검사
      */
     private User validateUser(Long userId) {
         User user = userRepository.findById(userId)
@@ -86,7 +80,7 @@ public class StatusLogService {
     }
 
     /**
-     * [1-B] 장소 검증 (Optional)
+     * [1-1-B] 장소 검증 (Optional) - 공통 유효성 검사
      */
     private Place validatePlace(Long placeId) {
         if (placeId == null)
@@ -96,7 +90,7 @@ public class StatusLogService {
     }
 
     /**
-     * [1-C] 요청 검증 및 필드 자동 필터링
+     * [1-1-C] 요청 검증 및 필드 자동 필터링 - 공통 유효성 검사
      */
     private Request validateAndFilterFieldsByRequest(StatusLogDto dto) {
         if (dto.getRequestId() == null)
@@ -111,14 +105,7 @@ public class StatusLogService {
     }
 
     /**
-     * [1-D] 사용자가 동일 요청에 이미 답변을 등록했는지 확인
-     */
-    public boolean hasUserAnswered(Long requestId, Long userId) {
-        return statusLogRepository.existsByRequestIdAndUserId(requestId, userId);
-    }
-
-    /**
-     * [1-E] 공식 장소의 허용된 질문 타입 검증
+     * [1-1-D] 허용된 요청 타입 검증 (공식 장소)
      */
     private void validateAllowedRequestType(Place place, Request request) {
         if (request == null)
@@ -130,8 +117,53 @@ public class StatusLogService {
         }
     }
 
+    // ─────────────────────────────────────────────
+    // [2] 사용자 기능 (상태 로그 등록) CREATE
+    // ─────────────────────────────────────────────
+
     /**
-     * [1-F] 일일 등록 횟수 제한 확인
+     * AnswerController: createAnswer
+     * [2-1] 요청 기반 답변 등록
+     * 누군가 등록한 요청(Request)에 대해 다른 사용자가 답변(상태 정보)을 등록할 때 사용
+     * 장소 정보는 optional (placeId가 null일 수 있음 – custom location 허용)
+     */
+    @Transactional
+    public void registerAnswer(Long userId, StatusLogDto dto, Long requestId) {
+
+        // RequestId가 없는 경우 예외 발생
+        if (requestId == null) {
+            throw new IllegalArgumentException("Request ID가 전달되지 않았습니다.");
+        }
+        // (1) 요청 유효성 검사 (존재 확인, 마감 확인)
+        Request request = requestRepository.findById(dto.getRequestId())
+                .orElseThrow(() -> new IllegalArgumentException("요청을 찾을 수 없습니다."));
+
+        // (2) 일일 등록 횟수 제한 확인 (3회)
+        validateDailyLimit(userId);
+
+        // (3) 마감된 요청인지 확인
+        if (request.isClosed()) {
+            throw new IllegalStateException("이미 마감된 요청입니다.");
+        }
+
+        // (4) 최대 답변 수 확인 (3개)
+        if (statusLogRepository.countByRequestId(requestId) >= 3) {
+            throw new IllegalStateException("이미 최대 답변 수(3개)에 도달했습니다.");
+        }
+
+        // (5) 사용자 중복 답변 확인
+        if (hasUserAnswered(requestId, userId)) {
+            throw new IllegalArgumentException("이미 답변을 등록하셨습니다.");
+        }
+
+        // (6) 공통 등록 로직으로 전달 (유효성 검사 + 상태 로그 생성)
+        dto.setRequestId(requestId);
+
+        registerInternal(userId, dto, StatusType.ANSWER);
+    }
+
+    /**
+     * [2-1-A] 일일 등록 횟수 제한 확인
      */
     private void validateDailyLimit(Long userId) {
         LocalDateTime start = LocalDate.now().atStartOfDay();
@@ -142,50 +174,60 @@ public class StatusLogService {
         }
     }
 
-    // ─────────────────────────────────────────────
-    // [2] 사용자 기능
-    // ─────────────────────────────────────────────
+    /**
+     * [2-1-B] 사용자가 동일 요청에 이미 답변을 등록했는지 확인
+     */
+    private boolean hasUserAnswered(Long requestId, Long userId) {
+        return statusLogRepository.existsByRequestIdAndUserId(requestId, userId);
+    }
 
     /**
-     * StatusLogController: register
-     * [1] 등록된 장소에 대한 답변 - 장소 기반 정보 공유 등록 (공식 장소)
-     * - 공식 등록된 장소(placeId 있음)
-     * - 위치 기반 정보 등록 시 사용
+     * StatusLogController: register [미사용]
+     * [2-2] 장소 기반 정보 공유 (공식 장소)
+     * 요청 없이 해당 장소 관리자가 직접 공유
+     * 공식 등록된 장소(placeId 있음)
      */
     @Transactional
     public void register(Long userId, StatusLogDto dto) {
-        registerInternal(userId, dto, StatusType.ANSWER, false);
+
+        // (1) 장소 소유자 확인
+        validatePlaceOwnership(userId, dto.getPlaceId());
+         // (2) 상태 로그 등록 (공통 로직 호출)
+        registerInternal(userId, dto, StatusType.REGISTER);
     }
 
     /**
-     * AnswerController: createAnswer
-     * [2] 요청 기반 답변 등록
-     * - 누군가 등록한 요청(Request)에 대해 다른 사용자가 답변(상태 정보)을 등록할 때 사용
-     * - 장소 정보는 optional (placeId가 null일 수 있음 – custom location 허용)
+     * [2-2-A] 장소 소유자 확인 메서드
      */
-    @Transactional
-    public void registerAnswer(Long userId, StatusLogDto dto) {
-        if (statusLogRepository.countByRequestId(dto.getRequestId()) >= 3) {
-            throw new RuntimeException("해당 요청은 이미 3개의 답변이 등록되었습니다.");
+    private void validatePlaceOwnership(Long userId, Long placeId) {
+        if (placeId == null) {
+            throw new IllegalArgumentException("장소 ID가 필요합니다.");
         }
-        registerInternal(userId, dto, StatusType.ANSWER, false);
 
+        // 장소 조회 (존재 여부 확인)
+        Place place = placeRepository.findById(placeId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 장소입니다."));
+
+        // 사용자 ID와 장소 소유자 ID 비교
+        if (!place.getOwner().getId().equals(userId)) {
+            throw new IllegalStateException("해당 장소의 소유자가 아닙니다.");
+        }
     }
 
     /**
-     * StatusLogController: registerFreeShare
-     * [3] 자발적 정보 공유 등록 (FREE_SHARE)
-     * - 요청 없이 사용자가 직접 공유
-     * - 조회수 기반 보상 구조로 활용 가능
+     * StatusLogController: registerFreeShare [미사용]
+     * [2-3] 자발적 정보 공유 등록 (FREE_SHARE)
+     * 요청 없이 사용자가 직접 공유
+     * 조회수 기반 보상 구조로 활용 가능
      */
     @Transactional
     public void registerFreeShare(Long userId, StatusLogDto dto) {
-        registerInternal(userId, dto, StatusType.FREE_SHARE, true);
+        registerInternal(userId, dto, StatusType.FREE_SHARE);
     }
 
     /**
-     * [4] 자발적 공유(FREE_SHARE) 로그 조회 시 조회수 증가
-     * - 조회수 1 증가 + 포인트 누적 조건 기반 처리 가능
+     * [2-4] 자발적 공유(FREE_SHARE): 조회수 증가 및 포인트 지급 [미사용]
+     * 조회수 1 증가 + 포인트 누적 조건 기반 처리 가능
      */
     public StatusLogDto viewFreeShare(Long logId) {
         StatusLog log = statusLogRepository.findById(logId)
@@ -210,95 +252,21 @@ public class StatusLogService {
     }
 
     /**
-     * [4-A] 포인트 지급 처리 (FREE_SHARE에만 사용)
+     * [2-4-A] 포인트 지급 처리 (FREE_SHARE에만 사용) [미사용]
      */
     private void giveUserPoint(User user, int points, String reason) {
         pointService.givePoint(user, points, reason, PointType.EARN);
     }
 
-    /**
-     * [5] 장소별 최근 로그 상태 조회
-     * - 최근 3시간 이내의 로그만 조회
-     */
-    public List<StatusLogDto> getLogsByPlace(Long placeId) {
-        LocalDateTime cutoff = LocalDateTime.now().minusHours(3);
-        return statusLogRepository.findRecentByPlaceId(placeId, cutoff)
-                .stream()
-                .map(StatusLogDto::fromEntity)
-                .toList();
-    }
-
-    /**
-     * StatusLogController: getMyStatusLogs
-     * [6] 사용자별 전체 로그 답변 상태 조회
-     */
-    public List<StatusLogDto> getLogsByUser(Long userId) {
-        return statusLogRepository.findByReporterIdOrderByCreatedAtDesc(userId)
-                .stream()
-                .map(StatusLogDto::fromEntity)
-                .toList();
-    }
-
-    /**
-     * StatusLogController: updateStatusLog
-     * [7] 상태 로그 수정
-     * - 작성자 본인만 수정 가능
-     */
-    public void updateStatusLog(Long logId, Long userId, StatusLogDto dto) {
-        StatusLog log = statusLogRepository.findById(logId)
-                .orElseThrow(() -> new RuntimeException("해당 상태 정보가 존재하지 않습니다."));
-
-        if (!log.getReporter().getId().equals(userId)) {
-            throw new RuntimeException("해당 로그를 수정할 권한이 없습니다.");
-        }
-
-        // 업데이트: 기존 엔티티에 DTO 값만 갱신
-        log.setContent(dto.getContent());
-        log.setImageUrl(dto.getImageUrl());
-        log.setWaitCount(dto.getWaitCount());
-        log.setHasBathroom(dto.getHasBathroom());
-        log.setMenuInfo(dto.getMenuInfo());
-        log.setWeatherNote(dto.getWeatherNote());
-        log.setVendorName(dto.getVendorName());
-        log.setPhotoNote(dto.getPhotoNote());
-        log.setNoiseNote(dto.getNoiseNote());
-        log.setIsParkingAvailable(dto.getIsParkingAvailable());
-        log.setIsOpen(dto.getIsOpen());
-        log.setSeatCount(dto.getSeatCount());
-
-        statusLogRepository.save(log);
-    }
-
-    /**
-     * StautsLogController: deleteStatusLog
-     * [8] 상태 로그 삭제
-     * - 작성자 본인만 삭제 가능
-     */
-    public void deleteStatusLog(Long logId, Long userId) {
-        StatusLog log = statusLogRepository.findById(logId)
-                .orElseThrow(() -> new RuntimeException("해당 상태 정보가 존재하지 않습니다."));
-
-        if (!log.getReporter().getId().equals(userId)) {
-            throw new RuntimeException("해당 로그를 삭제할 권한이 없습니다.");
-        }
-
-        statusLogRepository.delete(log);
-    }
-
-    /**
-     * [9] 특정 장소의 가장 최근 공개된 상태 1건 조회
-     * - 마커 클릭 시 정보 표시용
-     */
-    public StatusLogDto getLatestVisibleLogByPlaceId(Long placeId) {
-        StatusLog log = statusLogRepository.findTopByPlaceIdAndIsHiddenFalseOrderByCreatedAtDesc(placeId);
-        return log != null ? StatusLogDto.fromEntity(log) : null;
-    }
+    // ─────────────────────────────────────────────
+    // [3] 사용자 기능 (상태 로그 조회) READ
+    // ─────────────────────────────────────────────
 
     /**
      * StatusLogController: getNearbyStatusLogs
-     * [10] 현재 위치 기반 근처 상태 로그 조회
-     * - 사용자의 위도/경도를 기준으로 일정 반경 내에 있는 상태 로그를 조회
-     * - 최근 3시간 이내에 등록된 로그만 반환
+     * [3-1] 현재 위치 기반 근처 상태 로그 조회
+     * 사용자의 위도/경도를 기준으로 일정 반경 내에 있는 상태 로그를 조회
+     * 최근 3시간 이내에 등록된 로그만 반환
      */
     public List<StatusLogDto> findNearbyStatusLogs(double lat, double lng, double radiusMeters) {
         LocalDateTime cutoff = LocalDateTime.now().minusHours(3);
@@ -310,7 +278,7 @@ public class StatusLogService {
 
     /**
      * StatusLogController: getAnswersByRequest
-     * [11] 특정 요청에 대한 답변 리스트(상세 조회)
+     * [3-2] 특정 요청에 대한 답변 리스트(상세 조회)
      */
     @Transactional(readOnly = true)
     public List<StatusLogDto> getAnswersByRequestId(Long requestId) {
@@ -320,8 +288,84 @@ public class StatusLogService {
     }
 
     /**
+     * StatusLogController: getMyStatusLogs
+     * [3-3] 사용자별 전체 로그 답변 상태 조회
+     */
+    public List<StatusLogDto> getLogsByUser(Long userId) {
+        return statusLogRepository.findByReporterIdOrderByCreatedAtDesc(userId)
+                .stream()
+                .map(StatusLogDto::fromEntity)
+                .toList();
+    }
+
+    /**
+     * [3-4] 장소별 최근 로그 상태 조회 [미사용]
+     * 최근 3시간 이내의 로그만 조회
+     */
+    public List<StatusLogDto> getLogsByPlace(Long placeId) {
+        LocalDateTime cutoff = LocalDateTime.now().minusHours(3);
+        return statusLogRepository.findRecentByPlaceId(placeId, cutoff)
+                .stream()
+                .map(StatusLogDto::fromEntity)
+                .toList();
+    }
+
+    /**
+     * [3-5] 특정 장소의 가장 최근 공개된 상태 1건 조회 [미사용]
+     * - 마커 클릭 시 정보 표시용
+     */
+    public StatusLogDto getLatestVisibleLogByPlaceId(Long placeId) {
+        StatusLog log = statusLogRepository.findTopByPlaceIdAndIsHiddenFalseOrderByCreatedAtDesc(placeId);
+        return log != null ? StatusLogDto.fromEntity(log) : null;
+    }
+
+    // ─────────────────────────────────────────────
+    // [5] 사용자 기능 (상태 로그 수정) UPDATE
+    // ─────────────────────────────────────────────
+
+    /**
+     * StatusLogController: updateStatusLog
+     * [5-1] 상태 로그 수정
+     * - 작성자 본인만 수정 가능
+     */
+    @Transactional
+    public void updateStatusLog(Long logId, Long userId, StatusLogDto dto) {
+        StatusLog log = statusLogRepository.findById(logId)
+                .orElseThrow(() -> new RuntimeException("해당 상태 정보가 존재하지 않습니다."));
+
+        if (!log.getReporter().getId().equals(userId)) {
+            throw new IllegalStateException("해당 로그를 수정할 권한이 없습니다.");
+        }
+
+        // 수정 가능한 필드만 갱신
+        log.setContent(dto.getContent());
+        if (dto.getWaitCount() != null)
+            log.setWaitCount(dto.getWaitCount());
+        if (dto.getHasBathroom() != null)
+            log.setHasBathroom(dto.getHasBathroom());
+        if (dto.getMenuInfo() != null)
+            log.setMenuInfo(dto.getMenuInfo());
+        if (dto.getWeatherNote() != null)
+            log.setWeatherNote(dto.getWeatherNote());
+        if (dto.getVendorName() != null)
+            log.setVendorName(dto.getVendorName());
+        if (dto.getPhotoNote() != null)
+            log.setPhotoNote(dto.getPhotoNote());
+        if (dto.getNoiseNote() != null)
+            log.setNoiseNote(dto.getNoiseNote());
+        if (dto.getIsParkingAvailable() != null)
+            log.setIsParkingAvailable(dto.getIsParkingAvailable());
+        if (dto.getIsOpen() != null)
+            log.setIsOpen(dto.getIsOpen());
+        if (dto.getSeatCount() != null)
+            log.setSeatCount(dto.getSeatCount());
+
+        statusLogRepository.save(log);
+    }
+
+    /**
      * StatusLogController : selectAnswer
-     * [12] 요청 기반 답변 채택 처리
+     * [5-2] 요청 기반 답변 채택 처리
      * - 요청 작성자가 본인 요청에 연결된 답변을 선택
      * - 상태 로그의 selected = true, 요청 마감 처리
      */
@@ -344,10 +388,10 @@ public class StatusLogService {
 
         // [4] 답변을 선택하고 자동으로 요청 마감 (연결된 Request)
         log.setSelected(true);
-        // 답변 상태 저장 (PreUpdate 자동 실행)
         statusLogRepository.save(log);
 
-        // [5] 자동으로 연결된 요청 마감 처리 (PreUpdate로 자동)
+        // [5] 자동으로 연결된 요청 마감 처리
+        request.setClosed(true);
         requestRepository.save(request);
 
         // [6] 포인트 지급/차감 처리 (트랜잭션)
@@ -362,12 +406,33 @@ public class StatusLogService {
         pointService.givePoint(answerer, points, "답변 채택 보상", PointType.EARN);
     }
 
+    // ─────────────────────────────────────────────
+    // [6] 사용자 기능 (상태 로그 삭제) DELETE
+    // ─────────────────────────────────────────────
+
+    /**
+     * StautsLogController: deleteStatusLog
+     * [6-1] 상태 로그 삭제
+     * - 작성자 본인만 삭제 가능
+     */
+    @Transactional
+    public void deleteStatusLog(Long logId, Long userId) {
+        StatusLog log = statusLogRepository.findById(logId)
+                .orElseThrow(() -> new RuntimeException("해당 상태 정보가 존재하지 않습니다."));
+
+        if (!log.getReporter().getId().equals(userId)) {
+            throw new IllegalStateException("해당 로그를 삭제할 권한이 없습니다.");
+        }
+
+        statusLogRepository.delete(log);
+    }
+
     // ────────────────────────────────────────
-    // [3] 관리자 기능
+    // [7] 관리자 기능
     // ────────────────────────────────────────
 
     /**
-     * [1] 전체 상태 로그 조회 (관리자용)
+     * [7] 전체 상태 로그 조회 (관리자용)
      * - 모든 로그를 반환
      */
     public List<StatusLogDto> getAllLogs() {

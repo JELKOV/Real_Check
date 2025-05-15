@@ -22,16 +22,13 @@ public class PointController {
     private final PointService pointService;
 
     // ─────────────────────────────────────────────
-    // [1] 내 포인트 내역 조회
+    // [1] 사용자 포인트 내역 조회 API
     // ─────────────────────────────────────────────
 
     /**
-     * [1] 내 포인트 조회 API
-     * - 로그인된 사용자의 포인트 지급 내역을 반환
-     * - 로그인 정보는 세션에서 확인
-     *
-     * @param session 현재 로그인된 사용자 세션
-     * @return 포인트 내역 리스트 (List<PointDto>)
+     * [1-1] 내 포인트 조회 API [미사용]
+     * 로그인된 사용자의 포인트 지급 내역을 반환
+     * 로그인 정보는 세션에서 확인
      */
     @GetMapping("/my")
     public ResponseEntity<List<PointDto>> getMyPoints(HttpSession session) {

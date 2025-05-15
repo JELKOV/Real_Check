@@ -23,6 +23,11 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RequestDto {
+
+    // ────────────────────────────────────────
+    // [1] 기본 필드
+    // ────────────────────────────────────────
+
     // 요청 ID (PK)
     private Long id;
     // 요청 제목
@@ -35,36 +40,60 @@ public class RequestDto {
     @NotNull(message = "포인트는 필수입니다.")
     private Integer point;
 
+    // 요청 카테고리
     private RequestCategory category;
 
-    // 유저가 직접 입력한 장소 이름 (ex. "문방구 앞 붕어빵")
-    private String customPlaceName;
+    // ────────────────────────────────────────
+    // [2] 장소 관련 필드
+    // ────────────────────────────────────────
 
-    // 공식 장소 ID (공식 장소 선택 시)
+    // 사용자 입력장소
+    private String customPlaceName;
+    // 공식 장소 ID
     private Long placeId;
-    // 등록된 Place 객체의 이름 (공식 장소 이름)
+    // 공식 장소 이름
     private String placeName;
-    // 위도 / 경도 정보 (지도에 표시하기 위함)
+    // 위도
     private Double lat;
+    // 경도
     private Double lng;
 
-    // 요청 마감 여부 (답변 채택 시 true)
+    // ────────────────────────────────────────
+    // [3] 상태 필드
+    // ────────────────────────────────────────
+
+    // 요청 마감 여부
     private boolean isClosed;
 
     // 요청 등록 시각
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
 
-    // 요청자 PK/ 이메일 / 닉네임
+    // ────────────────────────────────────────
+    // [4] 요청자 정보
+    // ────────────────────────────────────────
+
+    // 요청자 PK
     private Long requesterId;
+    // 요청자 이메일
     private String requesterEmail;
+    // 요청자 닉네임
     private String requesterNickname;
 
-    // 해당 요청에 달린 답변 수
+    // ────────────────────────────────────────
+    // [5] 답변 관련
+    // ────────────────────────────────────────
+
+    // 해당 요청에 달린 답변 갯수
     private int answerCount;
 
+    // ────────────────────────────────────────
+    // [6] 카테고리별 유연 필드 (12개)
+    // ────────────────────────────────────────
+
     // 카테고리별 확장 필드
-    private Integer waitCount; // WAITING_STATUS, CROWD_LEVEL
+    private Integer waitCount; // WAITING_STATUS
+    private Integer crowdLevel; // CROWD_LEVEL
     private Boolean hasBathroom; // BATHROOM
     private String menuInfo; // FOOD_MENU
     private String weatherNote; // WEATHER_LOCAL
@@ -74,12 +103,11 @@ public class RequestDto {
     private Boolean isParkingAvailable; // PARKING
     private Boolean isOpen; // BUSINESS_STATUS
     private Integer seatCount; // OPEN_SEAT
-    private String extra; // ETC or 확장 JSON
+    private String extra; // ETC (기타)
 
-    /**
-     * DTO → Entity 변환 메서드
-     * - 클라이언트가 보낸 데이터를 실제 DB에 저장 가능한 형태로 변환
-     */
+    // ────────────────────────────────────────
+    // [7] DTO → Entity 변환 메서드 - 클라이언트가 보낸 데이터를 실제 DB에 저장 가능한 형태로 변환
+    // ────────────────────────────────────────
     public Request toEntity(User user, Place place) {
         // 장소 검증 로직
         if (placeId != null) { // 공식 장소 선택
@@ -107,7 +135,9 @@ public class RequestDto {
                 .createdAt(LocalDateTime.now())
                 .isClosed(false)
 
+                // 카테고리별 동적 필드
                 .waitCount(waitCount)
+                .crowdLevel(crowdLevel)
                 .hasBathroom(hasBathroom)
                 .menuInfo(menuInfo)
                 .weatherNote(weatherNote)
@@ -122,10 +152,9 @@ public class RequestDto {
                 .build();
     }
 
-    /**
-     * Entity → DTO 변환 메서드
-     * - DB에서 꺼낸 Request 객체를 클라이언트에게 전달 가능한 형태로 변환
-     */
+    // ────────────────────────────────────────
+    // [8] Entity → DTO 변환 메서드 - DB에서 꺼낸 Request 객체를 클라이언트에게 전달 가능한 형태로 변환
+    // ────────────────────────────────────────
     public static RequestDto fromEntity(Request r) {
         return RequestDto.builder()
                 .id(r.getId())
@@ -145,7 +174,9 @@ public class RequestDto {
                 .requesterNickname(r.getUser() != null ? r.getUser().getNickname() : null)
                 .answerCount(r.getStatusLogs() != null ? r.getStatusLogs().size() : 0)
 
+                // 카테고리별 동적 필드
                 .waitCount(r.getWaitCount())
+                .crowdLevel(r.getCrowdLevel())
                 .hasBathroom(r.getHasBathroom())
                 .menuInfo(r.getMenuInfo())
                 .weatherNote(r.getWeatherNote())
@@ -156,7 +187,7 @@ public class RequestDto {
                 .isOpen(r.getIsOpen())
                 .seatCount(r.getSeatCount())
                 .extra(r.getExtra())
-
+                
                 .build();
     }
 }

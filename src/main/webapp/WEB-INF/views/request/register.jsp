@@ -172,6 +172,6 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
     </div>
 
     <%@ include file="../common/footer.jsp" %>
-    <script src="/js/register.js"></script>
+    <script src="/js/request/register.js"></script>
   </body>
 </html>

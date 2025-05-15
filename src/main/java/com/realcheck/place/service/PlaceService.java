@@ -24,11 +24,11 @@ import lombok.RequiredArgsConstructor;
  * - 장소(Place) 관련 비즈니스 로직을 담당하는 서비스 계층
  * - 컨트롤러로부터 요청을 받아 실제 동작을 처리하고, DB 작업은 Repository에 위임함
  */
-@Service // 이 클래스가 스프링의 서비스 컴포넌트임을 명시 → 자동으로 Bean 등록됨
-@RequiredArgsConstructor // final로 선언된 필드를 생성자로 자동 주입 (DI)
+@Service
+@RequiredArgsConstructor
 public class PlaceService {
-    private final PlaceRepository placeRepository; // 장소 데이터를 저장/조회하는 JPA Repository
-    private final UserRepository userRepository; // 장소를 등록한 사용자 정보를 조회하기 위한 Repository
+    private final PlaceRepository placeRepository;
+    private final UserRepository userRepository;
     private final AllowedRequestTypeRepository allowedRequestTypeRepository;
 
     // ─────────────────────────────────────────────
@@ -36,11 +36,9 @@ public class PlaceService {
     // ─────────────────────────────────────────────
 
     /**
-     * [1] 장소 등록 메서드
-     * - 등록자의 ID(ownerId)를 기반으로 User 객체를 조회하고,
-     * - PlaceDto를 Place Entity로 변환하여 DB에 저장함
-     *
-     * @param dto 장소 등록 요청 정보 (장소 이름, 주소, 위도/경도 등 포함)
+     * [1-1] 장소 등록 메서드 [미사용]
+     * 사용자 ID(ownerId)를 통해 User 조회
+     * PlaceDto → Place Entity 변환 후 저장
      */
     public void registerPlace(PlaceDto dto) {
         // 1. 등록자(ownerId)를 통해 User 객체 조회
@@ -57,8 +55,8 @@ public class PlaceService {
     // ─────────────────────────────────────────────
 
     /**
-     * [1] 전체 장소 목록 조회
-     * - DB에서 모든 Place 엔티티를 조회하고, PlaceDto로 변환하여 반환
+     * [2-1] 전체 장소 목록 조회 [미사용]
+     * DB에서 모든 Place 엔티티를 조회하고, PlaceDto로 변환하여 반환 (관리자 전용)
      */
     public List<PlaceDto> findAll() {
         return placeRepository.findAll().stream()
@@ -67,8 +65,8 @@ public class PlaceService {
     }
 
     /**
-     * [2] 특정 사용자가 등록한 장소 조회
-     * -
+     * [2-2] 특정 사용자가 등록한 장소 조회 [미사용]
+     * 로그인 사용자 본인이 등록한 장소 목록 반환
      */
     public List<PlaceDto> findByOwner(Long ownerId) {
         return placeRepository.findByOwnerId(ownerId).stream()
@@ -77,9 +75,8 @@ public class PlaceService {
     }
 
     /**
-     * [3] 현재 위치 기준 반경 내 장소 조회
-     * - 사용자의 위도(lat), 경도(lng)를 기반으로 주변 장소 조회
-     * -
+     * [2-3] 현재 위치 기준 반경 내 장소 조회 [미사용]
+     * 사용자의 위도(lat), 경도(lng)를 기반으로 주변 장소 조회
      */
     public List<PlaceDto> findNearbyPlaces(double lat, double lng, double radiusMeters) {
         return placeRepository.findNearbyPlaces(lat, lng, radiusMeters).stream()
@@ -88,9 +85,8 @@ public class PlaceService {
     }
 
     /**
-     * [4] 승인된 장소만 필터링
-     * - 사용자에게 보여줄 장소를 제한함
-     * 
+     * [2-4] 승인된 장소만 필터링 (사용자 노출용) [미사용]
+     * 사용자에게 보여줄 장소를 제한함
      */
     public List<PlaceDto> findApprovedNearby(double lat, double lng, double radiusMeters) {
         return placeRepository.findApprovedNearby(lat, lng, radiusMeters)
@@ -101,8 +97,8 @@ public class PlaceService {
 
     /**
      * PlaceController: searchApprovedPlaces
-     * [5] 장소 검색 로직 (검색어 기반)
-     * - 승인된 장소 & 검색어 기반 조회
+     * [2-5] 검색어 기반 장소 조회 (승인된 장소만)
+     * 승인된 장소 & 검색어 기반 조회
      */
     public List<PlaceDto> searchApprovedPlaces(String query) {
         return placeRepository.findApprovedByNameContaining(query).stream()
@@ -112,7 +108,8 @@ public class PlaceService {
 
     /**
      * PlaceController: getPlaceDetails
-     * [6] 장소 상세 정보 조회 로직 (공식 장소)
+     * [2-6] 장소 상세 정보 조회 (공식 장소)
+     * 장소 상세 정보 + 허용된 요청 타입 목록 반환
      * Todo: placeCommunity 내용 주소 수정
      */
     public PlaceDetailsDto getPlaceDetails(Long id) {
@@ -134,7 +131,8 @@ public class PlaceService {
     // ─────────────────────────────────────────────
 
     /**
-     * [1] 특정 장소에 허용된 요청 타입 추가
+     * [3-1] 특정 장소에 허용된 요청 타입 추가
+     * 지정된 장소에 특정 요청 타입을 추가 (관리자 전용)
      */
     @Transactional
     public void addAllowedRequestType(Long placeId, String requestType) {
@@ -151,7 +149,8 @@ public class PlaceService {
     }
 
     /**
-     * [2] 특정 장소에 허용된 요청 타입 제거
+     * [3-2] 특정 장소에 허용된 요청 타입 제거
+     * 지정된 장소에서 특정 요청 타입 제거
      */
     public void removeAllowedRequestType(Long placeId, String requestType) {
         allowedRequestTypeRepository.deleteByPlaceIdAndRequestType(placeId, RequestCategory.valueOf(requestType));

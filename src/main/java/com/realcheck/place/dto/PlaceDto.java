@@ -22,29 +22,52 @@ import lombok.*;
 @Builder
 public class PlaceDto {
 
-    private Long id; // 장소 ID
+    // ─────────────────────────────────────────────
+    // [1] 기본 필드 (장소 정보)
+    // ─────────────────────────────────────────────
 
+    // 장소 ID (식별자)
+    private Long id;
+
+    // 장소 이름 (최대 100자, 필수)
     @NotBlank(message = "장소 이름은 필수입니다.")
     @Size(max = 100, message = "장소 이름은 100자 이하로 입력해주세요.")
     private String name; // 장소 이름
 
+    // 도로명 주소 (필수)
     @NotBlank(message = "주소는 필수입니다.")
-    private String address; // 도로명 주소
+    private String address;
 
+    // ─────────────────────────────────────────────
+    // [2] 위치 정보 (위도, 경도)
+    // ─────────────────────────────────────────────
+
+    // 위도 (필수, 범위 -90 ~ 90)
     @DecimalMin(value = "-90.0", message = "위도는 -90 이상이어야 합니다.")
     @DecimalMax(value = "90.0", message = "위도는 90 이하여야 합니다.")
-    private double lat; // 위도
+    private double lat;
 
+    // 경도 (필수, 범위 -180 ~ 180)
     @DecimalMin(value = "-180.0", message = "경도는 -180 이상이어야 합니다.")
     @DecimalMax(value = "180.0", message = "경도는 180 이하여야 합니다.")
-    private double lng; // 경도
+    private double lng;
 
+    // ─────────────────────────────────────────────
+    // [3] 등록자 정보 (사용자 ID)
+    // ─────────────────────────────────────────────
+
+    // 등록자 ID (필수)
     @NotNull(message = "등록자(ownerId)는 필수입니다.")
-    private Long ownerId; // 등록자 ID (User)
+    private Long ownerId;
+
+    // ─────────────────────────────────────────────
+    // [4] 변환 메서드 (DTO ↔ Entity)
+    // ─────────────────────────────────────────────
 
     /**
      * DTO → Entity 변환
-     * - 등록 시 사용
+     * 클라이언트로부터 받은 DTO를 DB 저장용 Entity로 변환
+     * 등록할 사용자(User) 객체를 전달받아 엔티티 생성
      */
     public Place toEntity(User owner) {
         return Place.builder()
@@ -58,7 +81,7 @@ public class PlaceDto {
 
     /**
      * Entity → DTO 변환
-     * - 조회 시 사용
+     * DB에서 조회된 Place 엔티티를 클라이언트에 전달할 DTO로 변환
      */
     public static PlaceDto fromEntity(Place place) {
         return PlaceDto.builder()

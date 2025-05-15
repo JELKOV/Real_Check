@@ -30,15 +30,22 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class RequestService {
 
+    // ─────────────────────────────────────────────
+    // [1] Repository 의존성 주입
+    // ─────────────────────────────────────────────
     private final RequestRepository requestRepository;
     private final PlaceRepository placeRepository;
     private final AllowedRequestTypeRepository allowedRequestTypeRepository;
 
+    // ─────────────────────────────────────────────
+    // [2] 요청 등록 (Request 등록 로직)
+    // ─────────────────────────────────────────────
+
     /**
      * RequestController: createRequest
-     * [1] 요청 등록
-     * 각종 유효성 검사
-     * 요청의 종류에 따라 분기한 서비스 메서드 (공식 장소에 대한 요청 질문 / 커스텀 장소에 대한 요청 질문)
+     * [2-1] 요청 등록
+     * 유효성 검사
+     * 공식 장소 타입 검증
      */
     @Transactional
     public Request createRequest(RequestDto dto, User user) {
@@ -64,7 +71,7 @@ public class RequestService {
         return requestRepository.save(request);
     }
 
-    // [1-A] 기본 요청 유효성 검사
+    // [2-1-A] 기본 요청 유효성 검사
     private void validateRequestDto(RequestDto dto) {
         if (dto.getCategory() == null) {
             throw new IllegalArgumentException("질문의 카테고리를 선택해주세요.");
@@ -77,7 +84,7 @@ public class RequestService {
         }
     }
 
-    // [1-B] 공식 장소 타입 검증 로직 / 지정된 장소(Place)에 허용된 요청 타입인지 확인 / 사용자가 지정한 장소는 무조건 허용
+    // [2-1-B] 공식 장소 타입 검증 로직 / 지정된 장소(Place)에 허용된 요청 타입인지 확인 / 사용자가 지정한 장소는 무조건 허용
     public boolean isValidForPlace(Place place, RequestCategory category) {
         // (1) 사용자 지정 장소인 경우 (place == null) → 항상 허용
         if (place == null) {
@@ -88,10 +95,13 @@ public class RequestService {
         return allowedRequestTypeRepository.existsByPlaceIdAndRequestType(place.getId(), category);
     }
 
+    // ─────────────────────────────────────────────
+    // [3] 요청 마감 처리 (수동 마감, 자동 마감)
+    // ─────────────────────────────────────────────
+
     /**
      * RequestController: closeRequest
-     * [2] 요청 마감 처리
-     * 답변 채택 시
+     * [3-1] 요청자 요청취소 (스스로 마감처리)
      */
     @Transactional
     public void closeRequest(Long requestId, Long userId) {
@@ -114,8 +124,32 @@ public class RequestService {
     }
 
     /**
+     * AutoCloseRequestService: autoCloseExpiredRequests
+     * [3-2] 자동 마감 대상 조회
+     * 3시간 기준으로 자동 마감에 해당되는 요청글이 있는 지 조회
+     */
+    @Transactional(readOnly = true)
+    public List<Request> findOpenRequestsWithAnswers(LocalDateTime threshold) {
+        return requestRepository.findAllByIsClosedFalseAndCreatedAtBefore(threshold);
+    }
+
+    /**
+     * AutoCloseRequestService: autoCloseExpiredRequests
+     * [3-2-A] 요청 저장 메서드
+     * 자동 마감 시 상태 변경 저장용
+     */
+    @Transactional
+    public Request save(Request request) {
+        return requestRepository.save(request);
+    }
+
+    // ─────────────────────────────────────────────
+    // [4] 요청 조회 (단건 조회, 리스트 조회)
+    // ─────────────────────────────────────────────
+
+    /**
      * RequestController: findRequestById
-     * [3] 요청 단건 조회 (ID로 조회)
+     * [4-1] 요청 단건 조회 (ID로 조회)
      */
     @Transactional
     public Optional<Request> findById(Long id) {
@@ -124,7 +158,7 @@ public class RequestService {
 
     /**
      * RequestController: findOpenRequests
-     * [4] 지역 기반 요청이 3시간이 지나서 오픈된 요청 조회
+     * [4-2] 지역 기반 요청이 3시간이 지나서 오픈된 요청 조회
      * 미마감
      * 답변 3개 미만
      * 3시간 지난 요청
@@ -133,29 +167,32 @@ public class RequestService {
             String category) {
         Pageable pageable = PageRequest.of(page - 1, size);
         LocalDateTime threshold = LocalDateTime.now().minusHours(3);
-
-        RequestCategory categoryEnum = null;
-        if (category != null && !category.isBlank()) {
-            try {
-                categoryEnum = RequestCategory.valueOf(category);
-            } catch (IllegalArgumentException e) {
-                throw new IllegalArgumentException("Invalid category value: " + category);
-            }
-        }
+        RequestCategory categoryEnum = parseCategory(category);
 
         // Repository에서 필터링된 요청 조회
         Page<Request> entities = requestRepository.findOpenRequestsWithLocation(
                 lat, lng, radius, threshold, categoryEnum, pageable);
 
         // DTO로 변환하여 반환
-        return entities.stream()
-                .map(RequestDto::fromEntity)
-                .toList();
+        return entities.stream().map(RequestDto::fromEntity).toList();
+    }
+
+    /**
+     * [4-2-A] 카테고리 파싱 (String → Enum)
+     */
+    private RequestCategory parseCategory(String category) {
+        if (category == null || category.isBlank())
+            return null;
+        try {
+            return RequestCategory.valueOf(category);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("잘못된 카테고리 값: " + category);
+        }
     }
 
     /**
      * RequestController: findNearbyOpenRequests
-     * [5] 최신 요청 조회 (현재 사용자 위치 기준 / 지도 반경 기반)
+     * [4-3] 최신 요청 조회 (현재 사용자 위치 기준 / 지도 반경 기반)
      * 위도, 경도 기준으로 radius(m) 이내
      * 장소 좌표가 존재하며 답변 수가 3개 미만인 요청 필터
      * [FIX] 3시간 이내 수정 (테스트라 48시간으로 바꿈)
@@ -167,30 +204,11 @@ public class RequestService {
 
     /**
      * RequestController: findMyRequests
-     * [6] 특정 사용자(userId)의 요청 목록 조회
+     * [4-4] 특정 사용자(userId)의 요청 목록 조회
      * 내 요청리스트를 조회
      */
     public List<Request> findByUserId(Long userId) {
         return requestRepository.findByUserIdOrderByCreatedAtDesc(userId);
-    }
-
-    /**
-     * AutoCloseRequestService: autoCloseExpiredRequests
-     * [7] 자동 마감 대상 조회
-     * 6시간 기준으로 자동 마감에 해당되는 요청글이 있는 지 조회
-     */
-    @Transactional(readOnly = true)
-    public List<Request> findOpenRequestsWithAnswers(LocalDateTime threshold) {
-        return requestRepository.findAllByIsClosedFalseAndCreatedAtBefore(threshold);
-    }
-
-    /**
-     * AutoCloseRequestService: autoCloseExpiredRequests
-     * [7-A] 요청 저장 메서드
-     */
-    @Transactional
-    public Request save(Request request) {
-        return requestRepository.save(request);
     }
 
 }

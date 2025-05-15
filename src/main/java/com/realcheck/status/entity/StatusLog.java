@@ -23,94 +23,117 @@ import lombok.*;
 public class StatusLog {
 
     // ─────────────────────────────────────────────
-    // 기본 필드
+    // [1] 기본 필드
     // ─────────────────────────────────────────────
 
+    // 기본 식별자
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // 상태 설명
     @Column(columnDefinition = "TEXT")
     @NotBlank(message = "답변 내용은 필수입니다.")
-    private String content; // 상태 설명
+    private String content;
 
-    private boolean rewarded = false; // 조회수 기반 보상 지급 여부
-
-    @Column(nullable = true)
-    private String imageUrl; // 이미지 경로 (선택적)
-
+    // 등록 시간 (기본값: 현재)
     @Column(nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now(); // 등록 시간 (기본값: 현재)
+    private LocalDateTime createdAt = LocalDateTime.now();
 
+    // 상태 타입
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private StatusType statusType = StatusType.ANSWER; // 상태 타입 (ANSWER or FREE_SHARE)
+    private StatusType statusType = StatusType.ANSWER;
 
-    private boolean isSelected = false; // 답변 채택 여부 (요청 답변일 경우만 사용)
+    // 조회수 기반 보상 지급 여부
+    @Column(nullable = false)
+    private boolean rewarded = false;
 
-    private boolean isHidden = false; // 숨김 여부 (신고 누적 시 true)
+    // 이미지 경로 (선택적)
+    @Column(nullable = true)
+    private String imageUrl;
 
-    private int viewCount = 0; // 조회수 (자발적 공유일 경우 사용)
+    // 답변 채택 여부 (요청 답변일 경우만 사용)
+    private boolean isSelected = false;
 
+    // 숨김 여부 (신고 누적 시 true)
+    @Column(nullable = false)
+    private boolean isHidden = false;
+
+    // 조회수 (자발적 공유일 경우 사용)
+    @Column(nullable = false)
+    private int viewCount = 0;
+
+    // ─────────────────────────────────────────────
+    // [2] 유연 필드 (카테고리별 동적 사용)
+    // - 카테고리에 따라 동적으로 사용되며, null 허용
+    // ─────────────────────────────────────────────
+
+    // 화장실 여부 (BATHROOM)
+    @Column
+    private Boolean hasBathroom;
+    // 메뉴 정보 (FOOD_MENU)
+    @Column
+    private String menuInfo;
+    // 대기 인원 (WAITING_STATUS, CROWD_LEVEL)
+    @Column
+    private Integer waitCount;
+    // 날씨 상태 (WEATHER_LOCAL)
+    @Column
+    private String weatherNote;
+    // 노점 이름 (STREET_VENDOR)
+    @Column
+    private String vendorName;
+    // 사진 요청 메모 (PHOTO_REQUEST)
+    @Column
+    private String photoNote;
+    // 소음 상태 (NOISE_LEVEL)
+    @Column
+    private String noiseNote;
+    // 주차 가능 여부 (PARKING)
+    @Column
+    private Boolean isParkingAvailable;
+    // 영업 여부 (BUSINESS_STATUS)
+    @Column
+    private Boolean isOpen;
+    // 남은 좌석 수 (OPEN_SEAT)
+    @Column
+    private Integer seatCount;
+    // 혼잡도 (CROWD_LEVEL)
+    @Column
+    private Integer crowdLevel;
+    // 기타 정보 (ETC) - 사용자 자유 입력
+    @Column(columnDefinition = "TEXT")
+    private String extra;
+
+    // ─────────────────────────────────────────────
+    // [3] 위치 필드 (좌표)
+    // ─────────────────────────────────────────────
+
+    // 위도 (Latitude)
     @Column
     private Double lat;
 
+    // 경도 (Longitude)
     @Column
     private Double lng;
 
-    // ──────────────── 추가된 유연 필드들 ────────────────
-
-    @Column
-    private Boolean hasBathroom; // 화장실 여부
-
-    @Column
-    private String menuInfo; // 음식 메뉴
-
-    @Column
-    private Integer waitCount; // 대기 인원 수
-
-    @Column
-    private String weatherNote; // 날씨 상태
-
-    @Column
-    private String vendorName; // 노점 이름
-
-    @Column
-    private String photoNote; // 사진 요청 메모
-
-    @Column
-    private String noiseNote; // 소음 상태
-
-    @Column
-    private Boolean isParkingAvailable; // 주차 가능 여부
-
-    @Column
-    private Boolean isOpen; // 영업 여부
-
-    @Column
-    private Integer seatCount; // 남은 좌석 수
-
     // ─────────────────────────────────────────────
-    // 관계 매핑
+    // [4] 관계 매핑
     // ─────────────────────────────────────────────
-
+    
+    // 연결된 요청 (답변형 StatusLog일 경우)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "request_id", nullable = true)
-    private Request request; // 연결된 요청 (null 가능)
+    private Request request; 
 
+    // 작성자 (로그 등록자)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User reporter; // 작성자 (로그 등록자)
+    private User reporter; 
 
+    // 관련 장소 (선택적)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "place_id", nullable = true)
-    private Place place; // 관련 장소
-
-    // 자동 동기화 로직 (답변 채택 시)
-    @PreUpdate
-    private void syncRequestOnSelection() {
-        if (this.isSelected && this.request != null) {
-            this.request.setClosed(true);
-        }
-    }
+    private Place place; 
 }

@@ -17,47 +17,44 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
 
     // ────────────────────────────────────────
-    // [1] 사용자 단건 조회
+    // [1] 사용자 조회 기능 (단건 조회)
     // ────────────────────────────────────────
 
     /**
-     * UserSerivce: login
-     * UserService: register
-     * [1] 이메일로 사용자 정보를 조회하는 메서드
-     * - SQL: SELECT * FROM users WHERE email = ?
+     * UserSerivce: validateUserByEmail
+     * UserService: validateUniqueEmail
+     * UserService: isEmailExists
+     * [1-1] 이메일로 사용자 정보를 조회하는 메서드
+     * 회원가입 중복 검사, 로그인 시 사용자 확인에 사용
      */
     Optional<User> findByEmail(String email);
 
     /**
-     * UserService: register
-     * [2] 닉네임으로 사용자 정보를 조회하는 메서드
-     * - SQL: SELECT * FROM users WHERE nickname = ?
+     * UserService: validateUniqueNickname
+     * UserService: isNicknameExists
+     * [1-2] 닉네임으로 사용자 정보를 조회하는 메서드
+     * 회원가입 중복 검사, 프로필 수정 중복 확인에 사용
      */
     Optional<User> findByNickname(String nickname);
 
     // ────────────────────────────────────────
-    // [2] 차단 사용자 관련
+    // [2] 사용자 상태 조회 (활성/비활성)
     // ────────────────────────────────────────
 
     /**
      * UserAdminService : getBlockedUsers
-     * [1] isActive가 false인 사용자 목록 조회하는 메서드
-     * - 비활성화된(차단된) 사용자 조회용
-     * - SQL: SELECT * FROM users WHERE is_active = false
+     * [2-1] isActive가 false인 사용자 목록 조회하는 메서드
+     * 비활성화된(차단된) 사용자 조회용
      */
     List<User> findByIsActiveFalse();
 
     // ────────────────────────────────────────
-    // [3] 검색 기능
+    // [3] 사용자 검색 기능 (이메일/닉네임)
     // ────────────────────────────────────────
 
     /**
      * UserAdminService : searchUsers
-     * [1] 이메일 또는 닉네임에 검색어(keyword)가 포함된 사용자 목록 조회
-     * - SQL:
-     * SELECT * FROM users
-     * WHERE email LIKE '%keyword%'
-     * OR nickname LIKE '%keyword%'
+     * [3-1] 이메일 또는 닉네임에 검색어(keyword)가 포함된 사용자 목록 조회
      */
     @Query("SELECT u FROM User u WHERE u.email LIKE %:keyword% OR u.nickname LIKE %:keyword%")
     List<User> searchByEmailOrNickname(@Param("keyword") String keyword);
