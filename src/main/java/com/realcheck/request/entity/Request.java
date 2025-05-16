@@ -96,8 +96,25 @@ public class Request {
     @Column(nullable = false)
     private boolean isClosed = false;
 
-    // 요청 생성 시각
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    // 수정 시간 (업데이트 시 자동 설정)
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        if (this.createdAt == null) {
+            this.createdAt = LocalDateTime.now();
+        }
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 
     // ─────────────────────────────────────────────
     // [5] 카테고리별 동적 필드 (nullable 허용)

@@ -69,6 +69,10 @@ public class RequestDto {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
 
+    // 요청 수정 시각
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime updatedAt;
+
     // ────────────────────────────────────────
     // [4] 요청자 정보
     // ────────────────────────────────────────
@@ -132,7 +136,6 @@ public class RequestDto {
                 .customPlaceName(customPlaceName)
                 .lat(lat)
                 .lng(lng)
-                .createdAt(LocalDateTime.now())
                 .isClosed(false)
 
                 // 카테고리별 동적 필드
@@ -169,6 +172,7 @@ public class RequestDto {
                 .category(r.getCategory())
                 .isClosed(r.isClosed())
                 .createdAt(r.getCreatedAt())
+                .updatedAt(r.getUpdatedAt())
                 .requesterId(r.getUser() != null ? r.getUser().getId() : null)
                 .requesterEmail(r.getUser() != null ? r.getUser().getEmail() : null)
                 .requesterNickname(r.getUser() != null ? r.getUser().getNickname() : null)
@@ -187,7 +191,7 @@ public class RequestDto {
                 .isOpen(r.getIsOpen())
                 .seatCount(r.getSeatCount())
                 .extra(r.getExtra())
-                
+
                 .build();
     }
 }

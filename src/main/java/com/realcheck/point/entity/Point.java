@@ -28,9 +28,18 @@ public class Point {
     @Column(nullable = false)
     private String reason;
     // 지급/차감 시점
-    @Column(nullable = false)
+    @Column(nullable = false, updatable = false)
     private LocalDateTime earnedAt;
 
+    // TODO: 포인트 지급일과 소비일의 날짜처리를 어떻게 해야할지 ?
+    // TODO: 테이블을 더 만들어야 되는지  타입에 따라서 나눴으니 된건지 
+    @PrePersist
+    protected void onCreate() {
+        if (this.earnedAt == null) {
+            this.earnedAt = LocalDateTime.now();
+        }
+    }
+    
     /**
      * 포인트 타입 (Enum)
      * EARN: 적립, DEDUCT: 차감, REWARD: 보상 등

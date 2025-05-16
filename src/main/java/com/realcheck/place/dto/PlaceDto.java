@@ -1,5 +1,7 @@
 package com.realcheck.place.dto;
 
+import java.time.LocalDateTime;
+
 import com.realcheck.place.entity.Place;
 import com.realcheck.user.entity.User;
 
@@ -37,6 +39,10 @@ public class PlaceDto {
     // 도로명 주소 (필수)
     @NotBlank(message = "주소는 필수입니다.")
     private String address;
+
+    // 등록 및 수정 시간 - 조회 전용 (Entity → DTO 변환 시 사용)
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     // ─────────────────────────────────────────────
     // [2] 위치 정보 (위도, 경도)
@@ -91,6 +97,8 @@ public class PlaceDto {
                 .lat(place.getLat())
                 .lng(place.getLng())
                 .ownerId(place.getOwner() != null ? place.getOwner().getId() : null)
+                .createdAt(place.getCreatedAt())
+                .updatedAt(place.getUpdatedAt())
                 .build();
     }
 }

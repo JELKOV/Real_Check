@@ -1,6 +1,11 @@
 package com.realcheck.user.dto;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 import com.realcheck.user.entity.User;
+import com.realcheck.user.entity.UserRole;
+
 import lombok.*;
 
 /**
@@ -30,6 +35,23 @@ public class UserDto {
     private boolean isActive;
     // 사용자 비밀번호
     private String password;
+    // 사용자 포인트
+    private int points;
+    // 사용자 아이디 생성일자
+    private LocalDateTime createdAt;
+    // 사용자 정보 수정 일자
+    private LocalDateTime updatedAt;
+    // 사용자 마지막 로그인 시간
+    private LocalDateTime lastLogin;
+
+    // 포맷된 날짜 문자열 반환 메서드 (JSP 에서만)
+    public String getCreatedAtFormatted() {
+        return createdAt != null ? createdAt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : "정보 없음";
+    }
+
+    public String getLastLoginFormatted() {
+        return lastLogin != null ? lastLogin.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : "정보 없음";
+    }
 
     // ─────────────────────────────────────────────
     // [2] 생성자 (비밀번호 제외)
@@ -40,12 +62,16 @@ public class UserDto {
      * [2-1] 사용자 정보 생성자 (비밀번호 제외)
      * Entity → DTO 변환 시 사용
      */
-    public UserDto(Long id, String email, String nickname, String role, boolean isActive) {
+    public UserDto(Long id, String email, String nickname, String role, boolean isActive,
+            int points, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime lastLogin) {
         this.id = id;
         this.email = email;
         this.nickname = nickname;
         this.role = role;
         this.isActive = isActive;
+        this.points = points;
+        this.createdAt = createdAt;
+        this.lastLogin = lastLogin;
     }
 
     // ─────────────────────────────────────────────
@@ -61,7 +87,9 @@ public class UserDto {
         User user = new User();
         user.setEmail(email);
         user.setNickname(nickname);
-        user.setPassword(password);
+        user.setRole(UserRole.USER); // 기본 사용자 역할
+        user.setActive(true); // 기본 활성화 상태
+        user.setPoints(0); // 기본 포인트 0
         return user;
     }
 
@@ -76,7 +104,11 @@ public class UserDto {
                 user.getEmail(),
                 user.getNickname(),
                 user.getRole().name(),
-                user.isActive());
+                user.isActive(),
+                user.getPoints(),
+                user.getCreatedAt(),
+                user.getUpdatedAt(),
+                user.getLastLogin());
     }
 
 }

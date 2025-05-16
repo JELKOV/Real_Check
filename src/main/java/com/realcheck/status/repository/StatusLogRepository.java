@@ -34,7 +34,13 @@ public interface StatusLogRepository extends JpaRepository<StatusLog, Long> {
         int countByReporterIdAndCreatedAtBetween(Long reporterId, LocalDateTime start, LocalDateTime end);
 
         /**
-         * [1-3] 내가 등록한 상태 로그 중 숨김 처리되지 않은 로그만 조회 [미사용]
+         * UserService: getRecentActivities
+         * [1-3] 특정 사용자의 최근 답변 5개 조회
+         */
+        List<StatusLog> findTop5ByReporterIdOrderByCreatedAtDesc(Long userId);
+
+        /**
+         * [1-4] 내가 등록한 상태 로그 중 숨김 처리되지 않은 로그만 조회 [미사용]
          * 마이페이지에서 공개 게시물만 표시
          */
         List<StatusLog> findByReporterIdAndIsHiddenFalseOrderByCreatedAtDesc(Long userId);

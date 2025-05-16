@@ -1,9 +1,14 @@
 package com.realcheck.page.controller;
 
 import com.realcheck.user.dto.UserDto;
+import com.realcheck.user.service.UserService;
 
 import org.springframework.ui.Model;
 import jakarta.servlet.http.HttpSession;
+import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -15,7 +20,10 @@ import org.springframework.web.bind.annotation.PathVariable;
  * - 단순 JSP 페이지 이동을 담당하는 컨트롤러
  */
 @Controller
+@RequiredArgsConstructor
 public class PageController {
+
+    private final UserService userService;
 
     @Value("${naver.map.client.id}")
     private String naverMapClientId;
@@ -32,7 +40,18 @@ public class PageController {
 
     // 마이페이지 - page: common/header.jsp
     @GetMapping("/mypage")
-    public String mypage() {
+    public String myPage(HttpSession session, Model model) {
+        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            return "redirect:/login";
+        }
+
+        // 최근 활동 불러오기
+        List<Map<String, Object>> recentActivities = userService.getRecentActivities(loginUser.getId());
+
+        model.addAttribute("recentActivities", recentActivities);
+        model.addAttribute("loginUser", loginUser);
+
         return "user/mypage";
     }
 

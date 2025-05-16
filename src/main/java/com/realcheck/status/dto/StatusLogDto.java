@@ -56,10 +56,13 @@ public class StatusLogDto {
     // 요청 작성자 ID (답변 채택용)
     private Long requestOwnerId;
 
-    // 등록 일시
-    private LocalDateTime createdAt;
     // 상태 타입 (ANSWER, FREE_SHARE 등)
     private StatusType type;
+    // 등록 일시
+    private LocalDateTime createdAt;
+    // 업데이트 일시
+    private LocalDateTime updatedAt;
+    
     // 요청 카테고리 (12가지 중 하나, String)
     private String category;
 
@@ -160,6 +163,7 @@ public class StatusLogDto {
                 .lat(log.getLat())
                 .lng(log.getLng())
                 .createdAt(log.getCreatedAt())
+                .updatedAt(log.getUpdatedAt())
                 .type(log.getStatusType())
                 .requestId(log.getRequest() != null ? log.getRequest().getId() : null)
                 .nickname(log.getReporter() != null ? log.getReporter().getNickname() : null)

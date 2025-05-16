@@ -2,6 +2,8 @@ package com.realcheck.user.controller;
 
 import com.realcheck.user.dto.UserDto;
 import com.realcheck.user.service.UserService;
+
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -27,17 +29,12 @@ public class RegisterController {
      * [1-1] 회원가입 페이지 이동
      */
     @GetMapping("/register")
-    public String showRegisterForm(@RequestParam(required = false) String error,
-            Model model) {
-        if (error != null) {
-            // error 파라미터별로 다른 메시지 매핑 가능
-            String msg = switch (error) {
-                case "password" -> "비밀번호와 확인이 일치하지 않습니다.";
-                case "dupEmail" -> "이미 사용 중인 이메일입니다.";
-                case "dupNick" -> "이미 사용 중인 닉네임입니다.";
-                default -> "알 수 없는 오류가 발생했습니다.";
-            };
-            model.addAttribute("errorMsg", msg);
+    public String showRegisterForm(HttpSession session, Model model) {
+        // 세션에서 에러 메시지 확인
+        String errorMsg = (String) session.getAttribute("errorMsg");
+        if (errorMsg != null) {
+            model.addAttribute("errorMsg", errorMsg);
+            session.removeAttribute("errorMsg");
         }
         return "user/register";
     }
@@ -55,26 +52,30 @@ public class RegisterController {
     public String register(@RequestParam String email,
             @RequestParam String nickname,
             @RequestParam String password,
-            @RequestParam String confirmPassword) {
+            @RequestParam String confirmPassword,
+            HttpSession session) {
         // 1) 비밀번호 일치 검사
         if (!password.equals(confirmPassword)) {
-            return "redirect:/register?error=password";
+            session.setAttribute("errorMsg", "비밀번호와 확인이 일치하지 않습니다.");
+            return "redirect:/register";
         }
 
-        // 2) 가입 시도 (무결성보장 - 서버단 중복검사)
         try {
-            UserDto dto = new UserDto(null, email, nickname, null, true, password);
-            userService.register(dto);
-            return "redirect:/login"; // 성공 시 로그인 페이지로
+            UserDto dto = new UserDto(null, email, nickname, "USER", true, 0, null, null, null);
+            userService.register(dto, password);
+            session.setAttribute("successMsg", "🎉 회원가입이 완료되었습니다! 환영합니다, " + nickname + "님!");
+            return "redirect:/login";
         } catch (RuntimeException e) {
-            // service에서 던진 메시지에 따라 분기
             String msg = e.getMessage();
             if (msg.contains("이메일")) {
-                return "redirect:/register?error=dupEmail";
+                session.setAttribute("errorMsg", "이미 사용 중인 이메일입니다.");
             } else if (msg.contains("닉네임")) {
-                return "redirect:/register?error=dupNick";
+                session.setAttribute("errorMsg", "이미 사용 중인 닉네임입니다.");
+            } else {
+                session.setAttribute("errorMsg", "알 수 없는 오류가 발생했습니다.");
             }
-            return "redirect:/register?error";
+            return "redirect:/register";
         }
     }
+
 }

@@ -1,5 +1,6 @@
 package com.realcheck.user.entity;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -59,6 +60,32 @@ public class User {
     // 활성 상태 여부 - true면 정상 활동, false면 비활성화된 계정
     private boolean isActive = true;
 
+    // 회원 생성 시 생성 시점 기록 (createdAt)
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    // 회원 정보 수정 시점 기록 (updatedAt)
+    @Column(nullable = true)
+    private LocalDateTime updatedAt;
+
+    // 마지막 로그인 시점 (lastLogin)
+    @Column
+    private LocalDateTime lastLogin;
+
+    // 자동 생성 및 갱신 로직
+    @PrePersist
+    protected void onCreate() {
+        if (this.createdAt == null) {
+            this.createdAt = LocalDateTime.now();
+        }
+        this.updatedAt = this.createdAt;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now(); // 수정 시점만 갱신
+    }
+
     // ─────────────────────────────────────────────
     // [2] 사용자와 연관된 엔티티들 (양방향 관계)
     // ─────────────────────────────────────────────
@@ -68,7 +95,7 @@ public class User {
      * User (1) → (N) Request
      * 사용자 탈퇴 시 관련 요청들도 자동 삭제 (CascadeType.ALL)
      */
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Request> requests = new ArrayList<>();
 
     /**
@@ -76,7 +103,7 @@ public class User {
      * User (1) → (N) StatusLog
      * 사용자 탈퇴 시 관련 로그들도 자동 삭제 (CascadeType.ALL)
      */
-    @OneToMany(mappedBy = "reporter", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "reporter", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<StatusLog> statusLogs = new ArrayList<>();
 
     /**
@@ -84,7 +111,7 @@ public class User {
      * User (1) → (N) Report
      * 사용자 탈퇴 시 관련 신고들도 자동 삭제 (CascadeType.ALL)
      */
-    @OneToMany(mappedBy = "reporter", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "reporter", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Report> reports = new ArrayList<>();
 
     /**
@@ -92,7 +119,7 @@ public class User {
      * User (1) → (N) Point
      * 사용자 탈퇴 시 관련 포인트 기록들도 자동 삭제 (CascadeType.ALL)
      */
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Point> pointLogs = new ArrayList<>();
 
     /**
@@ -100,7 +127,7 @@ public class User {
      * User (1) → (N) Place
      * 사용자 탈퇴 시 관련 장소들도 자동 삭제 (CascadeType.ALL)
      */
-    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Place> places = new ArrayList<>();
 
 }

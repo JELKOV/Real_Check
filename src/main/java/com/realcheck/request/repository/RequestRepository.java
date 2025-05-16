@@ -37,6 +37,12 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
    */
   List<Request> findByUserIdOrderByCreatedAtDesc(Long userId);
 
+  /**
+   * UserService: getRecentActivities
+   * [1-3] UserId로 사용자의 최근 요청 5개 조회
+   */
+  List<Request> findTop5ByUserIdOrderByCreatedAtDesc(Long userId);
+
   // ─────────────────────────────────────────────
   // [2] 위치 기반 필터링 관련 메소드
   // ─────────────────────────────────────────────

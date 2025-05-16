@@ -1,5 +1,7 @@
 package com.realcheck.user.service;
 
+import com.realcheck.request.repository.RequestRepository;
+import com.realcheck.status.repository.StatusLogRepository;
 import com.realcheck.user.dto.PasswordUpdateRequestDto;
 import com.realcheck.user.dto.UserDto;
 import com.realcheck.user.entity.User;
@@ -9,6 +11,15 @@ import com.realcheck.user.repository.UserRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -16,15 +27,14 @@ import org.springframework.stereotype.Service;
  * UserService 클래스
  * - 사용자 관련 비즈니스 로직 (회원가입, 로그인, 비밀번호 변경 등)을 처리
  */
-@Service // 스프링이 이 클래스를 서비스 컴포넌트로 등록함 (빈으로 자동 생성됨)
-@RequiredArgsConstructor // final이 붙은 필드를 자동으로 생성자 주입 (DI)
+@Service
+@RequiredArgsConstructor
 public class UserService {
 
-    // UserRepository를 주입받음 (DB 접근을 담당)
     private final UserRepository userRepository;
-
-    // 암호화 주입
     private final PasswordEncoder passwordEncoder;
+    private final RequestRepository requestRepository;
+    private final StatusLogRepository statusLogRepository;
 
     // ─────────────────────────────────────────────
     // [1] 사용자 생성 및 인증 관련 기능
@@ -36,7 +46,7 @@ public class UserService {
      * 이메일, 닉네임 중복 확인
      * 비밀번호 암호화 후 저장
      */
-    public void register(UserDto dto) {
+    public void register(UserDto dto, String rawPassword) {
         // (1) 이메일 중복 검사
         validateUniqueEmail(dto.getEmail());
 
@@ -47,7 +57,7 @@ public class UserService {
         User user = dto.toEntity();
 
         // (4) 비밀번호 암호화 적용
-        String encodedPassword = passwordEncoder.encode(dto.getPassword());
+        String encodedPassword = passwordEncoder.encode(rawPassword);
         user.setPassword(encodedPassword);
 
         // (5) 기본 정보 세팅 (역할, 포인트, 활성 상태)
@@ -94,7 +104,11 @@ public class UserService {
             throw new RuntimeException("비밀번호가 일치하지 않습니다.");
         }
 
-        // (3) 로그인 성공 → User 엔티티를 DTO로 변환하여 반환 (비밀번호 제외)
+        // (3) 마지막 로그인 시간 업데이트
+        user.setLastLogin(LocalDateTime.now());
+        userRepository.save(user);
+
+        // (4) 로그인 성공 → User 엔티티를 DTO로 변환하여 반환 (비밀번호 제외)
         return UserDto.fromEntity(user);
     }
 
@@ -172,6 +186,7 @@ public class UserService {
     }
 
     /**
+     * UserController: checkEmail
      * [2-3] 이메일 중복 여부 확인 (AJAX)
      * 회원가입/프로필 수정 시 사용
      */
@@ -180,6 +195,7 @@ public class UserService {
     }
 
     /**
+     * UserController: checkNickname
      * [2-4] 닉네임 중복 여부 확인 (AJAX)
      * 회원가입/프로필 수정 시 사용
      */
@@ -187,12 +203,90 @@ public class UserService {
         return userRepository.findByNickname(nickname).isPresent();
     }
 
+    /**
+     * PageController: myPage
+     * [2-5] 최근 활동 조회 (요청, 답변)
+     */
+    public List<Map<String, Object>> getRecentActivities(Long userId) {
+        List<Map<String, Object>> recentActivities = new ArrayList<>();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        // 최근 요청 5개
+        requestRepository.findTop5ByUserIdOrderByCreatedAtDesc(userId).forEach(req -> {
+            Map<String, Object> activity = new HashMap<>();
+            activity.put("type", "요청");
+            activity.put("title", req.getTitle());
+            activity.put("category", req.getCategory().name());
+
+            // 장소 정보 (공식 장소 or 사용자 지정)
+            if (req.getPlace() != null) {
+                activity.put("placeName", req.getPlace().getName());
+            } else if (req.getCustomPlaceName() != null) {
+                activity.put("placeName", "사용자 지정 장소 - " + req.getCustomPlaceName());
+            } else {
+                activity.put("placeName", "좌표: (" + req.getLat() + ", " + req.getLng() + ")");
+            }
+
+            activity.put("createdAt", req.getCreatedAt().format(formatter));
+            recentActivities.add(activity);
+        });
+        // 최근 답변 5개
+        statusLogRepository.findTop5ByReporterIdOrderByCreatedAtDesc(userId).forEach(log -> {
+            Map<String, Object> activity = new HashMap<>();
+            activity.put("type", "답변");
+            activity.put("content", log.getContent());
+
+            // 요청 정보 (답변일 경우)
+            if (log.getRequest() != null) {
+                activity.put("category", log.getRequest().getCategory().name());
+                activity.put("requestTitle", log.getRequest().getTitle());
+
+                // 장소 정보 (공식 장소 or 사용자 지정)
+                if (log.getRequest().getPlace() != null) {
+                    activity.put("placeName", log.getRequest().getPlace().getName());
+                } else if (log.getRequest().getCustomPlaceName() != null) {
+                    activity.put("placeName", "사용자 지정 장소 - " + log.getRequest().getCustomPlaceName());
+                } else {
+                    activity.put("placeName",
+                            "좌표: (" + log.getRequest().getLat() + ", " + log.getRequest().getLng() + ")");
+                }
+            } else {
+                // 답변이 자유 공유일 경우
+                activity.put("category", log.getStatusType().name());
+                activity.put("requestTitle", "자유 공유");
+                activity.put("placeName", log.getPlace() != null ? log.getPlace().getName() : "장소 정보 없음");
+            }
+
+            activity.put("createdAt", log.getCreatedAt().format(formatter));
+            recentActivities.add(activity);
+        });
+
+        // 최신순 정렬
+        recentActivities.sort(
+                Comparator.comparing(activity -> (String) activity.get("createdAt"), Comparator.reverseOrder()));
+
+        // 최대 5개만 반환
+        return recentActivities.stream().limit(5).collect(Collectors.toList());
+    }
+
     // ─────────────────────────────────────────────
-    // [3] 관리자 계정 자동 생성 (초기화)
+    // [3] 사용자 탈퇴 관련 기능 (마이페이지)
     // ─────────────────────────────────────────────
 
     /**
-     * [3-1] 관리자 계정 자동 생성 (초기화)
+     * UserController: deleteAccount
+     * [3-1] 회원탈퇴 관련 기능
+     */
+    public void deleteAccount(Long userId) {
+        userRepository.deleteById(userId);
+    }
+
+    // ─────────────────────────────────────────────
+    // [4] 관리자 계정 자동 생성 (초기화)
+    // ─────────────────────────────────────────────
+
+    /**
+     * [4-1] 관리자 계정 자동 생성 (초기화)
      * 서버 시작 시 admin@example.com 계정이 없으면 자동 생성
      */
     @PostConstruct

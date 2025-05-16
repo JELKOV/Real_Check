@@ -28,7 +28,7 @@
             지도에서 궁금한 장소를 선택하고, 요청을 등록하세요.<br />
             포인트를 걸고 빠르게 답변을 받아보세요.
           </p>
-          <a href="/request/register" class="btn btn-primary mt-auto">요청 등록하기</a>
+          <a href="/request/register" class="btn btn-outline-primary mt-auto">요청 등록하기</a>
         </div>
       </div>
     </div>
@@ -70,7 +70,7 @@
             내 주변에 등록된 정보를 지도에서 탐색하세요.<br />
             다양한 질문과 답변을 확인할 수 있습니다.
           </p>
-          <a href="/nearby" class="btn btn-outline-success mt-auto">주변 정보 보기</a>
+          <a href="/nearby" class="btn btn-outline-info mt-auto">주변 정보 보기</a>
         </div>
       </div>
     </div>

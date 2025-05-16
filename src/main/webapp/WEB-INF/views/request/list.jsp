@@ -10,7 +10,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/css/list.css" />
+    <link rel="stylesheet" href="/css/request/list.css" />
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script
       type="text/javascript"

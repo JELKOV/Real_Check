@@ -11,9 +11,9 @@ import lombok.Data;
 @AllArgsConstructor
 public class MonthlyStatDto {
     // 연도
-    private int year;
+    private Integer year;
     // 월   
-    private int month; 
+    private Integer month;
     // 등록 수   
-    private long count;   
+    private Long count;    
 }

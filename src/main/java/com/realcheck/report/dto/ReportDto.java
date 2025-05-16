@@ -1,5 +1,7 @@
 package com.realcheck.report.dto;
 
+import java.time.LocalDateTime;
+
 import com.realcheck.report.entity.Report;
 import com.realcheck.status.entity.StatusLog;
 import com.realcheck.user.entity.User;
@@ -10,8 +12,10 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ReportDto {
-    private String reason;   // 신고사유(ex. "정보가 틀려요")
+    private String reason; // 신고사유(ex. "정보가 틀려요")
     private Long statusLogId;// 신고 대상 상태 로그 ID
+
+    private LocalDateTime createdAt;
 
     /**
      * DTO -> Entity 변환
@@ -23,15 +27,15 @@ public class ReportDto {
         report.setReason(this.reason);
         report.setReporter(reporter);
         report.setStatusLog(statusLog);
-        
+
         return report;
     }
 
     public static ReportDto fromEntity(Report report) {
         return new ReportDto(
-            report.getReason(),
-            report.getStatusLog().getId()
-        );
+                report.getReason(),
+                report.getStatusLog() != null ? report.getStatusLog().getId() : null,
+                report.getCreatedAt());
     }
-    
+
 }

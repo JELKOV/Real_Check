@@ -14,7 +14,8 @@ import lombok.*;
  */
 @Entity
 @Table(name = "reports") // 테이블명: reports
-@Getter @Setter
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Report {
@@ -24,7 +25,16 @@ public class Report {
 
     private String reason; // 신고 사유 (예: "정보가 틀림", "이미 영업 종료 상태")
 
-    private LocalDateTime reportedAt = LocalDateTime.now(); // 신고 시간 – 기본값은 현재 시간
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    // TODO: 신고 일자를 Update를 해야할지 / 신고처리를 날짜처리를 해야지 
+    @PrePersist
+    protected void onCreate() {
+        if (this.createdAt == null) {
+            this.createdAt = LocalDateTime.now();
+        }
+    }
 
     @ManyToOne
     @JoinColumn(name = "reporter_id") // 신고자와 연결되는 외래키

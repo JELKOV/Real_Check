@@ -1,5 +1,6 @@
 package com.realcheck.place.entity;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -44,6 +45,26 @@ public class Place {
 
     @Column(nullable = false)
     private double lng;
+
+    // createdAt: DB에서 자동 생성 (CURRENT_TIMESTAMP)
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        if (this.createdAt == null) {
+            this.createdAt = LocalDateTime.now();
+        }
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 
     // ─────────────────────────────────────────────
     // [2] 승인 상태 및 등록자 정보

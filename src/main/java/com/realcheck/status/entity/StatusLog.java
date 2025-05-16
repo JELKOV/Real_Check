@@ -36,10 +36,6 @@ public class StatusLog {
     @NotBlank(message = "답변 내용은 필수입니다.")
     private String content;
 
-    // 등록 시간 (기본값: 현재)
-    @Column(nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
-
     // 상태 타입
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -63,6 +59,27 @@ public class StatusLog {
     // 조회수 (자발적 공유일 경우 사용)
     @Column(nullable = false)
     private int viewCount = 0;
+
+    // 등록 시간 (기본값: 현재)
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    // 수정 시간 (업데이트 시 자동 설정)
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        if (this.createdAt == null) {
+            this.createdAt = LocalDateTime.now();
+        }
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 
     // ─────────────────────────────────────────────
     // [2] 유연 필드 (카테고리별 동적 사용)
@@ -121,19 +138,19 @@ public class StatusLog {
     // ─────────────────────────────────────────────
     // [4] 관계 매핑
     // ─────────────────────────────────────────────
-    
+
     // 연결된 요청 (답변형 StatusLog일 경우)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "request_id", nullable = true)
-    private Request request; 
+    private Request request;
 
     // 작성자 (로그 등록자)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User reporter; 
+    private User reporter;
 
     // 관련 장소 (선택적)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "place_id", nullable = true)
-    private Place place; 
+    private Place place;
 }

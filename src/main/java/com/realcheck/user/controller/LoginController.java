@@ -30,10 +30,18 @@ public class LoginController {
      * 쿼리 파라미터에 error가 있으면 실패 메시지 전달
      */
     @GetMapping("/login")
-    public String loginPage(@RequestParam(required = false) String error, Model model) {
+    public String loginPage(@RequestParam(required = false) String error, Model model, HttpSession session) {
         if (error != null) {
             model.addAttribute("errorMsg", "이메일 또는 비밀번호가 일치하지 않습니다.");
         }
+
+        // 회원가입 성공 메시지 세션에서 읽기
+        String successMsg = (String) session.getAttribute("successMsg");
+        if (successMsg != null) {
+            model.addAttribute("successMsg", successMsg);
+            session.removeAttribute("successMsg");
+        }
+
         return "user/login";
     }
 
@@ -49,8 +57,8 @@ public class LoginController {
      */
     @PostMapping("/login")
     public String login(@RequestParam String email,
-                        @RequestParam String password,
-                        HttpSession session) {
+            @RequestParam String password,
+            HttpSession session) {
         try {
             UserDto loginUser = userService.login(email, password);
             session.setAttribute("loginUser", loginUser); // 세션 저장

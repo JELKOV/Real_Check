@@ -11,6 +11,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/css/style.css" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   </head>
   <body>
     <%@ include file="../common/header.jsp" %>
@@ -23,6 +24,29 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
         <div class="alert alert-danger" role="alert">${errorMsg}</div>
       </c:if>
 
+      <!-- Toast 알림 영역 -->
+      <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050">
+        <div
+          id="errorToast"
+          class="toast align-items-center text-bg-danger border-0"
+          role="alert"
+          aria-live="assertive"
+          aria-atomic="true"
+        >
+          <div class="d-flex">
+            <div class="toast-body" id="toastMessage">
+              입력 정보를 확인해주세요.
+            </div>
+            <button
+              type="button"
+              class="btn-close btn-close-white me-2 m-auto"
+              data-bs-dismiss="toast"
+              aria-label="Close"
+            ></button>
+          </div>
+        </div>
+      </div>
+
       <form method="post" action="/register" id="registerForm">
         <div class="mb-3">
           <label for="email" class="form-label">이메일</label>
@@ -32,8 +56,10 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
             id="email"
             name="email"
             required
+            autocomplete="off"
+            value=""
           />
-          <div class="form-text text-danger" id="emailError"></div>
+          <div class="form-text" id="emailError"></div>
         </div>
 
         <div class="mb-3">
@@ -45,7 +71,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
             name="nickname"
             required
           />
-          <div class="form-text text-danger" id="nicknameError"></div>
+          <div class="form-text" id="nicknameError"></div>
         </div>
 
         <div class="mb-3">
@@ -56,6 +82,8 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
             id="password"
             name="password"
             required
+            autocomplete="new-password"
+            value=""
           />
         </div>
 
@@ -68,77 +96,20 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
             name="confirmPassword"
             required
           />
-          <div class="form-text text-danger" id="passwordMatchError"></div>
+          <div class="form-text" id="passwordMatchError"></div>
         </div>
 
         <button type="submit" class="btn btn-primary w-100">가입하기</button>
       </form>
 
       <div class="text-center mt-3">
-        <a href="/login" class="text-decoration-none"
+        <a href="/login" class="text-decoration-none" id="loginLink"
           >이미 계정이 있으신가요? 로그인</a
         >
       </div>
     </div>
 
     <%@ include file="../common/footer.jsp" %>
+    <script src="/js/user/register.js"></script>
   </body>
 </html>
-
-<script>
-    $(document).ready(function () {
-      // 이메일 중복 확인
-      $("#email").on("blur", function () {
-        const email = $(this).val();
-        $.get("/api/user/check-email", { email }, function (exists) {
-          if (exists) {
-            $("#emailError")
-              .text("이미 사용 중인 이메일입니다.")
-              .css("color", "red");
-          } else {
-            $("#emailError")
-              .text("사용 가능한 이메일입니다.")
-              .css("color", "green");
-          }
-        });
-      });
-  
-      // 닉네임 중복 확인
-      $("#nickname").on("blur", function () {
-        const nickname = $(this).val();
-        $.get("/api/user/check-nickname", { nickname }, function (exists) {
-          if (exists) {
-            $("#nicknameError")
-              .text("이미 사용 중인 닉네임입니다.")
-              .css("color", "red");
-          } else {
-            $("#nicknameError")
-              .text("사용 가능한 닉네임입니다.")
-              .css("color", "green");
-          }
-        });
-      });
-  
-      // 비밀번호 일치 여부 확인
-      $("#confirmPassword, #password").on("keyup", function () {
-        const pw = $("#password").val();
-        const cpw = $("#confirmPassword").val();
-        if (pw !== cpw) {
-          $("#passwordMatchError")
-            .text("비밀번호가 일치하지 않습니다.")
-            .css("color", "red");
-        } else {
-          $("#passwordMatchError").text("").css("color", "");
-        }
-      });
-  
-      // 전체 폼 유효성 검사
-      $("#registerForm").on("submit", function () {
-        return (
-          $("#emailError").css("color") !== "red" &&
-          $("#nicknameError").css("color") !== "red" &&
-          $("#passwordMatchError").text() === ""
-        );
-      });
-    });
-  </script>

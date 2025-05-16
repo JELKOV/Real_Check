@@ -97,4 +97,24 @@ public class UserController {
         }
     }
 
+    // ─────────────────────────────────────────────
+    // [3] 사용자 회원 탈퇴 관련 API
+    // ─────────────────────────────────────────────
+
+    /**
+     * page: mypage.jsp
+     * [3-1] 회원 탈퇴 처리
+     */
+    @GetMapping("/delete-account")
+    public String deleteAccount(HttpSession session) {
+        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            return "redirect:/login";
+        }
+
+        userService.deleteAccount(loginUser.getId());
+        session.invalidate(); // 로그아웃 처리
+        return "redirect:/";
+    }
+
 }

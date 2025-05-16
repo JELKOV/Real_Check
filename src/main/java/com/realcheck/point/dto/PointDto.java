@@ -26,7 +26,6 @@ public class PointDto {
                 .user(user)
                 .amount(this.amount)
                 .reason(this.reason)
-                .earnedAt(LocalDateTime.now()) // 지급 시각은 현재 시간으로 지정
                 .type(pointType)
                 .build();
     }

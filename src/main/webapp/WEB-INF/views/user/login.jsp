@@ -18,6 +18,12 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
     <div class="container mt-5" style="max-width: 480px">
       <h3 class="text-center mb-4">로그인</h3>
 
+      <!-- 성공 메시지 -->
+      <c:if test="${not empty successMsg}">
+        <div class="alert alert-success" role="alert">${successMsg}</div>
+      </c:if>
+
+      <!-- 에러 메시지 -->
       <c:if test="${not empty errorMsg}">
         <div class="alert alert-danger" role="alert">${errorMsg}</div>
       </c:if>
