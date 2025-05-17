@@ -61,6 +61,14 @@ public class LoginController {
             HttpSession session) {
         try {
             UserDto loginUser = userService.login(email, password);
+
+            // [1] 탈퇴 예약 상태 확인
+            if (loginUser.isPendingDeletion()) {
+                session.setAttribute("loginUser", loginUser); // 세션 저장 (로그인 유지)
+                return "redirect:/account-restricted"; // 탈퇴 예약 상태로 서비스 접근 제한
+            }
+
+            // [2] 정상 로그인 처리
             session.setAttribute("loginUser", loginUser); // 세션 저장
             return "redirect:/"; // 로그인 성공 → 메인 페이지
         } catch (RuntimeException e) {

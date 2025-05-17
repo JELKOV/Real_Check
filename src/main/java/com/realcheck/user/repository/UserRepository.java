@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -58,4 +59,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
      */
     @Query("SELECT u FROM User u WHERE u.email LIKE %:keyword% OR u.nickname LIKE %:keyword%")
     List<User> searchByEmailOrNickname(@Param("keyword") String keyword);
+
+    /**
+     * UserDeletionScheduler: autoDeleteExpiredAccounts
+     * [3-2] 삭제(회원탈퇴) 예정 상태인 사용자 조회 메서드 
+     */
+    List<User> findByIsPendingDeletionTrueAndDeletionScheduledAtBefore(LocalDateTime now);
 }

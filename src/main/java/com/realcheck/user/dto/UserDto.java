@@ -37,6 +37,12 @@ public class UserDto {
     private String password;
     // 사용자 포인트
     private int points;
+
+    // 탈퇴 예약 여부
+    private boolean isPendingDeletion;
+    // 탈퇴 예정일
+    private LocalDateTime deletionScheduledAt;
+
     // 사용자 아이디 생성일자
     private LocalDateTime createdAt;
     // 사용자 정보 수정 일자
@@ -53,6 +59,12 @@ public class UserDto {
         return lastLogin != null ? lastLogin.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : "정보 없음";
     }
 
+    public String getDeletionScheduledAtFormatted() {
+        return deletionScheduledAt != null
+                ? deletionScheduledAt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                : "정보 없음";
+    }
+
     // ─────────────────────────────────────────────
     // [2] 생성자 (비밀번호 제외)
     // 비밀번호가 없는 생성자 (로그인/조회용)
@@ -63,13 +75,16 @@ public class UserDto {
      * Entity → DTO 변환 시 사용
      */
     public UserDto(Long id, String email, String nickname, String role, boolean isActive,
-            int points, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime lastLogin) {
+            int points, boolean isPendingDeletion, LocalDateTime deletionScheduledAt, LocalDateTime createdAt,
+            LocalDateTime updatedAt, LocalDateTime lastLogin) {
         this.id = id;
         this.email = email;
         this.nickname = nickname;
         this.role = role;
         this.isActive = isActive;
         this.points = points;
+        this.isPendingDeletion = isPendingDeletion;
+        this.deletionScheduledAt = deletionScheduledAt;
         this.createdAt = createdAt;
         this.lastLogin = lastLogin;
     }
@@ -90,6 +105,8 @@ public class UserDto {
         user.setRole(UserRole.USER); // 기본 사용자 역할
         user.setActive(true); // 기본 활성화 상태
         user.setPoints(0); // 기본 포인트 0
+        user.setPendingDeletion(isPendingDeletion);
+        user.setDeletionScheduledAt(deletionScheduledAt);
         return user;
     }
 
@@ -106,6 +123,8 @@ public class UserDto {
                 user.getRole().name(),
                 user.isActive(),
                 user.getPoints(),
+                user.isPendingDeletion(),
+                user.getDeletionScheduledAt(),
                 user.getCreatedAt(),
                 user.getUpdatedAt(),
                 user.getLastLogin());

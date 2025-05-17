@@ -86,6 +86,11 @@ public class User {
         this.updatedAt = LocalDateTime.now(); // 수정 시점만 갱신
     }
 
+    // 탈퇴 예약 여부
+    private boolean isPendingDeletion;
+    // 탈퇴 예정일
+    private LocalDateTime deletionScheduledAt; 
+
     // ─────────────────────────────────────────────
     // [2] 사용자와 연관된 엔티티들 (양방향 관계)
     // ─────────────────────────────────────────────

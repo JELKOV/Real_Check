@@ -62,6 +62,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
                 >
                   <i class="bi bi-key"></i> 비밀번호 변경
                 </a>
+                
                 <button
                   class="btn btn-danger btn-sm flex-grow-1"
                   data-bs-toggle="modal"
@@ -128,7 +129,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="deleteModalLabel">회원 탈퇴</h5>
+            <h5 class="modal-title" id="deleteModalLabel">회원 탈퇴 요청</h5>
             <button
               type="button"
               class="btn-close"
@@ -137,7 +138,8 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
             ></button>
           </div>
           <div class="modal-body">
-            회원 탈퇴 시 모든 정보가 삭제되며 복구할 수 없습니다.
+            회원 탈퇴 요청을 하시면, 7일 뒤에 모든 정보가 자동 삭제됩니다.<br />
+            이 기간 동안 로그인하여 탈퇴 요청을 취소할 수 있습니다.<br />
             계속하시겠습니까?
           </div>
           <div class="modal-footer">
@@ -148,7 +150,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
             >
               취소
             </button>
-            <a href="/delete-account" class="btn btn-danger">회원 탈퇴</a>
+            <a href="/delete-account" class="btn btn-danger">탈퇴 요청</a>
           </div>
         </div>
       </div>

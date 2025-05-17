@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -41,9 +42,17 @@ public interface StatusLogRepository extends JpaRepository<StatusLog, Long> {
 
         /**
          * [1-4] 내가 등록한 상태 로그 중 숨김 처리되지 않은 로그만 조회 [미사용]
-         * 마이페이지에서 공개 게시물만 표시
+         * 마이 로그 페이지에서 공개 게시물만 표시
          */
         List<StatusLog> findByReporterIdAndIsHiddenFalseOrderByCreatedAtDesc(Long userId);
+
+        /**
+         * UserService: deleteUserAndRelatedData
+         * [1-5] 사용자의 답변 전체 삭제 (탈퇴 시 사용)
+         */
+        @Modifying
+        @Query("DELETE FROM StatusLog s WHERE s.reporter.id = :userId")
+        void deleteByReporterId(@Param("userId") Long userId);
 
         // ─────────────────────────────────────────────
         // [2] 장소 기반 조건 조회
