@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
  * LoginController
@@ -58,21 +59,26 @@ public class LoginController {
     @PostMapping("/login")
     public String login(@RequestParam String email,
             @RequestParam String password,
-            HttpSession session) {
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
         try {
             UserDto loginUser = userService.login(email, password);
 
-            // [1] 탈퇴 예약 상태 확인
+            // (1) 세션에 로그인 사용자 저장
+            session.setAttribute("loginUser", loginUser);
+
+            // (2) 탈퇴 예약 상태 확인 (서비스 접근 차단)
             if (loginUser.isPendingDeletion()) {
-                session.setAttribute("loginUser", loginUser); // 세션 저장 (로그인 유지)
-                return "redirect:/account-restricted"; // 탈퇴 예약 상태로 서비스 접근 제한
+                return "redirect:/account-restricted"; // 서비스 접근 제한 페이지로 이동
             }
 
-            // [2] 정상 로그인 처리
-            session.setAttribute("loginUser", loginUser); // 세션 저장
+            // (3) 정상 로그인 처리
             return "redirect:/"; // 로그인 성공 → 메인 페이지
+
         } catch (RuntimeException e) {
-            return "redirect:/login?error=1"; // 실패 → 쿼리 파라미터 전달
+            // 에러 메시지 전달
+            redirectAttributes.addFlashAttribute("loginError", e.getMessage());
+            return "redirect:/login";
         }
     }
 
@@ -90,5 +96,50 @@ public class LoginController {
     public String logout(HttpSession session) {
         session.invalidate(); // 세션 무효화
         return "redirect:/login";
+    }
+
+    // ─────────────────────────────────────────────
+    // [4] 회원 탈퇴 관련 API
+    // ─────────────────────────────────────────────
+
+    /**
+     * page: mypage.jsp
+     * [4-1] 회원 탈퇴 처리
+     */
+    @GetMapping("/delete-account")
+    public String requestAccountDeletion(HttpSession session, RedirectAttributes redirectAttributes) {
+        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            return "redirect:/login";
+        }
+
+        userService.requestAccountDeletion(loginUser.getId());
+        session.invalidate(); // 로그아웃 처리
+
+        // 플래시 메시지 설정 (메인 페이지에서 확인)
+        redirectAttributes.addFlashAttribute("deletionRequested", true);
+        return "redirect:/";
+    }
+
+    /**
+     * page: account-restricted.jsp
+     * [4-2] 탈퇴 예약 취소 처리
+     * 사용자 탈퇴 예약을 취소하고 세션 정보를 갱신
+     */
+    @GetMapping("/cancel-account-deletion")
+    public String cancelAccountDeletion(HttpSession session) {
+        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            return "redirect:/login";
+        }
+
+        // 탈퇴 예약 취소 처리
+        userService.cancelAccountDeletion(loginUser.getId());
+
+        // 세션 사용자 정보 갱신
+        UserDto updatedUser = userService.getUserDtoById(loginUser.getId());
+        session.setAttribute("loginUser", updatedUser);
+
+        return "redirect:/?cancel_success=true";
     }
 }

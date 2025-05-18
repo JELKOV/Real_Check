@@ -62,7 +62,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
                 >
                   <i class="bi bi-key"></i> 비밀번호 변경
                 </a>
-                
+
                 <button
                   class="btn btn-danger btn-sm flex-grow-1"
                   data-bs-toggle="modal"
@@ -126,10 +126,12 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
       aria-labelledby="deleteModalLabel"
       aria-hidden="true"
     >
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="deleteModalLabel">회원 탈퇴 요청</h5>
+      <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content rounded-3 shadow-md">
+          <div class="modal-header border-0">
+            <h5 class="modal-title fw-bold" id="deleteModalLabel">
+              회원 탈퇴 요청
+            </h5>
             <button
               type="button"
               class="btn-close"
@@ -137,20 +139,28 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
               aria-label="Close"
             ></button>
           </div>
-          <div class="modal-body">
-            회원 탈퇴 요청을 하시면, 7일 뒤에 모든 정보가 자동 삭제됩니다.<br />
-            이 기간 동안 로그인하여 탈퇴 요청을 취소할 수 있습니다.<br />
-            계속하시겠습니까?
+          <div class="modal-body text-center">
+            <p class="mb-3 text-content">
+              회원 탈퇴 요청을 하시면, <strong>7일 뒤</strong>에 모든 정보가
+              자동 삭제됩니다.<br />
+              <span class="d-block mt-2"
+                >이 기간 동안 로그인하여 <strong>탈퇴 요청을 취소</strong>할 수
+                있습니다.</span
+              >
+              <span class="d-block mt-2">계속하시겠습니까?</span>
+            </p>
           </div>
-          <div class="modal-footer">
+          <div
+            class="modal-footer border-0 d-flex justify-content-center gap-2"
+          >
             <button
               type="button"
-              class="btn btn-secondary"
+              class="btn btn-light px-4"
               data-bs-dismiss="modal"
             >
               취소
             </button>
-            <a href="/delete-account" class="btn btn-danger">탈퇴 요청</a>
+            <a href="/delete-account" class="btn btn-danger px-4">탈퇴 요청</a>
           </div>
         </div>
       </div>

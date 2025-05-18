@@ -97,44 +97,4 @@ public class UserController {
         }
     }
 
-    // ─────────────────────────────────────────────
-    // [3] 사용자 회원 탈퇴 관련 API
-    // ─────────────────────────────────────────────
-
-    /**
-     * page: mypage.jsp
-     * [3-1] 회원 탈퇴 처리
-     */
-    @GetMapping("/delete-account")
-    public String requestAccountDeletion(HttpSession session) {
-        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
-        if (loginUser == null) {
-            return "redirect:/login";
-        }
-
-        userService.requestAccountDeletion(loginUser.getId());
-        session.invalidate(); // 로그아웃 처리
-        return "redirect:/?deletionRequested=true";
-    }
-
-    /**
-     * page: account-restricted.jsp
-     * [3-2] 탈퇴 예약 취소 처리
-     * 사용자 탈퇴 예약을 취소하고 세션 정보를 갱신
-     */
-    @GetMapping("/cancel-account-deletion")
-    public String cancelAccountDeletion(HttpSession session) {
-        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
-        if (loginUser == null) {
-            return "redirect:/login";
-        }
-
-        // 탈퇴 예약 취소 처리
-        userService.cancelAccountDeletion(loginUser.getId());
-
-        // 세션 사용자 정보 갱신
-        session.setAttribute("loginUser", userService.getUserDtoById(loginUser.getId()));
-        return "redirect:/?cancel_success=true";
-    }
-
 }

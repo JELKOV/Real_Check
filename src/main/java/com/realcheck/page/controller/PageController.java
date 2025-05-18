@@ -7,6 +7,7 @@ import org.springframework.ui.Model;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -53,6 +54,21 @@ public class PageController {
         model.addAttribute("loginUser", loginUser);
 
         return "user/mypage";
+    }
+
+    // 탈퇴 예약 상태 페이지 이동 - page user/login.jsp
+    // LoginController 또는 AccountRestrictionController에서
+    @GetMapping("/account-restricted")
+    public String accountRestrictedPage(HttpSession session, Model model) {
+        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            return "redirect:/login";
+        }
+
+        // 탈퇴 예정 시간 전달
+        model.addAttribute("deletionScheduledAt",
+                loginUser.getDeletionScheduledAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")));
+        return "user/account-restricted";
     }
 
     // 내 응답 관련 페이지 - page: common/header.jsp

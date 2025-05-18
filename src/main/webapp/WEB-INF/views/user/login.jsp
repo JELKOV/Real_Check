@@ -6,11 +6,11 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
   <head>
     <meta charset="UTF-8" />
     <title>로그인 - RealCheck</title>
+    <link rel="stylesheet" href="/css/style.css" />
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/css/style.css" />
   </head>
   <body>
     <%@ include file="../common/header.jsp" %>
@@ -23,9 +23,9 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
         <div class="alert alert-success" role="alert">${successMsg}</div>
       </c:if>
 
-      <!-- 에러 메시지 -->
-      <c:if test="${not empty errorMsg}">
-        <div class="alert alert-danger" role="alert">${errorMsg}</div>
+      <!-- 에러 메시지 표시 -->
+      <c:if test="${not empty loginError}">
+        <div class="alert alert-danger">${loginError}</div>
       </c:if>
 
       <form method="post" action="/login">

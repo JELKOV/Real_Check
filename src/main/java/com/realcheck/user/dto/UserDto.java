@@ -106,7 +106,6 @@ public class UserDto {
         user.setActive(true); // 기본 활성화 상태
         user.setPoints(0); // 기본 포인트 0
         user.setPendingDeletion(isPendingDeletion);
-        user.setDeletionScheduledAt(deletionScheduledAt);
         return user;
     }
 

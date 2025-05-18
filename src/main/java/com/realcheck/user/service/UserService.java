@@ -100,21 +100,16 @@ public class UserService {
         // (1) 이메일로 사용자 조회 (존재하지 않으면 예외 발생)
         User user = validateUserByEmail(email);
 
-        // (2) 탈퇴 예약 상태 확인 (로그인 차단)
-        if (user.isPendingDeletion()) {
-            throw new RuntimeException("현재 계정은 탈퇴 예약 상태입니다. 서비스 이용이 제한됩니다.");
-        }
-
-        // (3) 입력한 비밀번호(rawPassword)와 저장된 암호화된 비밀번호 비교
+        // (2) 입력한 비밀번호(rawPassword)와 저장된 암호화된 비밀번호 비교
         if (!passwordEncoder.matches(rawPassword, user.getPassword())) {
             throw new RuntimeException("비밀번호가 일치하지 않습니다.");
         }
 
-        // (4) 마지막 로그인 시간 업데이트
+        // (3) 마지막 로그인 시간 업데이트
         user.setLastLogin(LocalDateTime.now());
         userRepository.save(user);
 
-        // (5) 로그인 성공 → User 엔티티를 DTO로 변환하여 반환 (비밀번호 제외)
+        // (4) 로그인 성공 → User 엔티티를 DTO로 변환하여 반환 (비밀번호 제외)
         return UserDto.fromEntity(user);
     }
 
@@ -280,7 +275,7 @@ public class UserService {
     // ─────────────────────────────────────────────
 
     /**
-     * UserController: requestAccountDeletion
+     * LoginController: requestAccountDeletion
      * [3-1] 회원 탈퇴 요청 처리 (7 일간 유예)
      */
     public void requestAccountDeletion(Long userId) {
@@ -293,7 +288,7 @@ public class UserService {
     }
 
     /**
-     * LoginController: login (Post)
+     * LoginController: cancelAccountDeletion
      * [3-2] 회원 탈퇴 예약 취소 (7 일간 유예)
      */
     public void cancelAccountDeletion(Long userId) {
