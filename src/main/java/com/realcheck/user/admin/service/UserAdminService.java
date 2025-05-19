@@ -64,4 +64,17 @@ public class UserAdminService {
                 .map(UserDto::fromEntity)
                 .collect(Collectors.toList());
     }
+
+    /**
+     * UserAdminController: getReportedUsers [미사용]
+     * [2-2] 신고된 사용자 목록 조회 (신고 횟수 1회 이상)
+     * 신고 받은 사용자는 StatusLog를 신고 받은 사용자
+     * 신고된 사용자와 신고 횟수를 함께 반환
+     */
+    public List<UserDto> getReportedUsers() {
+        return userRepository.findAll().stream()
+                .filter(user -> user.getReportCount() > 0) // 신고 횟수 1회 이상 필터링
+                .map(UserDto::fromEntity)
+                .toList();
+    }
 }

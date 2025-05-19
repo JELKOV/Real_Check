@@ -7,20 +7,15 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     /**
      * ReportAdminService: countReportsByStatusLogId
      * [1] 특정 StatusLog에 대해 신고된 횟수를 조회
-     * - 신고 수 조회용
-     * - SQL:
-     * SELECT COUNT(*) FROM reports WHERE status_log_id = ?;
+     * 신고 수 조회용
      */
     long countByStatusLogId(Long statusLogId);
 
     /**
-     * 
-     * [2] 특정 ID의 신고당한 횟수 조회
-     * - 신고 당한 횟수
-     * - SQL:
-     * SELECT COUNT(*) FROM reports r
-     * JOIN status_log s ON r.status_log_id = s.id
-     * WHERE s.reporter_id = ?;
+     * ReportService: hasAlreadyReported
+     * ReportAdminService: countReportsByStatusLogId
+     * [2] 특정 사용자가 해당 상태 로그에 신고한 여부 확인
      */
-    long countByStatusLogReporterId(Long userId);
+    boolean existsByReporterIdAndStatusLogId(Long userId, Long statusLogId);
+
 }

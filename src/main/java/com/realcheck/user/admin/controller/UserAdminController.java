@@ -77,4 +77,13 @@ public class UserAdminController {
         return ResponseEntity.ok("차단 해제 완료");
     }
 
+    /**
+     * [미사용]
+     * [3] 신고된 사용자 목록 조회
+     */
+    @GetMapping("/reported")
+    public ResponseEntity<List<UserDto>> getReportedUsers() {
+        return ResponseEntity.ok(userAdminService.getReportedUsers());
+    }
+
 }

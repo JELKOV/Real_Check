@@ -57,6 +57,15 @@ public class User {
     // 포인트 - 기본값 0으로 시작, 정보 제공 등으로 증가 가능
     private int points = 0;
 
+    // 신고 횟수
+    @Column(nullable = false)
+    private int reportCount = 0;
+
+    // 신고 횟수 증가
+    public void incrementReportCount() {
+        this.reportCount++;
+    }
+
     // 활성 상태 여부 - true면 정상 활동, false면 비활성화된 계정
     private boolean isActive = true;
 
@@ -89,7 +98,7 @@ public class User {
     // 탈퇴 예약 여부
     private boolean isPendingDeletion;
     // 탈퇴 예정일
-    private LocalDateTime deletionScheduledAt; 
+    private LocalDateTime deletionScheduledAt;
 
     // ─────────────────────────────────────────────
     // [2] 사용자와 연관된 엔티티들 (양방향 관계)

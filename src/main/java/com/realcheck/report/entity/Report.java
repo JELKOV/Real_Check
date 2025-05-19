@@ -36,10 +36,12 @@ public class Report {
         }
     }
 
+    // 신고자 (N:1 관계)
     @ManyToOne
     @JoinColumn(name = "reporter_id") // 신고자와 연결되는 외래키
     private User reporter; // 신고한 사람
 
+    // 신고 대상 로그 (N:1 관계)
     @ManyToOne
     @JoinColumn(name = "status_log_id") // 신고 대상 StatusLog와의 관계
     private StatusLog statusLog; // 어떤 상태 정보를 신고했는지

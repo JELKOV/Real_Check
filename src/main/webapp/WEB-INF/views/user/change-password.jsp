@@ -10,6 +10,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
     />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   </head>
   <body>
     <%@ include file="../common/header.jsp" %>
@@ -56,42 +57,6 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
     </div>
 
     <%@ include file="../common/footer.jsp" %>
-
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-      $("#confirmPassword, #newPassword").on("keyup", function () {
-        const pw = $("#newPassword").val();
-        const cpw = $("#confirmPassword").val();
-        if (pw !== cpw) {
-          $("#matchError").text("비밀번호가 일치하지 않습니다.");
-        } else {
-          $("#matchError").text("");
-        }
-      });
-
-      $("#passwordForm").on("submit", function (e) {
-        e.preventDefault();
-
-        const currentPassword = $("#currentPassword").val();
-        const newPassword = $("#newPassword").val();
-
-        $.ajax({
-          url: "/api/user/password",
-          method: "PUT",
-          contentType: "application/json",
-          data: JSON.stringify({
-            currentPassword,
-            newPassword,
-          }),
-          success: function () {
-            alert("비밀번호가 변경되었습니다.");
-            location.href = "/mypage";
-          },
-          error: function (xhr) {
-            alert(xhr.responseText || "변경 실패");
-          },
-        });
-      });
-    </script>
+    <script src="/js/user/change-password.js"></script>
   </body>
 </html>

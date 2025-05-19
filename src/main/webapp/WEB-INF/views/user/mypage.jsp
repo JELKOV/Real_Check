@@ -54,7 +54,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
                   href="/edit-profile"
                   class="btn btn-primary btn-sm flex-grow-1"
                 >
-                  <i class="bi bi-pencil"></i> 정보 수정
+                  <i class="bi bi-pencil"></i> 닉네임 변경
                 </a>
                 <a
                   href="/change-password"

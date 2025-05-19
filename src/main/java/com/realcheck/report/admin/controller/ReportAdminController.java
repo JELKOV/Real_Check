@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.realcheck.report.admin.service.ReportAdminService;
 import com.realcheck.report.dto.ReportDto;
+import com.realcheck.status.dto.StatusLogDto;
 import com.realcheck.user.dto.UserDto;
 
 import jakarta.servlet.http.HttpSession;
@@ -31,7 +32,7 @@ public class ReportAdminController {
 
     /**
      * page: admin/reports.jsp
-     * [1] 전체 신고 내역 조회 API 
+     * [1] 전체 신고 내역 조회 API
      * - 관리자만 접근 가능
      * - 세션에서 ADMIN 권한 확인 후 전체 신고 리스트 반환
      */
@@ -50,7 +51,7 @@ public class ReportAdminController {
 
     /**
      * page: admin/reports.jsp
-     * [2] 특정 상태 로그(StatusLog)에 대한 신고 횟수 조회 API 
+     * [2] 특정 상태 로그(StatusLog)에 대한 신고 횟수 조회 API
      * - 관리자만 접근 가능
      * - statusLogId를 기준으로 신고 수 반환
      */
@@ -68,5 +69,15 @@ public class ReportAdminController {
         long count = reportAdminService.countReportsByStatusLogId(statusLogId);
         // 결과를 Map 형태로 응답 (자동으로 JSON 변환됨)
         return ResponseEntity.ok().body(Map.of("count", count)); // {"count": 3}
+    }
+
+    /**
+     * [미사용]
+     * [3] 신고된 상태 로그 목록 조회 (숨김 상태)
+     */
+    @GetMapping("/logs")
+    public ResponseEntity<List<StatusLogDto>> getReportedLogs() {
+        List<StatusLogDto> reportedLogs = reportAdminService.getHiddenLogs();
+        return ResponseEntity.ok(reportedLogs);
     }
 }

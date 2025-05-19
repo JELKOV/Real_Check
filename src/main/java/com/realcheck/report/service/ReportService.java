@@ -1,6 +1,7 @@
 package com.realcheck.report.service;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.realcheck.report.dto.ReportDto;
 import com.realcheck.report.entity.Report;
@@ -24,35 +25,41 @@ public class ReportService {
     private final UserRepository userRepository;
 
     /**
-     * [1] 신고 처리 메서드
-     * - 신고자가 다른 사용자의 상태 로그를 신고할 때 호출됨
-     * - 신고 내용 저장 후, 신고 대상자의 누적 신고 수를 확인
-     * - 일정 횟수(3회) 이상이면 자동으로 계정 비활성화 + 해당 로그 숨김 처리
+     * ReportController: report
+     * [1] 신고 처리 로직
+     * 신고자가 다른 사용자의 상태 로그를 신고할 때 호출됨
+     * 신고 내용 저장 후, 신고 대상자의 누적 신고 수를 확인
+     * 일정 횟수(3회) 이상이면 자동으로 계정 비활성화 + 해당 로그 숨김 처리
      */
+    @Transactional
     public void report(Long userId, ReportDto dto) {
-        // 1. 신고자 유효성 확인
+        // (1) 신고자 유효성 확인
         User reporter = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("사용자 없음"));
-        // 2. 어떤 상태 로그에 대한 신고인지 확인
+
+        // (2) 신고 대상 로그 확인
         StatusLog log = statusLogRepository.findById(dto.getStatusLogId())
                 .orElseThrow(() -> new RuntimeException("해당 상태 정보 없음"));
 
-        // 3. 신고 정보 저장
+        // (3) 신고 정보 저장
         Report report = dto.toEntity(reporter, log);
         reportRepository.save(report);
 
-        // 4. 해당 로그를 등록한 유저의 신고 횟수 조회
-        Long targetUserId = log.getReporter().getId();
-        long reportCount = reportRepository.countByStatusLogReporterId(targetUserId);
+        // (4) 신고 대상 로그 신고 횟수 증가
+        log.incrementReportCount();
+        statusLogRepository.save(log);
 
-        // 5. 신고가 3번 이상이면 사용자 차단
-        if (reportCount >= 3) {
-            User targetUser = log.getReporter();
-            targetUser.setActive(false); // 계정 비활성화
-            userRepository.save(targetUser); // 변경된 상태 저장
+        // (5) 신고 대상 사용자(User) 신고 횟수 증가
+        User targetUser = log.getReporter();
+        targetUser.incrementReportCount();
+        userRepository.save(targetUser);
+    }
 
-            log.setHidden(true); // 상태 로그도 숨김 처리
-            statusLogRepository.save(log); // 변경사항 저장
-        }
+    /**
+     * ReportController: report
+     * [2] 중복 신고 확인 (사용자별)
+     */
+    public boolean hasAlreadyReported(Long userId, Long statusLogId) {
+        return reportRepository.existsByReporterIdAndStatusLogId(userId, statusLogId);
     }
 }

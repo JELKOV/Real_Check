@@ -38,6 +38,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
      */
     Optional<User> findByNickname(String nickname);
 
+    /**
+     * UserService: updateProfile
+     * [1-3] 닉네임 중복 여부를 판단하는 메서드
+     */
+    boolean existsByNickname(String nickname);
+
     // ────────────────────────────────────────
     // [2] 사용자 상태 조회 (활성/비활성)
     // ────────────────────────────────────────

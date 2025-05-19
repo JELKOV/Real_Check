@@ -122,27 +122,54 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  // 비밀번호 일치 실시간 확인
+  // 비밀번호 실시간 유효성 및 일치 검사 (통합)
   $("#password, #confirmPassword").on("input", function () {
-    const pw = $("#password").val();
-    const cpw = $("#confirmPassword").val();
-    if (pw !== cpw) {
+    const password = $("#password").val().trim();
+    const confirmPassword = $("#confirmPassword").val().trim();
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()\-_=+[\]{};:,.<>/?]).{8,20}$/;
+
+    if (password === "" && confirmPassword === "") {
+      $("#passwordMatchError").text("").removeClass("text-danger text-success");
+      return;
+    }
+
+    if (!passwordRegex.test(password)) {
+      $("#passwordMatchError")
+        .text(
+          "비밀번호는 8~20자 영문 대소문자, 숫자, 특수문자를 포함해야 합니다."
+        )
+        .css("display", "block")
+        .removeClass("text-success")
+        .addClass("text-danger");
+      return;
+    }
+
+    if (password !== confirmPassword) {
       $("#passwordMatchError")
         .text("비밀번호가 일치하지 않습니다.")
         .css("display", "block")
         .removeClass("text-success")
         .addClass("text-danger");
-    } else {
-      $("#passwordMatchError").text("").removeClass("text-danger");
+      return;
     }
+
+    // 모두 통과할 경우
+    $("#passwordMatchError")
+      .text("비밀번호가 유효하고 일치합니다.")
+      .css("display", "block")
+      .removeClass("text-danger")
+      .addClass("text-success");
   });
 
   // 전체 폼 유효성 검사 (제출 시점)
   $("#registerForm").on("submit", function (event) {
+    const password = $("#password").val();
     if (
       !emailChecked ||
       !nicknameChecked ||
-      $("#passwordMatchError").text() !== ""
+      !passwordRegex.test(password) ||
+      $("#passwordMatchError").hasClass("text-danger")
     ) {
       event.preventDefault();
       showToast("입력 정보를 확인해주세요.");

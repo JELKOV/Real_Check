@@ -71,10 +71,16 @@ public class UserController {
             return ResponseEntity.status(401).body("로그인 필요");
         }
 
-        // 로그인된 사용자의 ID로 수정 요청
-        userService.updateProfile(loginUser.getId(), dto);
-        // 수정 완료 메시지 반환
-        return ResponseEntity.ok("수정 완료");
+        try {
+            // 로그인된 사용자의 ID로 수정 요청
+            userService.updateProfile(loginUser.getId(), dto);
+            // 세션 무효화 (로그아웃)
+            session.invalidate();
+            // 수정 완료 메시지 반환
+            return ResponseEntity.ok("수정 완료");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     /**
@@ -91,6 +97,8 @@ public class UserController {
 
         try {
             userService.changePassword(loginUser.getId(), dto);
+            // 세션 무효화 (로그아웃)
+            session.invalidate();
             return ResponseEntity.ok("비밀번호가 성공적으로 변경되었습니다.");
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());

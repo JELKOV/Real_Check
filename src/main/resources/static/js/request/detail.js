@@ -46,6 +46,9 @@ function bindEventListeners() {
 
   // 답변 삭제 버튼 클릭
   $(document).on("click", ".delete-answer-btn", deleteAnswer);
+
+  // 신고 버튼 클릭 (답변 신고)
+  $(document).on("click", ".report-answer-btn", handleReportButtonClick);
 }
 
 // [2] 요청 상세 정보 로드
@@ -322,6 +325,12 @@ function generateAnswerRow(answer, hasSelected) {
   const selectedBadge = answer.selected
     ? `<span class="badge bg-success ms-2">✅ 채택됨</span>`
     : "";
+  // 🚨 신고 버튼 및 신고 횟수 표시
+  const reportButton =
+    answer.reportCount > 0
+      ? `<button class="btn btn-sm btn-outline-danger" disabled>🚨 신고됨 (${answer.reportCount})</button>`
+      : `<button class="btn btn-sm btn-outline-danger report-answer-btn" data-id="${answer.id}">🚨 신고</button>`;
+
   const canSelect = canSelectAnswer(answer, hasSelected);
   const canEditOrDelete = canEditOrDeleteAnswer(answer);
 
@@ -357,7 +366,7 @@ function generateAnswerRow(answer, hasSelected) {
     <li class="list-group-item answer-item" data-answer-data='${JSON.stringify(
       answer
     )}'>
-      <strong>${nickname}</strong> ${selectedBadge}
+      <strong>${nickname}</strong> ${selectedBadge} ${reportButton}
       <p id="answer-text-${answer.id}">${answer.content}</p>
       <div class="dynamic-fields">
         ${renderExtraAnswerFields(answer)}
@@ -368,7 +377,39 @@ function generateAnswerRow(answer, hasSelected) {
     </li>`;
 }
 
-// [3-2-1] 답변 채택 가능 여부 판단 함수
+// [3-3] 신고 버튼 클릭 처리
+function handleReportButtonClick() {
+  const statusLogId = $(this).data("id");
+  openReportModal(statusLogId);
+}
+
+// [3-3-1] 신고 모달 열기
+function openReportModal(statusLogId) {
+  const reason = prompt("🚨 신고 사유를 입력해주세요:");
+  if (!reason) return;
+
+  // 신고 API 호출
+  submitReport(statusLogId, reason);
+}
+
+// [3-3-2] 신고 API 호출
+function submitReport(statusLogId, reason) {
+  $.ajax({
+    url: `/api/report`,
+    method: "POST",
+    contentType: "application/json",
+    data: JSON.stringify({ statusLogId, reason }),
+    success: function () {
+      alert("신고가 접수되었습니다.");
+      loadAnswerList(requestId); // 신고 후 목록 갱신
+    },
+    error: function (xhr) {
+      alert("신고 실패: " + xhr.responseText);
+    },
+  });
+}
+
+// [3-4] 답변 채택 가능 여부 판단 함수
 function canSelectAnswer(answer, hasSelected) {
   if (!loginUserIdNum) return false; // 로그인 여부 확인
   if (answer.selected) return false; // 이미 선택된 답변은 선택 불가
@@ -377,7 +418,7 @@ function canSelectAnswer(answer, hasSelected) {
   return true;
 }
 
-// [3-2-2] 답변 수정/삭제 가능 여부 판단 함수
+// [3-4] 답변 수정/삭제 가능 여부 판단 함수
 function canEditOrDeleteAnswer(answer) {
   if (!loginUserIdNum) return false; // 로그인 여부 확인
   if (loginUserIdNum !== answer.userId) return false; // 답변 작성자만 수정/삭제 가능
@@ -385,7 +426,7 @@ function canEditOrDeleteAnswer(answer) {
   return true;
 }
 
-// [3-2-2-1] 답변 수정 모드 활성화
+// [3-5] 답변 수정 모드 활성화
 function activateEditMode() {
   const answerId = $(this).data("id");
   const answerRow = $(`li[data-answer-data*='"id":${answerId}']`);
@@ -405,12 +446,12 @@ function activateEditMode() {
   answerRow.find(".edit-delete-buttons").hide();
   answerRow.find(".save-cancel-buttons").show();
 }
-// [3-2-2-2] 수정 취소 처리
+// [3-5-1] 수정 취소 처리
 function cancelEditMode() {
   loadAnswerList(requestId); // 원래 답변 목록으로 되돌리기
 }
 
-// [3-2-2-3] 수정 저장 처리
+// [3-5-2] 수정 저장 처리
 function saveEditedAnswer() {
   const answerId = $(this).data("id");
   const answerRow = $(`li[data-answer-data*='"id":${answerId}']`);
@@ -446,7 +487,7 @@ function saveEditedAnswer() {
   });
 }
 
-// [3-2-2-4] 답변 삭제 처리
+// [3-6] 답변 삭제 처리
 function deleteAnswer() {
   const answerId = $(this).data("id");
   if (!confirm("정말로 이 답변을 삭제하시겠습니까?")) return;
@@ -464,7 +505,7 @@ function deleteAnswer() {
   });
 }
 
-// [3-2-2-4] 답변 삭제 처리
+// [3-6-1] 답변 삭제 처리
 function deleteAnswer() {
   const answerId = $(this).data("id");
   if (!confirm("정말로 이 답변을 삭제하시겠습니까?")) return;
@@ -482,7 +523,7 @@ function deleteAnswer() {
   });
 }
 
-// [3-2-3] 유틸 함수: 응답 필드 표시용 텍스트 생성 (수정 모드 지원)
+// [3-7] 유틸 함수: 응답 필드 표시용 텍스트 생성 (수정 모드 지원)
 function renderExtraAnswerFields(answer, isEditMode = false) {
   const fieldMap = {
     PARKING: {

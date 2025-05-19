@@ -6,7 +6,6 @@ import com.realcheck.request.entity.RequestCategory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -43,14 +42,6 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
    * [1-3] UserId로 사용자의 최근 요청 5개 조회
    */
   List<Request> findTop5ByUserIdOrderByCreatedAtDesc(Long userId);
-
-  /**
-   * UserService: deleteUserAndRelatedData
-   * [1-4] 사용자의 요청 전체 삭제 (탈퇴 시 사용)
-   */
-  @Modifying
-  @Query("DELETE FROM Request r WHERE r.user.id = :userId")
-  void deleteByUserId(@Param("userId") Long userId);
 
   // ─────────────────────────────────────────────
   // [2] 위치 기반 필터링 관련 메소드

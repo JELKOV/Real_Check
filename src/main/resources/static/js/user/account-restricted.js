@@ -1,13 +1,16 @@
+// 페이지 로드 시 타이머 초기화
 document.addEventListener("DOMContentLoaded", function () {
   const timerElement = document.getElementById("timer");
   const deletionScheduledAt = timerElement?.getAttribute("data-deletion");
 
+  // [1] 삭제 예정 시간 확인
   if (!deletionScheduledAt) {
     timerElement.innerHTML =
       "<span class='text-danger'>삭제 예정 시간이 설정되지 않았습니다.</span>";
     return;
   }
 
+  // [2] 삭제 예정 시간 파싱 (ISO 문자열 → Date 객체)
   const deletionDate = new Date(deletionScheduledAt);
   if (isNaN(deletionDate.getTime())) {
     timerElement.innerHTML =
@@ -15,35 +18,43 @@ document.addEventListener("DOMContentLoaded", function () {
     return;
   }
 
+  // [3] 타이머 시작 (1초마다 갱신)
   updateCountdown(deletionDate);
   setInterval(() => updateCountdown(deletionDate), 1000);
 });
 
+// 타이머 업데이트 함수 (남은 시간 계산 및 표시)
 function updateCountdown(deletionDate) {
+  // [1] 현재 시간과 삭제 예정 시간 차이 계산
   const now = new Date();
   const diff = deletionDate - now;
 
+  // [2] 타이머 요소 참조
   const daysElement = document.getElementById("days");
   const hoursElement = document.getElementById("hours");
   const minutesElement = document.getElementById("minutes");
   const secondsElement = document.getElementById("seconds");
 
+  // [3] 타이머 요소 확인 (존재하지 않으면 오류 로그)
   if (!daysElement || !hoursElement || !minutesElement || !secondsElement) {
     console.error("타이머 요소를 찾을 수 없습니다.");
     return;
   }
 
+  // [4] 삭제 예정 시간이 이미 도래한 경우
   if (diff <= 0) {
     document.getElementById("timer").innerHTML =
       "<span class='text-danger'>삭제 예약 시간이 도래했습니다.</span>";
     return;
   }
 
+  // [5] 남은 시간 계산 (일, 시, 분, 초)
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
   const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
   const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
+  // [6] 타이머 표시 업데이트
   daysElement.textContent = days;
   hoursElement.textContent = hours;
   minutesElement.textContent = minutes;

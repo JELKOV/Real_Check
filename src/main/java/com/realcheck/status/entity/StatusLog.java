@@ -1,8 +1,10 @@
 package com.realcheck.status.entity;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.realcheck.place.entity.Place;
+import com.realcheck.report.entity.Report;
 import com.realcheck.request.entity.Request;
 import com.realcheck.user.entity.User;
 
@@ -59,6 +61,18 @@ public class StatusLog {
     // 조회수 (자발적 공유일 경우 사용)
     @Column(nullable = false)
     private int viewCount = 0;
+
+    // 신고 횟수 (자동 갱신)
+    @Column(nullable = false)
+    private int reportCount = 0;
+
+    // 신고 횟수 증가
+    public void incrementReportCount() {
+        this.reportCount++;
+        if (this.reportCount >= 3) {
+            this.isHidden = true; // 신고 3회 이상 시 자동 숨김
+        }
+    }
 
     // 등록 시간 (기본값: 현재)
     @Column(nullable = false, updatable = false)
@@ -153,4 +167,8 @@ public class StatusLog {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "place_id", nullable = true)
     private Place place;
+
+    // 신고 목록 (1:N 관계)
+    @OneToMany(mappedBy = "statusLog", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Report> reports;
 }

@@ -147,9 +147,13 @@ public class UserService {
         // (1) 해당 ID의 사용자 정보 조회 (없으면 예외 발생)
         User user = validateUserById(id);
 
-        // (2) 닉네임이 전달된 경우 → 기존 닉네임을 새 닉네임으로 변경
-        if (dto.getNickname() != null)
+        // (2) 닉네임 중복 확인 (닉네임이 전달된 경우)
+        if (dto.getNickname() != null && !dto.getNickname().equals(user.getNickname())) {
+            if (userRepository.existsByNickname(dto.getNickname())) {
+                throw new IllegalArgumentException("이미 사용 중인 닉네임입니다.");
+            }
             user.setNickname(dto.getNickname());
+        }
 
         // (3) 비밀번호가 전달된 경우 → 암호화 후 저장
         if (dto.getPassword() != null) {
@@ -300,7 +304,8 @@ public class UserService {
     }
 
     /**
-     * [3-2-A] 사용자 정보 조회
+     * LoginController: cancelAccountDeletion
+     * [3-3] 사용자 정보 조회
      * 로그인 유저 정보 갱신용
      */
     public UserDto getUserDtoById(Long userId) {
@@ -311,18 +316,14 @@ public class UserService {
 
     /**
      * UserDeletionScheduler:autoDeleteExpiredAccounts
-     * [3-3] 회원 및 관련 데이터 삭제 (요청, 답변) - 트랜잭션 적용
+     * [3-4] 회원 및 관련 데이터 삭제 (요청, 답변) - 트랜잭션 적용
      */
     @Transactional
     public void deleteUserAndRelatedData(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
-        // (1) 사용자 관련 데이터 삭제 (요청, 답변)
-        requestRepository.deleteByUserId(userId);
-        statusLogRepository.deleteByReporterId(userId);
-
-        // (2) 사용자 삭제
+        // 사용자 삭제 (연관된 데이터는 CascadeType.ALL에 의해 자동 삭제)
         userRepository.delete(user);
     }
 
