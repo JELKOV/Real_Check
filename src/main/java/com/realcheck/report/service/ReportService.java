@@ -1,6 +1,10 @@
 package com.realcheck.report.service;
 
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.realcheck.report.dto.ReportDto;
@@ -31,7 +35,8 @@ public class ReportService {
      * 신고 내용 저장 후, 신고 대상자의 누적 신고 수를 확인
      * 일정 횟수(3회) 이상이면 자동으로 계정 비활성화 + 해당 로그 숨김 처리
      */
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Retryable(value = ObjectOptimisticLockingFailureException.class, maxAttempts = 3, backoff = @Backoff(delay = 100))
     public void report(Long userId, ReportDto dto) {
         // (1) 신고자 유효성 확인
         User reporter = userRepository.findById(userId)
@@ -41,15 +46,20 @@ public class ReportService {
         StatusLog log = statusLogRepository.findById(dto.getStatusLogId())
                 .orElseThrow(() -> new RuntimeException("해당 상태 정보 없음"));
 
-        // (3) 신고 정보 저장
+        // (3) 동일 사용자의 중복 신고 방지
+        if (hasAlreadyReported(userId, log.getId())) {
+            throw new RuntimeException("이미 신고한 상태입니다.");
+        }
+
+        // (4) 신고 정보 저장
         Report report = dto.toEntity(reporter, log);
         reportRepository.save(report);
 
-        // (4) 신고 대상 로그 신고 횟수 증가
+        // (5) 신고 대상 로그 신고 횟수 증가 (동시성 안전)
         log.incrementReportCount();
         statusLogRepository.save(log);
 
-        // (5) 신고 대상 사용자(User) 신고 횟수 증가
+        // (6) 신고된 사용자(User) 신고 횟수 증가 (동시성 안전)
         User targetUser = log.getReporter();
         targetUser.incrementReportCount();
         userRepository.save(targetUser);

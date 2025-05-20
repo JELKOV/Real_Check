@@ -19,6 +19,9 @@ import lombok.*;
 @AllArgsConstructor
 public class UserDto {
 
+    // 동시성 제어용 버전 필드 추가
+    private Integer version;
+
     // ─────────────────────────────────────────────
     // [1] 사용자 정보 필드
     // ─────────────────────────────────────────────
@@ -37,6 +40,8 @@ public class UserDto {
     private String password;
     // 사용자 포인트
     private int points;
+    // 신고횟수 추가
+    private int reportCount;
 
     // 탈퇴 예약 여부
     private boolean isPendingDeletion;
@@ -75,18 +80,21 @@ public class UserDto {
      * Entity → DTO 변환 시 사용
      */
     public UserDto(Long id, String email, String nickname, String role, boolean isActive,
-            int points, boolean isPendingDeletion, LocalDateTime deletionScheduledAt, LocalDateTime createdAt,
-            LocalDateTime updatedAt, LocalDateTime lastLogin) {
+            int points, int reportCount, boolean isPendingDeletion, LocalDateTime deletionScheduledAt,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt, LocalDateTime lastLogin, Integer version) {
         this.id = id;
         this.email = email;
         this.nickname = nickname;
         this.role = role;
         this.isActive = isActive;
         this.points = points;
+        this.reportCount = reportCount;
         this.isPendingDeletion = isPendingDeletion;
         this.deletionScheduledAt = deletionScheduledAt;
         this.createdAt = createdAt;
         this.lastLogin = lastLogin;
+        this.version = version;
     }
 
     // ─────────────────────────────────────────────
@@ -122,11 +130,13 @@ public class UserDto {
                 user.getRole().name(),
                 user.isActive(),
                 user.getPoints(),
+                user.getReportCount(),
                 user.isPendingDeletion(),
                 user.getDeletionScheduledAt(),
                 user.getCreatedAt(),
                 user.getUpdatedAt(),
-                user.getLastLogin());
+                user.getLastLogin(),
+                user.getVersion());
     }
 
 }

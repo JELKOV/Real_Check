@@ -2,6 +2,10 @@ package com.realcheck.point.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +37,7 @@ public class PointService {
      * StatusLogService: giveUserPoint / selectAnswer
      * [1-1] 포인트 지급/차감 처리
      */
+    @Retryable(value = ObjectOptimisticLockingFailureException.class, maxAttempts = 3, backoff = @Backoff(delay = 100))
     @Transactional
     public void givePoint(User user, int amount, String reason, PointType type) {
         // (1) 지급할 포인트 유효성 검사

@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -120,7 +121,13 @@ public class RequestService {
 
         // 요청 마감 처리
         request.setClosed(true);
-        requestRepository.save(request);
+
+        // 동시성 문제 고려
+        try {
+            requestRepository.save(request);
+        } catch (ObjectOptimisticLockingFailureException e) {
+            throw new RuntimeException("동일한 요청을 동시에 마감하려 했습니다. 다시 시도해주세요.");
+        }
     }
 
     /**

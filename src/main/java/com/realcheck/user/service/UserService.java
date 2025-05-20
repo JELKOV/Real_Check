@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,6 +48,7 @@ public class UserService {
      * 이메일, 닉네임 중복 확인
      * 비밀번호 암호화 후 저장
      */
+    @Transactional
     public void register(UserDto dto, String rawPassword) {
         // (1) 이메일 중복 검사
         validateUniqueEmail(dto.getEmail());
@@ -96,6 +98,7 @@ public class UserService {
      * 비밀번호 비교 (암호화된 비밀번호와 비교)
      * 성공 시 DTO 반환
      */
+    @Transactional
     public UserDto login(String email, String rawPassword) {
         // (1) 이메일로 사용자 조회 (존재하지 않으면 예외 발생)
         User user = validateUserByEmail(email);
@@ -107,7 +110,11 @@ public class UserService {
 
         // (3) 마지막 로그인 시간 업데이트
         user.setLastLogin(LocalDateTime.now());
-        userRepository.save(user);
+        try {
+            userRepository.save(user);
+        } catch (ObjectOptimisticLockingFailureException e) {
+            throw new RuntimeException("다른 기기에서 로그인 정보가 동시에 갱신되었습니다. 다시 시도해주세요.");
+        }
 
         // (4) 로그인 성공 → User 엔티티를 DTO로 변환하여 반환 (비밀번호 제외)
         return UserDto.fromEntity(user);
@@ -143,6 +150,7 @@ public class UserService {
      * 닉네임 또는 비밀번호 변경
      * 닉네임은 단순 대체, 비밀번호는 암호화 후 저장
      */
+    @Transactional
     public void updateProfile(Long id, UserDto dto) {
         // (1) 해당 ID의 사용자 정보 조회 (없으면 예외 발생)
         User user = validateUserById(id);
@@ -162,7 +170,11 @@ public class UserService {
         }
 
         // (4) 변경된 사용자 정보를 DB에 저장
-        userRepository.save(user);
+        try {
+            userRepository.save(user);
+        } catch (ObjectOptimisticLockingFailureException e) {
+            throw new RuntimeException("다른 기기에서 사용자 정보가 동시에 수정되었습니다. 다시 시도해주세요.");
+        }
     }
 
     /**
@@ -170,6 +182,7 @@ public class UserService {
      * [2-2] 비밀번호 변경
      * 현재 비밀번호 확인 후 새 비밀번호로 변경
      */
+    @Transactional
     public void changePassword(Long userId, PasswordUpdateRequestDto dto) {
         User user = validateUserById(userId);
 
@@ -179,7 +192,11 @@ public class UserService {
         }
         // 새 비밀번호로 변경 (암호화)
         user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
-        userRepository.save(user);
+        try {
+            userRepository.save(user);
+        } catch (ObjectOptimisticLockingFailureException e) {
+            throw new RuntimeException("다른 기기에서 비밀번호가 변경되었습니다. 다시 시도해주세요.");
+        }
     }
 
     /**
@@ -282,6 +299,7 @@ public class UserService {
      * LoginController: requestAccountDeletion
      * [3-1] 회원 탈퇴 요청 처리 (7 일간 유예)
      */
+    @Transactional
     public void requestAccountDeletion(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
@@ -295,6 +313,7 @@ public class UserService {
      * LoginController: cancelAccountDeletion
      * [3-2] 회원 탈퇴 예약 취소 (7 일간 유예)
      */
+    @Transactional
     public void cancelAccountDeletion(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
@@ -324,7 +343,11 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         // 사용자 삭제 (연관된 데이터는 CascadeType.ALL에 의해 자동 삭제)
-        userRepository.delete(user);
+        try {
+            userRepository.delete(user);
+        } catch (ObjectOptimisticLockingFailureException e) {
+            throw new RuntimeException("사용자 정보가 동시에 변경되었습니다. 다시 시도해주세요.");
+        }
     }
 
     // ─────────────────────────────────────────────

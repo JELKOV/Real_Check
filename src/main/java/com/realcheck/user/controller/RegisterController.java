@@ -61,7 +61,21 @@ public class RegisterController {
         }
 
         try {
-            UserDto dto = new UserDto(null, email, nickname, "USER", true, 0, false, null, null, null, null);
+            UserDto dto = new UserDto(
+                    null, // id
+                    email, // email
+                    nickname, // nickname
+                    "USER", // role
+                    true, // isActive
+                    0, // points
+                    0, // reportCount
+                    false, // isPendingDeletion
+                    null, // deletionScheduledAt
+                    null, // createdAt
+                    null, // updatedAt
+                    null, // lastLogin
+                    0 // version (최초 가입 시 0)
+            );
             userService.register(dto, password);
             session.setAttribute("successMsg", "🎉 회원가입이 완료되었습니다! 환영합니다, " + nickname + "님!");
             return "redirect:/login";

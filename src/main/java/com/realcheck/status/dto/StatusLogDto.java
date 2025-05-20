@@ -23,6 +23,9 @@ import lombok.*;
 @Builder
 public class StatusLogDto {
 
+    // 동시성 제어용 버전 필드 추가
+    private Integer version;
+
     // ─────────────────────────────────────────────
     // [1] 기본 필드 (ID, 내용, 이미지, 선택 여부)
     // ─────────────────────────────────────────────
@@ -34,6 +37,8 @@ public class StatusLogDto {
     private String imageUrl;
     // 답변 채택 여부 (요청 답변일 경우)
     private boolean isSelected;
+    // 신고 횟수
+    private int reportCount;
 
     // ─────────────────────────────────────────────
     // [2] 사용자 및 위치 정보
@@ -62,7 +67,7 @@ public class StatusLogDto {
     private LocalDateTime createdAt;
     // 업데이트 일시
     private LocalDateTime updatedAt;
-    
+
     // 요청 카테고리 (12가지 중 하나, String)
     private String category;
 
@@ -158,6 +163,7 @@ public class StatusLogDto {
                 .content(log.getContent())
                 .isSelected(log.isSelected())
                 .imageUrl(log.getImageUrl())
+                .reportCount(log.getReportCount())
                 .userId(log.getReporter() != null ? log.getReporter().getId() : null)
                 .placeId(log.getPlace() != null ? log.getPlace().getId() : null)
                 .lat(log.getLat())
@@ -191,6 +197,8 @@ public class StatusLogDto {
                 .seatCount(log.getSeatCount())
                 .crowdLevel(log.getCrowdLevel())
                 .extra(log.getExtra())
+
+                .version(log.getVersion())
 
                 .build();
     }

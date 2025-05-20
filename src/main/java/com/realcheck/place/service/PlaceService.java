@@ -4,6 +4,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -134,6 +137,7 @@ public class PlaceService {
      * [3-1] 특정 장소에 허용된 요청 타입 추가
      * 지정된 장소에 특정 요청 타입을 추가 (관리자 전용)
      */
+    @Retryable(value = ObjectOptimisticLockingFailureException.class, maxAttempts = 3, backoff = @Backoff(delay = 100))
     @Transactional
     public void addAllowedRequestType(Long placeId, String requestType) {
         Place place = placeRepository.findById(placeId)

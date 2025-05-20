@@ -24,6 +24,9 @@ import lombok.*;
 @Builder
 public class PlaceDto {
 
+    // 동시성 제어용 버전 필드 추가
+    private Integer version;
+
     // ─────────────────────────────────────────────
     // [1] 기본 필드 (장소 정보)
     // ─────────────────────────────────────────────
@@ -99,6 +102,8 @@ public class PlaceDto {
                 .ownerId(place.getOwner() != null ? place.getOwner().getId() : null)
                 .createdAt(place.getCreatedAt())
                 .updatedAt(place.getUpdatedAt())
+                .version(place.getVersion())
+                
                 .build();
     }
 }

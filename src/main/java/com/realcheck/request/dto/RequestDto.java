@@ -24,6 +24,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class RequestDto {
 
+    // 동시성 제어용 버전 필드 추가
+    private Integer version;
+
     // ────────────────────────────────────────
     // [1] 기본 필드
     // ────────────────────────────────────────
@@ -177,6 +180,8 @@ public class RequestDto {
                 .requesterEmail(r.getUser() != null ? r.getUser().getEmail() : null)
                 .requesterNickname(r.getUser() != null ? r.getUser().getNickname() : null)
                 .answerCount(r.getStatusLogs() != null ? r.getStatusLogs().size() : 0)
+
+                .version(r.getVersion())
 
                 // 카테고리별 동적 필드
                 .waitCount(r.getWaitCount())

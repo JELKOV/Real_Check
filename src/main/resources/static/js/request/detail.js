@@ -1,6 +1,20 @@
-// 전역 변수로 loginUserIdNum, requestId 선언
 let loginUserIdNum = null;
 let requestId = null;
+
+const categoryLabelMap = {
+  PARKING: "🅿️ 주차 가능 여부",
+  WAITING_STATUS: "⏳ 대기 상태",
+  STREET_VENDOR: "🥟 노점 현황",
+  PHOTO_REQUEST: "📸 사진 요청",
+  BUSINESS_STATUS: "🏪 가게 영업 여부",
+  OPEN_SEAT: "💺 좌석 여유",
+  BATHROOM: "🚻 화장실 여부",
+  WEATHER_LOCAL: "☁️ 날씨 상태",
+  NOISE_LEVEL: "🔊 소음 여부",
+  FOOD_MENU: "🍔 메뉴/음식",
+  CROWD_LEVEL: "👥 혼잡도",
+  ETC: "❓ 기타",
+};
 
 $(document).ready(function () {
   const loginUserIdElement = document.getElementById("loginUserId");
@@ -22,7 +36,9 @@ $(document).ready(function () {
   loadAnswerList(requestId);
 });
 
-// [1] 이벤트 리스너 바인딩
+/**
+ * [1] 이벤트 리스너 바인딩
+ */
 function bindEventListeners() {
   // 답변 채택 버튼 클릭
   $(document).on("click", ".select-answer-btn", handleSelectAnswer);
@@ -51,7 +67,11 @@ function bindEventListeners() {
   $(document).on("click", ".report-answer-btn", handleReportButtonClick);
 }
 
-// [2] 요청 상세 정보 로드
+/**
+ * [2] 요청 상세 정보 로드
+ */
+
+// [2-1] 상세 정보 관련 전체 로드 헬퍼 함수
 function loadRequestDetail(requestId) {
   $.get(`/api/request/${requestId}`, function (request) {
     renderRequestDetail(request);
@@ -65,7 +85,7 @@ function loadRequestDetail(requestId) {
   });
 }
 
-// [2-1] 요청 상세 정보 렌더링
+// [2-2] 요청 상세 정보 렌더링
 function renderRequestDetail(request) {
   const formattedDate = new Date(request.createdAt).toLocaleString();
   const nickname = request.requesterNickname || "익명";
@@ -139,7 +159,28 @@ function renderRequestDetail(request) {
   }
 }
 
-// [2-2] 지도 표시 함수
+// [2-2-1] 요청 수동 마감 처리
+function closeRequestManually(requestId) {
+  if (!confirm("이 요청을 마감하시겠습니까?")) return;
+
+  $.ajax({
+    url: `/api/request/${requestId}/close`,
+    method: "PATCH",
+    // 사용자 ID 전달
+    data: { userId: loginUserIdNum },
+    success: function () {
+      alert("요청이 마감되었습니다.");
+      // 마감 상태 갱신
+      loadRequestDetail(requestId);
+      loadAnswerList(requestId);
+    },
+    error: function (xhr) {
+      alert("마감 처리에 실패했습니다: " + xhr.responseText);
+    },
+  });
+}
+
+// [2-3] 지도 표시 함수
 function renderMap(lat, lng) {
   if (lat && lng) {
     const map = new naver.maps.Map("map", {
@@ -155,7 +196,7 @@ function renderMap(lat, lng) {
   }
 }
 
-// [2-3] 답변 입력창 비활성화 관리
+// [2-4] 답변 입력창 비활성화 관리
 function manageAnswerFormVisibility(request) {
   let disableReason = "";
 
@@ -180,7 +221,7 @@ function manageAnswerFormVisibility(request) {
   }
 }
 
-// [2-4] 유틸 함수: 카테고리별 동적 필드 생성
+// [2-5] 유틸 함수: 카테고리별 동적 필드 생성
 function renderAnswerFields(category) {
   const container = $("#dynamicAnswerFields");
   container.empty();
@@ -279,7 +320,11 @@ function renderAnswerFields(category) {
   container.append(fieldHtml);
 }
 
-// [3] 답변 리스트 로드
+/**
+ * [3] 답변 리스트 함수
+ */
+
+// [3-1] 답변 리스트 로드
 function loadAnswerList(requestId) {
   $.get(`/api/status/by-request/${requestId}`, function (answers) {
     $("#answerList").empty();
@@ -303,7 +348,7 @@ function loadAnswerList(requestId) {
   });
 }
 
-// [3-1] 답변 자동 마감 안내
+// [3-1-1] 답변 자동 마감 안내
 function updateAutoCloseNotice(answerCount) {
   if (answerCount > 0) {
     $("#autoCloseNotice").html(`
@@ -325,16 +370,56 @@ function generateAnswerRow(answer, hasSelected) {
   const selectedBadge = answer.selected
     ? `<span class="badge bg-success ms-2">✅ 채택됨</span>`
     : "";
-  // 🚨 신고 버튼 및 신고 횟수 표시
-  const reportButton =
-    answer.reportCount > 0
-      ? `<button class="btn btn-sm btn-outline-danger" disabled>🚨 신고됨 (${answer.reportCount})</button>`
-      : `<button class="btn btn-sm btn-outline-danger report-answer-btn" data-id="${answer.id}">🚨 신고</button>`;
 
+  // 신고 버튼 (본인 답변은 신고 불가)
+  const reportButton = generateReportButton(answer);
+  // 수정 삭제 버튼
+  const actionButtons = generateActionButtons(answer, hasSelected);
+  const formattedDate = new Date(answer.createdAt).toLocaleString("ko-KR");
+
+  return `
+    <li class="list-group-item answer-item" data-answer-data='${JSON.stringify(
+      answer
+    )}'>
+      <strong>${nickname}</strong> ${selectedBadge} ${reportButton}
+      <p id="answer-text-${answer.id}">${answer.content}</p>
+      <small class="text-muted">신고 횟수: ${answer.reportCount}</small>
+      <div class="dynamic-fields">
+        ${renderExtraAnswerFields(answer)}
+      </div>
+      ${imageHtml}
+      <br><small class="text-muted">${formattedDate}</small>
+      ${actionButtons}
+    </li>`;
+}
+
+/**
+ * [3-3] 수정 / 삭제 관련 로직
+ */
+
+// [3-3-1] 답변 채택 가능 여부 판단 함수
+function canSelectAnswer(answer, hasSelected) {
+  if (!loginUserIdNum) return false; // 로그인 여부 확인
+  if (answer.selected) return false; // 이미 선택된 답변은 선택 불가
+  if (hasSelected) return false; // 이미 다른 답변이 선택된 경우
+  if (loginUserIdNum !== answer.requestOwnerId) return false; // 요청 작성자만 채택 가능
+  return true;
+}
+
+// [3-3-2] 답변 수정/삭제 가능 여부 판단 함수
+function canEditOrDeleteAnswer(answer) {
+  if (!loginUserIdNum) return false; // 로그인 여부 확인
+  if (loginUserIdNum !== answer.userId) return false; // 답변 작성자만 수정/삭제 가능
+  if (answer.selected) return false; // 채택된 답변은 수정/삭제 불가
+  return true;
+}
+
+// [3-3-3] 수정/삭제 버튼 생성 함수
+function generateActionButtons(answer, hasSelected) {
   const canSelect = canSelectAnswer(answer, hasSelected);
   const canEditOrDelete = canEditOrDeleteAnswer(answer);
 
-  const actionButtons = `
+  return `
     <div class="edit-delete-buttons">
       ${
         canSelect
@@ -350,7 +435,7 @@ function generateAnswerRow(answer, hasSelected) {
           : ""
       }
     </div>
-    <div class="save-cancel-buttons">
+    <div class="save-cancel-buttons" style="display:none;">
       <button class="btn btn-primary save-edit-btn" data-id="${
         answer.id
       }">저장</button>
@@ -359,74 +444,9 @@ function generateAnswerRow(answer, hasSelected) {
       }">취소</button>
     </div>
   `;
-
-  const formattedDate = new Date(answer.createdAt).toLocaleString("ko-KR");
-
-  return `
-    <li class="list-group-item answer-item" data-answer-data='${JSON.stringify(
-      answer
-    )}'>
-      <strong>${nickname}</strong> ${selectedBadge} ${reportButton}
-      <p id="answer-text-${answer.id}">${answer.content}</p>
-      <div class="dynamic-fields">
-        ${renderExtraAnswerFields(answer)}
-      </div>
-      ${imageHtml}
-      <br><small class="text-muted">${formattedDate}</small>
-      ${actionButtons}
-    </li>`;
 }
 
-// [3-3] 신고 버튼 클릭 처리
-function handleReportButtonClick() {
-  const statusLogId = $(this).data("id");
-  openReportModal(statusLogId);
-}
-
-// [3-3-1] 신고 모달 열기
-function openReportModal(statusLogId) {
-  const reason = prompt("🚨 신고 사유를 입력해주세요:");
-  if (!reason) return;
-
-  // 신고 API 호출
-  submitReport(statusLogId, reason);
-}
-
-// [3-3-2] 신고 API 호출
-function submitReport(statusLogId, reason) {
-  $.ajax({
-    url: `/api/report`,
-    method: "POST",
-    contentType: "application/json",
-    data: JSON.stringify({ statusLogId, reason }),
-    success: function () {
-      alert("신고가 접수되었습니다.");
-      loadAnswerList(requestId); // 신고 후 목록 갱신
-    },
-    error: function (xhr) {
-      alert("신고 실패: " + xhr.responseText);
-    },
-  });
-}
-
-// [3-4] 답변 채택 가능 여부 판단 함수
-function canSelectAnswer(answer, hasSelected) {
-  if (!loginUserIdNum) return false; // 로그인 여부 확인
-  if (answer.selected) return false; // 이미 선택된 답변은 선택 불가
-  if (hasSelected) return false; // 이미 다른 답변이 선택된 경우
-  if (loginUserIdNum !== answer.requestOwnerId) return false; // 요청 작성자만 채택 가능
-  return true;
-}
-
-// [3-4] 답변 수정/삭제 가능 여부 판단 함수
-function canEditOrDeleteAnswer(answer) {
-  if (!loginUserIdNum) return false; // 로그인 여부 확인
-  if (loginUserIdNum !== answer.userId) return false; // 답변 작성자만 수정/삭제 가능
-  if (answer.selected) return false; // 채택된 답변은 수정/삭제 불가
-  return true;
-}
-
-// [3-5] 답변 수정 모드 활성화
+// [3-3-4] 답변 수정 모드 활성화
 function activateEditMode() {
   const answerId = $(this).data("id");
   const answerRow = $(`li[data-answer-data*='"id":${answerId}']`);
@@ -446,12 +466,12 @@ function activateEditMode() {
   answerRow.find(".edit-delete-buttons").hide();
   answerRow.find(".save-cancel-buttons").show();
 }
-// [3-5-1] 수정 취소 처리
+// [3-3-5] 수정 취소 처리
 function cancelEditMode() {
   loadAnswerList(requestId); // 원래 답변 목록으로 되돌리기
 }
 
-// [3-5-2] 수정 저장 처리
+// [3-3-6] 수정 저장 처리
 function saveEditedAnswer() {
   const answerId = $(this).data("id");
   const answerRow = $(`li[data-answer-data*='"id":${answerId}']`);
@@ -487,7 +507,7 @@ function saveEditedAnswer() {
   });
 }
 
-// [3-6] 답변 삭제 처리
+// [3-3-7] 답변 삭제 처리
 function deleteAnswer() {
   const answerId = $(this).data("id");
   if (!confirm("정말로 이 답변을 삭제하시겠습니까?")) return;
@@ -505,25 +525,57 @@ function deleteAnswer() {
   });
 }
 
-// [3-6-1] 답변 삭제 처리
-function deleteAnswer() {
-  const answerId = $(this).data("id");
-  if (!confirm("정말로 이 답변을 삭제하시겠습니까?")) return;
+/**
+ * [3-4] 신고 버튼 관련 함수수
+ */
 
+// [3-4-1] 신고 버튼 생성 함수
+function generateReportButton(answer) {
+  const canReport = loginUserIdNum !== answer.userId; // 본인 신고 불가
+  if (!canReport) return "";
+
+  return answer.reportCount > 0
+    ? `<button class="btn btn-sm btn-outline-danger" disabled>
+        🚨 신고됨 (${answer.reportCount})
+      </button>`
+    : `<button class="btn btn-sm btn-danger report-answer-btn" data-id="${answer.id}">
+        🚨 신고
+      </button>`;
+}
+
+// [3-4-2] 신고 버튼 클릭 처리
+function handleReportButtonClick() {
+  const statusLogId = $(this).data("id");
+  openReportModal(statusLogId);
+}
+
+// [3-4-3] 신고 모달 열기
+function openReportModal(statusLogId) {
+  const reason = prompt("🚨 신고 사유를 입력해주세요:");
+  if (!reason) return;
+
+  // 신고 API 호출
+  submitReport(statusLogId, reason);
+}
+
+// [3-4-4] 신고 API 호출
+function submitReport(statusLogId, reason) {
   $.ajax({
-    url: `/api/status/${answerId}`,
-    method: "DELETE",
+    url: `/api/report`,
+    method: "POST",
+    contentType: "application/json",
+    data: JSON.stringify({ statusLogId, reason }),
     success: function () {
-      alert("답변이 삭제되었습니다.");
-      loadAnswerList(requestId);
+      alert("신고가 접수되었습니다.");
+      loadAnswerList(requestId); // 신고 후 목록 갱신
     },
     error: function (xhr) {
-      alert("답변 삭제 실패: " + xhr.responseText);
+      alert("신고 실패: " + xhr.responseText);
     },
   });
 }
 
-// [3-7] 유틸 함수: 응답 필드 표시용 텍스트 생성 (수정 모드 지원)
+// [3-5] 유틸 함수: 응답 필드 표시용 텍스트 생성 (수정 모드 지원)
 function renderExtraAnswerFields(answer, isEditMode = false) {
   const fieldMap = {
     PARKING: {
@@ -586,26 +638,9 @@ function renderExtraAnswerFields(answer, isEditMode = false) {
   }</div>`;
 }
 
-// [4] 요청 수동 마감 처리
-function closeRequestManually(requestId) {
-  if (!confirm("이 요청을 마감하시겠습니까?")) return;
-
-  $.ajax({
-    url: `/api/request/${requestId}/close`,
-    method: "PATCH",
-    data: { userId: loginUserIdNum }, // 사용자 ID 전달
-    success: function () {
-      alert("요청이 마감되었습니다.");
-      loadRequestDetail(requestId); // 마감 상태 갱신
-      loadAnswerList(requestId);
-    },
-    error: function (xhr) {
-      alert("마감 처리에 실패했습니다: " + xhr.responseText);
-    },
-  });
-}
-
-// [4] 답변 채택 버튼 처리
+/**
+ * [4] 답변 채택 버튼 처리
+ */
 function handleSelectAnswer() {
   const statusLogId = $(this).data("id");
   if (!confirm("이 답변을 채택하시겠습니까?")) return;
@@ -624,7 +659,9 @@ function handleSelectAnswer() {
     });
 }
 
-// [5] 답변 제출 처리 (중복 방지)
+/**
+ * [5] 답변 제출 처리 (중복 방지)
+ */
 function submitAnswer(e) {
   e.preventDefault();
   const content = $("#answerContent").val();
@@ -675,18 +712,3 @@ function submitAnswer(e) {
     });
   });
 }
-
-const categoryLabelMap = {
-  PARKING: "🅿️ 주차 가능 여부",
-  WAITING_STATUS: "⏳ 대기 상태",
-  STREET_VENDOR: "🥟 노점 현황",
-  PHOTO_REQUEST: "📸 사진 요청",
-  BUSINESS_STATUS: "🏪 가게 영업 여부",
-  OPEN_SEAT: "💺 좌석 여유",
-  BATHROOM: "🚻 화장실 여부",
-  WEATHER_LOCAL: "☁️ 날씨 상태",
-  NOISE_LEVEL: "🔊 소음 여부",
-  FOOD_MENU: "🍔 메뉴/음식",
-  CROWD_LEVEL: "👥 혼잡도",
-  ETC: "❓ 기타",
-};

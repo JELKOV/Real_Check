@@ -19,16 +19,27 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Report {
+    
+    // ─────────────────────────────────────────────
+    // [0] 동시성 제어
+    // ─────────────────────────────────────────────
 
+    // 동시성 제어를 위한 버전 필드 추가
+    @Version
+    @Column(nullable = false)
+    private Integer version = 0;
+
+    // 자동 증가 기본 키
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // 자동 증가 기본 키
+    @GeneratedValue(strategy = GenerationType.IDENTITY) 
+    private Long id;
 
-    private String reason; // 신고 사유 (예: "정보가 틀림", "이미 영업 종료 상태")
+    // 신고 사유 (예: "정보가 틀림", "이미 영업 종료 상태")
+    private String reason; 
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    // TODO: 신고 일자를 Update를 해야할지 / 신고처리를 날짜처리를 해야지 
     @PrePersist
     protected void onCreate() {
         if (this.createdAt == null) {

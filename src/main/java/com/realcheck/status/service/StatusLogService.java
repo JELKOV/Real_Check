@@ -13,6 +13,8 @@ import com.realcheck.user.entity.User;
 import com.realcheck.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -169,8 +171,8 @@ public class StatusLogService {
         LocalDateTime start = LocalDate.now().atStartOfDay();
         LocalDateTime end = start.plusDays(1);
         int count = statusLogRepository.countByReporterIdAndCreatedAtBetween(userId, start, end);
-        if (count >= 3) {
-            throw new RuntimeException("하루 3회까지만 등록 가능합니다.");
+        if (count >= 10) {
+            throw new RuntimeException("하루 10회까지만 등록 가능합니다.");
         }
     }
 
@@ -192,7 +194,7 @@ public class StatusLogService {
 
         // (1) 장소 소유자 확인
         validatePlaceOwnership(userId, dto.getPlaceId());
-         // (2) 상태 로그 등록 (공통 로직 호출)
+        // (2) 상태 로그 등록 (공통 로직 호출)
         registerInternal(userId, dto, StatusType.REGISTER);
     }
 
@@ -312,7 +314,7 @@ public class StatusLogService {
 
     /**
      * [3-5] 특정 장소의 가장 최근 공개된 상태 1건 조회 [미사용]
-     * - 마커 클릭 시 정보 표시용
+     * 마커 클릭 시 정보 표시용
      */
     public StatusLogDto getLatestVisibleLogByPlaceId(Long placeId) {
         StatusLog log = statusLogRepository.findTopByPlaceIdAndIsHiddenFalseOrderByCreatedAtDesc(placeId);
@@ -326,7 +328,7 @@ public class StatusLogService {
     /**
      * StatusLogController: updateStatusLog
      * [5-1] 상태 로그 수정
-     * - 작성자 본인만 수정 가능
+     * 작성자 본인만 수정 가능
      */
     @Transactional
     public void updateStatusLog(Long logId, Long userId, StatusLogDto dto) {
@@ -386,24 +388,30 @@ public class StatusLogService {
             throw new RuntimeException("이미 마감된 요청입니다.");
         }
 
-        // [4] 답변을 선택하고 자동으로 요청 마감 (연결된 Request)
-        log.setSelected(true);
-        statusLogRepository.save(log);
+        try {
 
-        // [5] 자동으로 연결된 요청 마감 처리
-        request.setClosed(true);
-        requestRepository.save(request);
+            // [4] 답변을 선택하고 자동으로 요청 마감 (연결된 Request)
+            log.setSelected(true);
+            statusLogRepository.save(log);
 
-        // [6] 포인트 지급/차감 처리 (트랜잭션)
-        User answerer = log.getReporter(); // 답변 작성자
-        User requester = request.getUser(); // 요청 작성자
-        int points = request.getPoint();
+            // [5] 자동으로 연결된 요청 마감 처리
+            request.setClosed(true);
+            requestRepository.save(request);
 
-        // [7] 요청자 포인트 차감 (요청 생성 시 지급한 포인트)
-        pointService.givePoint(requester, -points, "답변 채택으로 포인트 차감", PointType.DEDUCT);
+            // [6] 포인트 지급/차감 처리 (트랜잭션)
+            User answerer = log.getReporter(); // 답변 작성자
+            User requester = request.getUser(); // 요청 작성자
+            int points = request.getPoint();
 
-        // [8] 답변자 포인트 지급 (답변 채택 보상)
-        pointService.givePoint(answerer, points, "답변 채택 보상", PointType.EARN);
+            // [7] 요청자 포인트 차감 (요청 생성 시 지급한 포인트)
+            pointService.givePoint(requester, -points, "답변 채택으로 포인트 차감", PointType.DEDUCT);
+
+            // [8] 답변자 포인트 지급 (답변 채택 보상)
+            pointService.givePoint(answerer, points, "답변 채택 보상", PointType.EARN);
+
+        } catch (ObjectOptimisticLockingFailureException e) {
+            throw new RuntimeException("다른 사용자에 의해 요청 정보가 변경되었습니다. 다시 시도해주세요.");
+        }
     }
 
     // ─────────────────────────────────────────────

@@ -12,8 +12,16 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ReportDto {
-    private String reason; // 신고사유(ex. "정보가 틀려요")
-    private Long statusLogId;// 신고 대상 상태 로그 ID
+
+    // 동시성 제어용 버전 필드 추가
+    private Integer version;
+
+    // 신고사유(ex. "정보가 틀려요")
+    private String reason;
+    // 신고 대상 상태 로그 ID
+    private Long statusLogId;
+    // 신고 횟수
+    private int reportCount;
 
     private LocalDateTime createdAt;
 
@@ -33,8 +41,10 @@ public class ReportDto {
 
     public static ReportDto fromEntity(Report report) {
         return new ReportDto(
+                report.getVersion(),
                 report.getReason(),
                 report.getStatusLog() != null ? report.getStatusLog().getId() : null,
+                report.getStatusLog() != null ? report.getStatusLog().getReportCount() : 0,
                 report.getCreatedAt());
     }
 

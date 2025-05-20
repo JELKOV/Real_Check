@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.realcheck.user.dto.UserDto;
 import com.realcheck.user.entity.User;
@@ -43,6 +44,7 @@ public class UserAdminService {
      * [1-2] 사용자 차단 해제 기능
      * isActive = true 로 변경하여 활성화
      */
+    @Transactional
     public void unblockUser(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("사용자를 찾을수 없습니다."));
 
