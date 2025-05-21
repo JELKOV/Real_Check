@@ -20,7 +20,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
   <body>
     <%@ include file="../common/header.jsp" %>
 
-    <div class="container mt-5" style="max-width: 700px">
+    <div class="container mt-5">
       <h3 class="text-center mb-4">요청 등록</h3>
       <!-- 지도 위치 (공식 장소 / 사용자 지정 장소 공통 사용) -->
       <div class="mb-3 mt-3">

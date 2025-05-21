@@ -48,4 +48,48 @@ public class ReportController {
         reportService.report(loginUser.getId(), dto); // 신고 로직 실행
         return ResponseEntity.ok("신고가 접수되었습니다."); // 성공 응답
     }
+
+    /**
+     * page: user/detail.jsp
+     * [1-2] 신고 취소 처리
+     * 로그인 사용자가 본인이 한 신고를 취소
+     * 신고 이력이 없거나 본인이 아닌 경우 400 응답
+     */
+    @DeleteMapping
+    public ResponseEntity<String> cancelReport(@RequestParam Long statusLogId, HttpSession session) {
+        // (1) 로그인 확인
+        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            return ResponseEntity.status(401).body("로그인이 필요합니다.");
+        }
+
+        // (2) 신고 취소 로직 실행
+        try {
+            reportService.cancelReport(loginUser.getId(), statusLogId);
+            return ResponseEntity.ok("신고가 취소되었습니다.");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(400).body(e.getMessage());
+        }
+    }
+
+    /**
+     * page: user/detail.jsp
+     * [1-3] 로그인 사용자가 특정 상태 로그에 신고했는지 확인
+     * 프론트에서 UI 버튼 상태 결정 시 사용
+     */
+    @GetMapping("/check")
+    public ResponseEntity<Boolean> checkReported(
+            @RequestParam Long statusLogId,
+            HttpSession session) {
+
+        // (1) 로그인 여부 확인
+        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            return ResponseEntity.status(401).body(false);
+        }
+
+        // (2) 해당 상태 로그에 대한 신고 여부 반환
+        boolean isReported = reportService.hasAlreadyReported(loginUser.getId(), statusLogId);
+        return ResponseEntity.ok(isReported);
+    }
 }

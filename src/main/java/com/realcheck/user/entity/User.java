@@ -75,6 +75,13 @@ public class User {
         this.reportCount++;
     }
 
+    // 신고 횟수 감소
+    public void decrementReportCount() {
+        if (this.reportCount > 0) {
+            this.reportCount -= 1;
+        }
+    }
+
     // 활성 상태 여부 - true면 정상 활동, false면 비활성화된 계정
     private boolean isActive = true;
 

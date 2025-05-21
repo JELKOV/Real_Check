@@ -67,9 +67,42 @@ public class ReportService {
 
     /**
      * ReportController: report
+     * ReportController: checkReported
      * [2] 중복 신고 확인 (사용자별)
      */
     public boolean hasAlreadyReported(Long userId, Long statusLogId) {
         return reportRepository.existsByReporterIdAndStatusLogId(userId, statusLogId);
+    }
+
+    /**
+     * ReportController: cancelReport
+     * [3] 신고 취소 처리
+     * 신고 기록 삭제 + 대상 로그 및 사용자 신고 횟수 감소
+     * 본인이 신고한 기록이 없으면 예외 발생
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Retryable(value = ObjectOptimisticLockingFailureException.class, maxAttempts = 3, backoff = @Backoff(delay = 100))
+    public void cancelReport(Long userId, Long statusLogId) {
+        // (1) 신고 대상 로그 확인
+        StatusLog log = statusLogRepository.findById(statusLogId)
+                .orElseThrow(() -> new RuntimeException("해당 상태 정보 없음"));
+
+        // (2) 기존 신고 내역 확인
+        Report report = reportRepository.findByReporterIdAndStatusLogId(userId, statusLogId);
+        if (report == null) {
+            throw new RuntimeException("신고 기록이 없습니다.");
+        }
+
+        // (3) 신고 기록 삭제
+        reportRepository.delete(report);
+
+        // (4) 로그 신고 횟수 감소
+        log.decrementReportCount();
+        statusLogRepository.save(log);
+
+        // (5) 신고 대상 사용자 신고 횟수 감소
+        User targetUser = log.getReporter();
+        targetUser.decrementReportCount();
+        userRepository.save(targetUser);
     }
 }

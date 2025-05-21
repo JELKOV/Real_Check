@@ -83,6 +83,13 @@ public class StatusLog {
         }
     }
 
+    // 신고 횟수 감소
+    public void decrementReportCount() {
+        if (this.reportCount > 0) {
+            this.reportCount -= 1;
+        }
+    }
+
     // 등록 시간 (기본값: 현재)
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

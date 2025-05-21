@@ -18,4 +18,9 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
      */
     boolean existsByReporterIdAndStatusLogId(Long userId, Long statusLogId);
 
+    /**
+     * ReportService: cancelReport
+     * [3] 특정 사용자의 신고 기록 객체 조회 (신고 취소용)
+     */
+    Report findByReporterIdAndStatusLogId(Long userId, Long statusLogId);
 }

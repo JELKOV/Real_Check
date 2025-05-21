@@ -63,8 +63,11 @@ function bindEventListeners() {
   // 답변 삭제 버튼 클릭
   $(document).on("click", ".delete-answer-btn", deleteAnswer);
 
-  // 신고 버튼 클릭 (답변 신고)
-  $(document).on("click", ".report-answer-btn", handleReportButtonClick);
+  // 신고 버튼 클릭 (toggle 방식으로 대체)
+  $(document).on("click", ".report-toggle-btn", handleReportToggle);
+
+  // 신고 사유 선택 후 전송 버튼 클릭
+  $(document).on("click", "#submitReportBtn", handleSubmitReportReason);
 }
 
 /**
@@ -344,6 +347,15 @@ function loadAnswerList(requestId) {
         const row = generateAnswerRow(answer, hasSelected);
         $("#answerList").append(row);
       });
+
+    // 신고 버튼 상태 동기화 (렌더링 후 실행)
+    answers.forEach((answer) => {
+      const canReport = loginUserIdNum !== answer.userId && !answer.selected;
+      if (canReport) {
+        updateReportButton(answer.id, answer.reportCount);
+      }
+    });
+
     updateAutoCloseNotice(answers.length);
   });
 }
@@ -371,9 +383,13 @@ function generateAnswerRow(answer, hasSelected) {
     ? `<span class="badge bg-success ms-2">✅ 채택됨</span>`
     : "";
 
-  // 신고 버튼 (본인 답변은 신고 불가)
-  const reportButton = generateReportButton(answer);
-  // 수정 삭제 버튼
+  // ✅ 신고 수 뱃지
+  const reportBadge =
+    answer.reportCount > 0
+      ? `<span class="badge bg-danger ms-2">🚨 ${answer.reportCount}회 신고</span>`
+      : "";
+
+  // 수정 삭제 채택 신고 버튼
   const actionButtons = generateActionButtons(answer, hasSelected);
   const formattedDate = new Date(answer.createdAt).toLocaleString("ko-KR");
 
@@ -381,9 +397,8 @@ function generateAnswerRow(answer, hasSelected) {
     <li class="list-group-item answer-item" data-answer-data='${JSON.stringify(
       answer
     )}'>
-      <strong>${nickname}</strong> ${selectedBadge} ${reportButton}
+      <strong>${nickname}</strong> ${selectedBadge} ${reportBadge}
       <p id="answer-text-${answer.id}">${answer.content}</p>
-      <small class="text-muted">신고 횟수: ${answer.reportCount}</small>
       <div class="dynamic-fields">
         ${renderExtraAnswerFields(answer)}
       </div>
@@ -414,34 +429,38 @@ function canEditOrDeleteAnswer(answer) {
   return true;
 }
 
-// [3-3-3] 수정/삭제 버튼 생성 함수
+// [3-3-3] 수정/삭제/신고 버튼 생성 함수
 function generateActionButtons(answer, hasSelected) {
   const canSelect = canSelectAnswer(answer, hasSelected);
   const canEditOrDelete = canEditOrDeleteAnswer(answer);
+  const canReport = loginUserIdNum !== answer.userId;
+
+  const selectButton = canSelect
+    ? `<button class="btn btn-sm btn-outline-success select-answer-btn" data-id="${answer.id}">✅ 채택</button>`
+    : "";
+
+  const editDeleteButtons = canEditOrDelete
+    ? `
+      <button class="btn btn-sm btn-warning edit-answer-btn" data-id="${answer.id}">✏️</button>
+      <button class="btn btn-sm btn-danger delete-answer-btn" data-id="${answer.id}">🗑️</button>
+    `
+    : "";
+
+  // report-toggle-btn은 렌더링 후 updateReportButton()에서 실제 상태 적용됨
+  const reportButton =
+    canReport && !answer.selected
+      ? `<button class="btn btn-sm btn-secondary report-toggle-btn" data-id="${answer.id}" disabled>🚨 신고 상태 확인 중...</button>`
+      : "";
 
   return `
-    <div class="edit-delete-buttons">
-      ${
-        canSelect
-          ? `<button class="btn btn-sm btn-outline-success select-answer-btn" data-id="${answer.id}">✅ 채택</button>`
-          : ""
-      }
-      ${
-        canEditOrDelete
-          ? `
-          <button class="btn btn-sm btn-warning edit-answer-btn" data-id="${answer.id}">✏️</button>
-          <button class="btn btn-sm btn-danger delete-answer-btn" data-id="${answer.id}">🗑️</button>
-        `
-          : ""
-      }
+    <div class="edit-delete-buttons d-flex flex-wrap gap-2 mt-2">
+      ${selectButton}
+      ${editDeleteButtons}
+      ${reportButton}
     </div>
-    <div class="save-cancel-buttons" style="display:none;">
-      <button class="btn btn-primary save-edit-btn" data-id="${
-        answer.id
-      }">저장</button>
-      <button class="btn btn-secondary cancel-edit-btn" data-id="${
-        answer.id
-      }">취소</button>
+    <div class="save-cancel-buttons mt-2" style="display:none;">
+      <button class="btn btn-primary save-edit-btn" data-id="${answer.id}">저장</button>
+      <button class="btn btn-secondary cancel-edit-btn" data-id="${answer.id}">취소</button>
     </div>
   `;
 }
@@ -526,40 +545,74 @@ function deleteAnswer() {
 }
 
 /**
- * [3-4] 신고 버튼 관련 함수수
+ * [3-4] 신고 버튼 관련 함수
  */
 
-// [3-4-1] 신고 버튼 생성 함수
-function generateReportButton(answer) {
-  const canReport = loginUserIdNum !== answer.userId; // 본인 신고 불가
-  if (!canReport) return "";
-
-  return answer.reportCount > 0
-    ? `<button class="btn btn-sm btn-outline-danger" disabled>
-        🚨 신고됨 (${answer.reportCount})
-      </button>`
-    : `<button class="btn btn-sm btn-danger report-answer-btn" data-id="${answer.id}">
-        🚨 신고
-      </button>`;
+//[3-4-1] 신고버튼 UI 업데이트 토글 형식
+function updateReportButton(statusLogId, reportCount) {
+  $.get(`/api/report/check?statusLogId=${statusLogId}`, function (isReported) {
+    const btn = $(`.report-toggle-btn[data-id=${statusLogId}]`);
+    if (isReported) {
+      btn
+        .removeClass("btn-secondary btn-danger")
+        .addClass("btn-outline-danger")
+        .text(`🚨 신고됨 (${reportCount})`)
+        .prop("disabled", false);
+    } else {
+      btn
+        .removeClass("btn-secondary btn-outline-danger")
+        .addClass("btn-danger")
+        .text(`🚨 신고 (${reportCount})`)
+        .prop("disabled", false);
+    }
+  });
 }
 
-// [3-4-2] 신고 버튼 클릭 처리
-function handleReportButtonClick() {
+// [3-4-1] 신고 버튼 클릭 처리 : 모달 생성
+function handleReportToggle() {
   const statusLogId = $(this).data("id");
-  openReportModal(statusLogId);
+  const btn = $(this);
+  const isAlreadyReported = btn.hasClass("btn-outline-danger");
+
+  if (isAlreadyReported) {
+    // 신고 취소
+    if (!confirm("🚨 신고를 취소하시겠습니까?")) return;
+
+    $.ajax({
+      url: `/api/report?statusLogId=${statusLogId}`,
+      method: "DELETE",
+      success: function () {
+        alert("신고가 취소되었습니다.");
+        loadAnswerList(requestId);
+      },
+      error: function (xhr) {
+        alert("신고 취소 실패: " + xhr.responseText);
+      },
+    });
+  } else {
+    // 신고 모달 표시
+    $("#reportTargetStatusLogId").val(statusLogId);
+    $("#reportReasonSelect").val(""); // 초기화
+    const modal = new bootstrap.Modal(
+      document.getElementById("reportReasonModal")
+    );
+    modal.show();
+  }
 }
 
-// [3-4-3] 신고 모달 열기
-function openReportModal(statusLogId) {
-  const reason = prompt("🚨 신고 사유를 입력해주세요:");
-  if (!reason) return;
+// [3-4-2] 신고 처리 하기
+function handleSubmitReportReason() {
+  const statusLogId = $("#reportTargetStatusLogId").val();
+  const reason = $("#reportReasonSelect").val();
+  const modal = bootstrap.Modal.getInstance(
+    document.getElementById("reportReasonModal")
+  );
 
-  // 신고 API 호출
-  submitReport(statusLogId, reason);
-}
+  if (!reason) {
+    alert("🚨 신고 사유를 선택해주세요.");
+    return;
+  }
 
-// [3-4-4] 신고 API 호출
-function submitReport(statusLogId, reason) {
   $.ajax({
     url: `/api/report`,
     method: "POST",
@@ -567,7 +620,8 @@ function submitReport(statusLogId, reason) {
     data: JSON.stringify({ statusLogId, reason }),
     success: function () {
       alert("신고가 접수되었습니다.");
-      loadAnswerList(requestId); // 신고 후 목록 갱신
+      modal.hide();
+      loadAnswerList(requestId);
     },
     error: function (xhr) {
       alert("신고 실패: " + xhr.responseText);
