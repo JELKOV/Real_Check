@@ -91,10 +91,11 @@ public interface StatusLogRepository extends JpaRepository<StatusLog, Long> {
 
         /**
          * StatusLogService: registerAnswer
+         * RequestSerivce: countVisibleStatusLogsByRequestId
          * [3-2] 특정 요청(Request)에 등록된 답변(StatusLog)의 개수 조회
          * 요청당 최대 3개의 답변만 허용하기 위한 제약 조건 검사 시 사용
          */
-        long countByRequestId(Long requestId);
+        long countByRequestIdAndIsHiddenFalse(Long requestId);
 
         /**
          * StatusLogRepository: registerAnswer

@@ -81,7 +81,7 @@ function generateRequestRow(req) {
     <tr>
       <td>${req.title}</td>
       <td>${req.content}</td>
-      <td>${req.answerCount}</td>
+      <td>${req.visibleAnswerCount}</td>
       <td>${status}${alertText}</td>
       <td>${pointDisplay}</td>
       <td>${formattedDate}</td>

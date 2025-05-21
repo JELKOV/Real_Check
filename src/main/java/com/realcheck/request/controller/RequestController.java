@@ -50,7 +50,8 @@ public class RequestController {
         User loginUser = userService.convertToUser(loginUserDto);
 
         Request savedRequest = requestService.createRequest(dto, loginUser);
-        return ResponseEntity.ok(RequestDto.fromEntity(savedRequest));
+        // 생성 직후에는 statusLog가 없으므로 visibleCount = 0 명시적으로 전달
+        return ResponseEntity.ok(RequestDto.fromEntity(savedRequest, 0));
     }
 
     // ────────────────────────────────────────
@@ -60,7 +61,7 @@ public class RequestController {
     /**
      * page: request/list.jsp
      * [2-1] 지역 기반 요청이 3시간이 지나서 오픈된 요청 조회 API
-     * 미마감
+     * 미마감 요청
      * 답변 3개 미만
      * 3시간 지난 요청
      */
@@ -82,7 +83,6 @@ public class RequestController {
      * [2-2] 최신 요청 조회 (현재 사용자 위치 기준 / 지도 반경 기반) API
      * 위도, 경도 기준으로 radius(m) 이내
      * 장소 좌표가 존재하며 답변 수가 3개 미만인 요청 필터
-     * [FIX] 3시간 이내 수정 (테스트라 48시간으로 바꿈)
      */
     @GetMapping("/nearby")
     public ResponseEntity<List<RequestDto>> findNearbyOpenRequests(
@@ -90,11 +90,7 @@ public class RequestController {
             @RequestParam double lng,
             @RequestParam(defaultValue = "3000") double radiusMeters) {
 
-        List<Request> entities = requestService.findNearbyValidRequests(lat, lng, radiusMeters);
-        List<RequestDto> dtoList = entities.stream()
-                .map(RequestDto::fromEntity)
-                .toList();
-
+        List<RequestDto> dtoList = requestService.findNearbyValidRequests(lat, lng, radiusMeters);
         return ResponseEntity.ok(dtoList);
     }
 
@@ -108,7 +104,9 @@ public class RequestController {
         if (requestOpt.isEmpty()) {
             return ResponseEntity.badRequest().body("요청을 찾을 수 없습니다.");
         }
-        return ResponseEntity.ok(RequestDto.fromEntity(requestOpt.get()));
+        Request r = requestOpt.get();
+        int visibleCount = requestService.countVisibleStatusLogsByRequestId(r.getId());
+        return ResponseEntity.ok(RequestDto.fromEntity(r, visibleCount));
     }
 
     /**
@@ -125,9 +123,11 @@ public class RequestController {
 
         List<Request> myRequests = requestService.findByUserId(loginUser.getId());
         List<RequestDto> dtoList = myRequests.stream()
-                .map(RequestDto::fromEntity)
+                .map(r -> {
+                    int visibleCount = requestService.countVisibleStatusLogsByRequestId(r.getId());
+                    return RequestDto.fromEntity(r, visibleCount);
+                })
                 .toList();
-
         return ResponseEntity.ok(dtoList);
     }
 

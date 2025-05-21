@@ -91,8 +91,10 @@ public class RequestDto {
     // [5] 답변 관련
     // ────────────────────────────────────────
 
-    // 해당 요청에 달린 답변 갯수
+    // 전체 답변 수 (숨김 포함)
     private int answerCount;
+    // 숨김 제외한 사용자에게 보이는 수
+    private int visibleAnswerCount;
 
     // ────────────────────────────────────────
     // [6] 카테고리별 유연 필드 (12개)
@@ -161,7 +163,7 @@ public class RequestDto {
     // ────────────────────────────────────────
     // [8] Entity → DTO 변환 메서드 - DB에서 꺼낸 Request 객체를 클라이언트에게 전달 가능한 형태로 변환
     // ────────────────────────────────────────
-    public static RequestDto fromEntity(Request r) {
+    public static RequestDto fromEntity(Request r, int visibleCount) {
         return RequestDto.builder()
                 .id(r.getId())
                 .title(r.getTitle())
@@ -180,6 +182,7 @@ public class RequestDto {
                 .requesterEmail(r.getUser() != null ? r.getUser().getEmail() : null)
                 .requesterNickname(r.getUser() != null ? r.getUser().getNickname() : null)
                 .answerCount(r.getStatusLogs() != null ? r.getStatusLogs().size() : 0)
+                .visibleAnswerCount(visibleCount)
 
                 .version(r.getVersion())
 
@@ -199,4 +202,14 @@ public class RequestDto {
 
                 .build();
     }
+
+    // // [9] Entity → DTO (숨김 제외한 visibleAnswerCount 포함)
+    // // 숨김 여부 무관한 기본 answerCount만 사용하는 fromEntity
+    // public static RequestDto fromEntity(Request r) {
+    //     int visibleCount = (int) (r.getStatusLogs() == null
+    //             ? 0
+    //             : r.getStatusLogs().stream().filter(log -> !log.isHidden()).count());
+
+    //     return fromEntity(r, visibleCount); // 이미 존재하는 오버로드 메서드 호출
+    // }
 }

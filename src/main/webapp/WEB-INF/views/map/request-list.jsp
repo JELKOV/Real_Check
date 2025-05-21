@@ -102,9 +102,9 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
               const content = `
               <div style="padding:8px; font-size:13px;">
-                <strong>${"${req.title}"}</strong><br/>
-                포인트: ${"${req.point}"}pt<br/>
-                현재 답변 수: ${"${req.answerCount}"}개/3개<br/>
+                <strong>요청 제목: ${"${req.title}"}</strong><br/>
+                획득 포인트: ${"${req.point}"}pt<br/>
+                현재 답변 수: ${"${req.visibleAnswerCount}"}개/3개<br/>
                 <a href="javascript:goToDetail(${"${req.id}"})" class="btn btn-sm btn-primary mt-1">자세히 보기</a>
               </div>
             `;

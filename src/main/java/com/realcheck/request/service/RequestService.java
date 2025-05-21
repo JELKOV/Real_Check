@@ -7,6 +7,7 @@ import com.realcheck.request.dto.RequestDto;
 import com.realcheck.request.entity.Request;
 import com.realcheck.request.entity.RequestCategory;
 import com.realcheck.request.repository.RequestRepository;
+import com.realcheck.status.repository.StatusLogRepository;
 import com.realcheck.user.entity.User;
 
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,7 @@ public class RequestService {
     // ─────────────────────────────────────────────
     private final RequestRepository requestRepository;
     private final PlaceRepository placeRepository;
+    private final StatusLogRepository statusLogRepository;
     private final AllowedRequestTypeRepository allowedRequestTypeRepository;
 
     // ─────────────────────────────────────────────
@@ -181,7 +183,12 @@ public class RequestService {
                 lat, lng, radius, threshold, categoryEnum, pageable);
 
         // DTO로 변환하여 반환
-        return entities.stream().map(RequestDto::fromEntity).toList();
+        return entities.stream()
+                .map(r -> {
+                    int visibleCount = countVisibleStatusLogsByRequestId(r.getId());
+                    return RequestDto.fromEntity(r, visibleCount);
+                })
+                .toList();
     }
 
     /**
@@ -204,9 +211,26 @@ public class RequestService {
      * 장소 좌표가 존재하며 답변 수가 3개 미만인 요청 필터
      * [FIX] 3시간 이내 수정 (테스트라 48시간으로 바꿈)
      */
-    public List<Request> findNearbyValidRequests(double lat, double lng, double radiusMeters) {
+    public List<RequestDto> findNearbyValidRequests(double lat, double lng, double radiusMeters) {
         LocalDateTime timeLimit = LocalDateTime.now().minusHours(48);
-        return requestRepository.findNearbyValidRequests(lat, lng, radiusMeters, timeLimit);
+        List<Request> requests = requestRepository.findNearbyValidRequests(lat, lng, radiusMeters, timeLimit);
+        return requests.stream()
+                .map(r -> {
+                    int visibleCount = countVisibleStatusLogsByRequestId(r.getId());
+                    return RequestDto.fromEntity(r, visibleCount);
+                })
+                .toList();
+    }
+
+    /**
+     * RequestService: findNearbyValidRequests
+     * RequestService: findOpenRequests
+     * RequestController: findNearbyOpenRequests
+     * [4-2-B / 4-3-A]
+     * 숨김 처리되지 않은 상태 로그(답변) 수 조회
+     */
+    public int countVisibleStatusLogsByRequestId(Long requestId) {
+        return (int) statusLogRepository.countByRequestIdAndIsHiddenFalse(requestId);
     }
 
     /**

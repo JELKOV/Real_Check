@@ -39,6 +39,8 @@ public class StatusLogDto {
     private boolean isSelected;
     // 신고 횟수
     private int reportCount;
+    // 숨김 표시
+    private boolean isHidden;
 
     // ─────────────────────────────────────────────
     // [2] 사용자 및 위치 정보
@@ -164,6 +166,7 @@ public class StatusLogDto {
                 .isSelected(log.isSelected())
                 .imageUrl(log.getImageUrl())
                 .reportCount(log.getReportCount())
+                .isHidden(log.isHidden())
                 .userId(log.getReporter() != null ? log.getReporter().getId() : null)
                 .placeId(log.getPlace() != null ? log.getPlace().getId() : null)
                 .lat(log.getLat())

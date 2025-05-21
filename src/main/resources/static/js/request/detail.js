@@ -96,7 +96,7 @@ function renderRequestDetail(request) {
     request.placeName || request.customPlaceName || "장소 정보 없음";
   const isRequester = loginUserIdNum === request.requesterId;
   const canCloseManually =
-    isRequester && !request.closed && request.answerCount === 0;
+    isRequester && !request.closed && request.visibleAnswerCount === 0;
 
   const closedBadge = request.closed
     ? `<span class="badge bg-danger ms-2">🔒 마감</span>`
@@ -205,7 +205,7 @@ function manageAnswerFormVisibility(request) {
 
   if (request.closed) {
     disableReason = "🔒 이 요청은 마감되었습니다.";
-  } else if (request.answerCount >= 3) {
+  } else if (request.visibleAnswerCount >= 3) {
     disableReason = "🚫 최대 답변 수(3개)에 도달했습니다.";
   } else if (loginUserIdNum === request.requesterId) {
     disableReason = "🙋 요청 작성자는 답변을 등록할 수 없습니다.";
@@ -342,6 +342,7 @@ function loadAnswerList(requestId) {
     const hasSelected = answers.some((a) => a.selected);
 
     answers
+      .filter((answer) => !answer.hidden)
       .sort((a, b) => (b.selected ? 1 : 0) - (a.selected ? 1 : 0))
       .forEach((answer) => {
         const row = generateAnswerRow(answer, hasSelected);
@@ -361,8 +362,8 @@ function loadAnswerList(requestId) {
 }
 
 // [3-1-1] 답변 자동 마감 안내
-function updateAutoCloseNotice(answerCount) {
-  if (answerCount > 0) {
+function updateAutoCloseNotice(visibleAnswerCount) {
+  if (visibleAnswerCount > 0) {
     $("#autoCloseNotice").html(`
       <div class="alert alert-warning mt-2">
         ⚠️ 답변이 등록된 이후 3시간 내에 채택되지 않으면 자동 마감되고 포인트가 답변자들에게 분배됩니다.

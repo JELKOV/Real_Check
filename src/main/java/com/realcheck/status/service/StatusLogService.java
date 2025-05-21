@@ -149,7 +149,7 @@ public class StatusLogService {
         }
 
         // (4) 최대 답변 수 확인 (3개)
-        if (statusLogRepository.countByRequestId(requestId) >= 3) {
+        if (statusLogRepository.countByRequestIdAndIsHiddenFalse(requestId) >= 3) {
             throw new IllegalStateException("이미 최대 답변 수(3개)에 도달했습니다.");
         }
 
