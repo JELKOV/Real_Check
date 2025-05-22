@@ -4,6 +4,7 @@ import com.realcheck.status.dto.StatusLogDto;
 import com.realcheck.status.entity.StatusLog;
 import com.realcheck.status.entity.StatusType;
 import com.realcheck.status.repository.StatusLogRepository;
+import com.realcheck.common.dto.PageResult;
 import com.realcheck.place.entity.Place;
 import com.realcheck.place.repository.PlaceRepository;
 import com.realcheck.point.entity.PointType;
@@ -13,7 +14,10 @@ import com.realcheck.user.entity.User;
 import com.realcheck.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
-
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -291,13 +295,58 @@ public class StatusLogService {
 
     /**
      * StatusLogController: getMyStatusLogs
-     * [3-3] 사용자별 전체 로그 답변 상태 조회
+     * [3-3] 사용자별 전체 상태 로그 목록 조회 (마이페이지용)
+     *
+     * 주요 기능:
+     * - 세션 사용자 ID 기반으로 본인이 작성한 상태 로그만 조회
+     * - 필터 조건:
+     * - type: ANSWER, FREE_SHARE, REGISTER 중 하나 (optional)
+     * - hideHidden: 신고로 숨김 처리된 로그 제외 여부 (optional)
+     * - page: 현재 페이지 번호 (1부터 시작)
+     * - size: 페이지당 항목 수
+     *
+     * 동작 방식:
+     * - 4가지 조건 조합에 따라 repository 메서드 동적으로 선택
+     * - type 값이 유효하지 않으면 무시됨 (IllegalArgumentException catch)
+     * - 정렬 기준은 createdAt 내림차순 (최신순)
      */
-    public List<StatusLogDto> getLogsByUser(Long userId) {
-        return statusLogRepository.findByReporterIdOrderByCreatedAtDesc(userId)
-                .stream()
+    public PageResult<StatusLogDto> getLogsByUser(
+            Long userId, int page, int size, String type, boolean hideHidden) {
+
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        // Enum 변환 시 유효하지 않으면 null
+        StatusType statusType = null;
+        try {
+            if (type != null && !type.isBlank()) {
+                statusType = StatusType.valueOf(type);
+            }
+        } catch (IllegalArgumentException e) {
+            // 무시하고 statusType은 null 유지
+        }
+
+        Page<StatusLog> pageResult;
+
+        // 동적 조건 조합
+        if (statusType != null && hideHidden) {
+            pageResult = statusLogRepository
+                    .findByReporter_IdAndStatusTypeAndIsHiddenFalse(userId, statusType, pageable);
+        } else if (statusType != null) {
+            pageResult = statusLogRepository
+                    .findByReporter_IdAndStatusType(userId, statusType, pageable);
+        } else if (hideHidden) {
+            pageResult = statusLogRepository
+                    .findByReporter_IdAndIsHiddenFalse(userId, pageable);
+        } else {
+            pageResult = statusLogRepository
+                    .findByReporter_Id(userId, pageable);
+        }
+
+        List<StatusLogDto> dtoList = pageResult.getContent().stream()
                 .map(StatusLogDto::fromEntity)
                 .toList();
+
+        return new PageResult<>(dtoList, pageResult.getTotalPages(), page);
     }
 
     /**

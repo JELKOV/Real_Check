@@ -19,35 +19,56 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
     <div class="container mt-5" style="max-width: 800px">
       <h3 class="text-center mb-4">내가 공유한 정보</h3>
-      <table class="table table-striped text-center align-middle">
-        <thead>
-          <tr>
-            <th>번호</th>
-            <th>내용</th>
-            <th>대기 인원</th>
-            <th>이미지</th>
-            <th>장소 ID</th>
-            <th>등록일</th>
-            <th>수정/삭제</th>
-          </tr>
-        </thead>
-        <tbody id="logsBody"></tbody>
-      </table>
+
+      <!-- 필터 영역 추가 (다음 스텝에서 활용) -->
+      <div class="d-flex justify-content-between mb-3">
+        <select id="statusTypeFilter" class="form-select w-50">
+          <option value="">전체</option>
+          <option value="ANSWER">정보 요청에 의한 답변</option>
+          <option value="FREE_SHARE">자발적 정보 공유</option>
+        </select>
+
+        <div class="form-check">
+          <input
+            class="form-check-input"
+            type="checkbox"
+            id="hideHiddenLogs"
+            checked
+          />
+          <label class="form-check-label" for="hideHiddenLogs"
+            >신고된 답변 제외</label
+          >
+        </div>
+      </div>
+
+      <!-- 카드 기반 로그 출력 영역 -->
+      <div id="logsBody" class="row gy-3"></div>
+
+      <nav class="mt-4">
+        <ul class="pagination justify-content-center" id="pagination"></ul>
+      </nav>
     </div>
 
     <%@ include file="../common/footer.jsp" %>
 
-    <!-- 수정 모달 (hidden) -->
-    <div class="modal" tabindex="-1" id="editModal">
+    <!-- 수정 모달 -->
+    <div
+      class="modal fade"
+      id="editModal"
+      tabindex="-1"
+      aria-labelledby="editModalLabel"
+      aria-hidden="true"
+    >
       <div class="modal-dialog">
         <div class="modal-content">
           <form id="editForm">
             <div class="modal-header">
-              <h5 class="modal-title">상태 수정</h5>
+              <h5 class="modal-title" id="editModalLabel">상태 로그 수정</h5>
               <button
                 type="button"
                 class="btn-close"
                 data-bs-dismiss="modal"
+                aria-label="닫기"
               ></button>
             </div>
             <div class="modal-body">
@@ -60,15 +81,10 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
                   required
                 />
               </div>
-              <div class="mb-3">
-                <label>대기 인원</label>
-                <input
-                  type="number"
-                  id="editWaitCount"
-                  class="form-control"
-                  required
-                />
-              </div>
+
+              <!-- 카테고리별 유동 필드 삽입 영역 -->
+              <div id="dynamicFields"></div>
+
               <div class="mb-3">
                 <label>이미지 업로드</label><br />
                 <button
@@ -88,7 +104,6 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
               </div>
             </div>
             <div class="modal-footer">
-              <button type="submit" class="btn btn-primary">저장</button>
               <button
                 type="button"
                 class="btn btn-secondary"
@@ -96,160 +111,12 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
               >
                 닫기
               </button>
+              <button type="submit" class="btn btn-primary">저장</button>
             </div>
           </form>
         </div>
       </div>
     </div>
-
-    <script>
-      let editingId = null;
-      let uploadedImageUrl = null;
-
-      $(document).ready(function () {
-        loadMyLogs();
-
-        // 내 상태 로그 불러오기
-        function loadMyLogs() {
-          $.getJSON("/api/status/my", function (list) {
-            const $tbody = $("#logsBody");
-            $tbody.empty();
-
-            list.forEach((log, index) => {
-              const imageHtml = log.imageUrl
-                ? `<img src="${"${log.imageUrl}"}" alt="status image" style="max-width:60px; max-height:60px;" />`
-                : "-";
-
-              const formattedDate = new Date(log.createdAt).toLocaleString(
-                "ko-KR",
-                {
-                  year: "numeric",
-                  month: "2-digit",
-                  day: "2-digit",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                }
-              );
-
-              const row = `
-                <tr data-id=${"${log.id}"}>
-                  <td>${"${index + 1}"}</td>
-                  <td>${"${log.content}"}</td>
-                  <td>${"${log.waitCount}"}</td>
-                  <td>${"${imageHtml}"}</td>
-                  <td>${"${log.placeId}"}</td>
-                  <td>${"${formattedDate}"}</td>
-                  <td>
-                    <button class="btn btn-sm btn-primary btn-edit me-2">수정</button>
-                    <button class="btn btn-sm btn-danger btn-delete">삭제</button>
-                  </td>
-                </tr>
-              `;
-
-              $tbody.append(row);
-            });
-          });
-        }
-
-        // 수정 버튼 클릭
-        $("#logsBody").on("click", ".btn-edit", function () {
-          const $tr = $(this).closest("tr");
-          editingId = $tr.data("id");
-          const content = $tr.find("td:eq(1)").text();
-          const waitCount = $tr.find("td:eq(2)").text();
-
-          $("#editContent").val(content);
-          $("#editWaitCount").val(waitCount);
-          $("#uploadedImage").empty();
-          uploadedImageUrl = null;
-
-          const modal = new bootstrap.Modal(
-            document.getElementById("editModal")
-          );
-          modal.show();
-        });
-
-        // 이미지 업로드 버튼 클릭 시
-        $("#uploadBtn").on("click", function () {
-          $("#fileInput").click();
-        });
-
-        // 파일 선택하면 서버 업로드
-        $("#fileInput").on("change", function () {
-          const file = this.files[0];
-          if (!file) return;
-
-          const formData = new FormData();
-          formData.append("file", file);
-
-          $.ajax({
-            url: "/api/upload",
-            method: "POST",
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function (url) {
-              alert("업로드 성공! URL: " + url);
-              uploadedImageUrl = url;
-              $("#uploadedImage").html(
-                `<img src="${"${url}"}" style="max-width:100px;"/>`
-              );
-            },
-            error: function (xhr) {
-              alert("업로드 실패: " + xhr.responseText);
-            },
-          });
-        });
-
-        // 수정 완료 버튼 클릭
-        $("#editForm").on("submit", function (e) {
-          e.preventDefault();
-
-          if (!editingId) {
-            alert("수정할 항목이 없습니다.");
-            return;
-          }
-
-          const updatedData = {
-            content: $("#editContent").val(),
-            waitCount: parseInt($("#editWaitCount").val()),
-            imageUrl: uploadedImageUrl,
-          };
-
-          $.ajax({
-            url: `/api/status/${"${editingId}"}`,
-            method: "PUT",
-            contentType: "application/json",
-            data: JSON.stringify(updatedData),
-            success: function () {
-              alert("수정 완료");
-              location.reload();
-            },
-            error: function (xhr) {
-              alert("수정 실패: " + xhr.responseText);
-            },
-          });
-        });
-
-        // 삭제 버튼 클릭
-        $("#logsBody").on("click", ".btn-delete", function () {
-          const $tr = $(this).closest("tr");
-          const id = $tr.data("id");
-
-          if (confirm("정말 삭제하시겠습니까?")) {
-            $.ajax({
-              url: `/api/status/${"${id}"}`,
-              method: "DELETE",
-              success: function () {
-                $tr.remove();
-              },
-              error: function (xhr) {
-                alert("삭제 실패: " + xhr.responseText);
-              },
-            });
-          }
-        });
-      });
-    </script>
+    <script src="/js/status/my-logs.js"></script>
   </body>
 </html>

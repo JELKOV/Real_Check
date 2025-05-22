@@ -50,13 +50,13 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
   /**
    * RequestService: findOpenRequestsWithLocation
    * [2-1] 위치 기반, 카테고리 필터링된 미마감 요청 조회
-   * - 미마감
-   * - 답변 3개 미만
-   * - 위치(lat/lng) 존재
-   * - 생성 시간 기준 조회
-   * - 카테고리 및 반경 필터
-   * - 페이지네이션
-   * - 지도 기반 필터링 기능에서 사용됨
+   * 미마감
+   * 답변 3개 미만
+   * 위치(lat/lng) 존재
+   * 생성 시간 기준 조회
+   * 카테고리 및 반경 필터
+   * 페이지네이션
+   * 지도 기반 필터링 기능에서 사용됨
    */
   @Query("""
       SELECT r
@@ -84,8 +84,8 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
   /**
    * RequestService: findNearbyValidRequests
    * [2-2] 최신 요청 조회 (현재 위치 기준 / 반경 내 응답 부족 요청 조회)
-   * - 장소 정보가 있는 요청만 대상으로 함
-   * - 위도/경도 null 방지 포함
+   * 장소 정보가 있는 요청만 대상으로 함
+   * 위도/경도 null 방지 포함
    */
   @Query("""
       SELECT r FROM Request r
@@ -100,21 +100,28 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
       @Param("radius") double radius,
       @Param("timeLimit") LocalDateTime timeLimit);
 
+
   // ─────────────────────────────────────────────
   // [3] 자동 마감 관련 메소드
   // ─────────────────────────────────────────────
 
   /**
    * RequestService: findOpenRequestsWithAnswers
-   * [3-1] 자동 마감 대상 요청 조회
-   * - 마감되지 않았고 답변이 1개 이상 존재
-   * - 생성된 지 일정 시간이 지난 요청
+   * [3-1] 자동 마감 대상 쿼리
+   * 3시간 이상 지난 요청 중
+   * 마감되지 않았으며
+   * 숨겨지지 않은(StatusLog.isHidden = false) 답변이 1개 이상 존재하는 요청만 조회
    */
   @Query("""
-      SELECT r FROM Request r
-      WHERE r.isClosed = false
-        AND r.createdAt <= :threshold
-        AND SIZE(r.statusLogs) > 0
+          SELECT r
+          FROM Request r
+          WHERE r.isClosed = false
+            AND r.createdAt <= :threshold
+            AND EXISTS (
+                SELECT 1 FROM StatusLog s
+                WHERE s.request = r
+                  AND s.isHidden = false
+            )
       """)
-  List<Request> findAllByIsClosedFalseAndCreatedAtBefore(@Param("threshold") LocalDateTime threshold);
+  List<Request> findAllVisibleStatusLogsAfterThreshold(@Param("threshold") LocalDateTime threshold);
 }

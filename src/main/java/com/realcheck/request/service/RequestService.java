@@ -135,11 +135,14 @@ public class RequestService {
     /**
      * AutoCloseRequestService: autoCloseExpiredRequests
      * [3-2] 자동 마감 대상 조회
-     * 3시간 기준으로 자동 마감에 해당되는 요청글이 있는 지 조회
+     * 조건:
+     * 1. 마감되지 않았고 (isClosed = false)
+     * 2. 생성 시점이 기준(threshold)보다 이전이며
+     * 3. 숨김 처리되지 않은 답변이 1개 이상 존재하는 요청
      */
     @Transactional(readOnly = true)
     public List<Request> findOpenRequestsWithAnswers(LocalDateTime threshold) {
-        return requestRepository.findAllByIsClosedFalseAndCreatedAtBefore(threshold);
+        return requestRepository.findAllVisibleStatusLogsAfterThreshold(threshold);
     }
 
     /**

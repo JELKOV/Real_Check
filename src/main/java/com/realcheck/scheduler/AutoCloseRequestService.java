@@ -31,6 +31,10 @@ public class AutoCloseRequestService {
         LocalDateTime threshold = LocalDateTime.now().minusHours(3);
         List<Request> openRequests = requestService.findOpenRequestsWithAnswers(threshold);
 
+        // [디버깅용 로그 추가]
+        System.out.println("[AutoClose] " + LocalDateTime.now() +
+                " - 자동 마감 대상 요청 수: " + openRequests.size());
+
         for (Request request : openRequests) {
             if (request.isClosed() || request.getStatusLogs().stream().anyMatch(StatusLog::isSelected)) {
                 continue; // 이미 마감되거나 채택된 답변이 있는 경우 제외
@@ -39,11 +43,15 @@ public class AutoCloseRequestService {
             request.setClosed(true); // 마감 처리
             try {
                 requestService.save(request);
+
+                // [디버깅용 로그]
+                System.out.println("[AutoClose] 요청 ID " + request.getId() + " 마감 성공");
+
                 // 답변자에게 포인트 분배
                 distributePointsToAnswerers(request);
             } catch (ObjectOptimisticLockingFailureException e) {
-                // 충돌 무시하고 넘어감 (다른 프로세스가 이미 처리했을 수 있음)
-                System.out.println("요청 ID " + request.getId() + " 마감 중 충돌 발생. 다른 프로세스에서 이미 마감했을 수 있음.");
+                System.out.println("[AutoClose] 요청 ID " + request.getId() +
+                        " 마감 중 충돌 발생 - 다른 프로세스에서 처리했을 수 있음");
             }
         }
     }
@@ -55,8 +63,11 @@ public class AutoCloseRequestService {
      */
     @Transactional
     private void distributePointsToAnswerers(Request request) {
-        List<StatusLog> answers = request.getStatusLogs();
-        int answerCount = answers.size();
+        List<StatusLog> visibleAnswers = request.getStatusLogs().stream()
+                .filter(log -> !log.isHidden())
+                .toList();
+
+        int answerCount = visibleAnswers.size();
         if (answerCount == 0)
             return;
 
@@ -70,7 +81,7 @@ public class AutoCloseRequestService {
             return;
         }
 
-        for (StatusLog answer : answers) {
+        for (StatusLog answer : visibleAnswers) {
             pointService.givePoint(answer.getReporter(), pointPerUser, "자동 마감 포인트 분배", PointType.EARN);
         }
     }

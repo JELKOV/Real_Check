@@ -1,5 +1,6 @@
 package com.realcheck.status.controller;
 
+import com.realcheck.common.dto.PageResult;
 import com.realcheck.status.dto.StatusLogDto;
 import com.realcheck.status.service.StatusLogService;
 import com.realcheck.user.dto.UserDto;
@@ -98,13 +99,21 @@ public class StatusLogController {
      * 세션 사용자 ID 기반으로 내 기록만 조회
      */
     @GetMapping("/my")
-    public ResponseEntity<List<StatusLogDto>> getMyStatusLogs(HttpSession session) {
+    public ResponseEntity<PageResult<StatusLogDto>> getMyStatusLogs(
+            HttpSession session,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String type, // "ANSWER", "FREE_SHARE", ...
+            @RequestParam(defaultValue = "false") boolean hideHidden // true면 숨김 제외
+    ) {
         UserDto loginUser = (UserDto) session.getAttribute("loginUser");
         if (loginUser == null) {
-            return ResponseEntity.status(401).build(); // 로그인 안됨
+            return ResponseEntity.status(401).build(); // Unauthorized
         }
 
-        return ResponseEntity.ok(statusLogService.getLogsByUser(loginUser.getId()));
+        PageResult<StatusLogDto> result = statusLogService.getLogsByUser(
+                loginUser.getId(), page, size, type, hideHidden);
+        return ResponseEntity.ok(result);
     }
 
     /**

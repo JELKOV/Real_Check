@@ -53,6 +53,10 @@ public class StatusLogDto {
 
     // 공식 장소 ID (null 가능)
     private Long placeId;
+    // 장소 이름
+    private String placeName;
+    // 사용자 지정 장소 이름
+    private String customPlaceName;
     // 장소 위도
     private Double lat;
     // 장소 경도
@@ -169,6 +173,11 @@ public class StatusLogDto {
                 .isHidden(log.isHidden())
                 .userId(log.getReporter() != null ? log.getReporter().getId() : null)
                 .placeId(log.getPlace() != null ? log.getPlace().getId() : null)
+                .placeName(log.getPlace() != null ? log.getPlace().getName() : null)
+                .customPlaceName(
+                        log.getPlace() == null && log.getRequest() != null
+                                ? log.getRequest().getCustomPlaceName()
+                                : null)
                 .lat(log.getLat())
                 .lng(log.getLng())
                 .createdAt(log.getCreatedAt())

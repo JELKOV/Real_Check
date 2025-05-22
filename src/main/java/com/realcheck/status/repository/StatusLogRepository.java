@@ -2,9 +2,13 @@ package com.realcheck.status.repository;
 
 import com.realcheck.admin.dto.MonthlyStatDto;
 import com.realcheck.status.entity.StatusLog;
+import com.realcheck.status.entity.StatusType;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,10 +26,32 @@ public interface StatusLogRepository extends JpaRepository<StatusLog, Long> {
 
         /**
          * StatusLogService: getLogsByUser
-         * [1-1] 내가 작성한 모든 StatusLog 조회 (숨김 여부 관계 없음)
-         * 마이페이지나 관리자 페이지에서 사용
+         * [1-1-a] 내가 작성한 모든 StatusLog 조회 (숨김 여부 관계 없음)
+         * 마이페이지 기본 조회용
+         * 정렬 포함 (Pageable의 Sort)
          */
-        List<StatusLog> findByReporterIdOrderByCreatedAtDesc(Long userId);
+        Page<StatusLog> findByReporter_Id(Long userId, Pageable pageable);
+
+        /**
+         * StatusLogService: getLogsByUser
+         * [1-1-b] 특정 타입(StatusType)의 로그만 조회
+         * ex) 자발 공유만, 요청 답변만
+         */
+        Page<StatusLog> findByReporter_IdAndStatusType(Long userId, StatusType type, Pageable pageable);
+
+        /**
+         * StatusLogService: getLogsByUser
+         * [1-1-c] 숨김처리 되지 않은 로그만 조회
+         * "신고된 답변 제외" 필터 적용 시 사용
+         */
+        Page<StatusLog> findByReporter_IdAndIsHiddenFalse(Long userId, Pageable pageable);
+
+        /**
+         * StatusLogService: getLogsByUser
+         * [1-1-d] 특정 타입 + 숨김 제외 조건을 모두 만족하는 로그 조회
+         * 자발공유 중 신고되지 않은 것만
+         */
+        Page<StatusLog> findByReporter_IdAndStatusTypeAndIsHiddenFalse(Long userId, StatusType type, Pageable pageable);
 
         /**
          * StatusLogService: registerInternal
@@ -44,12 +70,6 @@ public interface StatusLogRepository extends JpaRepository<StatusLog, Long> {
          * [1-4] 숨김 처리된 상태 로그 조회 - 관리자용 [미사용]
          */
         List<StatusLog> findByIsHiddenTrue();
-
-        /**
-         * [1-5] 내가 등록한 상태 로그 중 숨김 처리되지 않은 로그만 조회 [미사용]
-         * 마이 로그 페이지에서 공개 게시물만 표시
-         */
-        List<StatusLog> findByReporterIdAndIsHiddenFalseOrderByCreatedAtDesc(Long userId);
 
         // ─────────────────────────────────────────────
         // [2] 장소 기반 조건 조회

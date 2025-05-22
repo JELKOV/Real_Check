@@ -202,14 +202,4 @@ public class RequestDto {
 
                 .build();
     }
-
-    // // [9] Entity → DTO (숨김 제외한 visibleAnswerCount 포함)
-    // // 숨김 여부 무관한 기본 answerCount만 사용하는 fromEntity
-    // public static RequestDto fromEntity(Request r) {
-    //     int visibleCount = (int) (r.getStatusLogs() == null
-    //             ? 0
-    //             : r.getStatusLogs().stream().filter(log -> !log.isHidden()).count());
-
-    //     return fromEntity(r, visibleCount); // 이미 존재하는 오버로드 메서드 호출
-    // }
 }

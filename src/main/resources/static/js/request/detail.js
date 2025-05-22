@@ -1,6 +1,7 @@
 let loginUserIdNum = null;
 let requestId = null;
 
+// 카테고리 코드 → 라벨 매핑 (배지 및 필터용)
 const categoryLabelMap = {
   PARKING: "🅿️ 주차 가능 여부",
   WAITING_STATUS: "⏳ 대기 상태",
@@ -384,7 +385,7 @@ function generateAnswerRow(answer, hasSelected) {
     ? `<span class="badge bg-success ms-2">✅ 채택됨</span>`
     : "";
 
-  // ✅ 신고 수 뱃지
+  // 신고 수 뱃지
   const reportBadge =
     answer.reportCount > 0
       ? `<span class="badge bg-danger ms-2">🚨 ${answer.reportCount}회 신고</span>`
