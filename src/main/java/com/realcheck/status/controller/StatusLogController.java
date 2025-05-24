@@ -32,8 +32,8 @@ public class StatusLogController {
     // ─────────────────────────────────────────────
 
     /**
-     * [1-1] 공식 장소 상태 등록 API (REGISTER)
-     * 장소 소유자나 관리자가 직접 상태 등록
+     * [1-1] 공식 장소 상태 등록 API (REGISTER) [미완성]
+     * - 장소 소유자나 관리자가 직접 상태 등록
      */
     @PostMapping
     public ResponseEntity<String> register(@RequestBody StatusLogDto dto, HttpSession session) {
@@ -49,9 +49,9 @@ public class StatusLogController {
     }
 
     /**
-     * [1-2] 자발적 공유 등록 API (FREE_SHARE)
-     * 로그인한 사용자가 장소 상태를 자유롭게 공유
-     * StatusLog 타입: FREE_SHARE
+     * [1-2] 자발적 공유 등록 API (FREE_SHARE) [미완성]
+     * - 로그인한 사용자가 장소 상태를 자유롭게 공유
+     * - StatusLog 타입: FREE_SHARE
      */
     @PostMapping("/free-share")
     public ResponseEntity<?> registerFreeShare(@RequestBody StatusLogDto dto, HttpSession session) {
@@ -72,8 +72,9 @@ public class StatusLogController {
     // ─────────────────────────────────────────────
 
     /**
-     * [2-1] 장소별 최근 3시간 이내 상태 조회
-     * 해당 장소 ID로 3시간 이내의 최신 상태 목록 조회
+     * [2-1] 장소별 최근 3시간 이내 상태 조회 [미사용]
+     * - 이후 요청조회 페이지에서 사용 // AJAX 용도
+     * - 해당 장소 ID로 3시간 이내의 최신 상태 목록 조회
      */
     @GetMapping("/place/{placeId}")
     public ResponseEntity<List<StatusLogDto>> getByPlace(@PathVariable Long placeId) {
@@ -81,8 +82,9 @@ public class StatusLogController {
     }
 
     /**
-     * [2-2] 특정 장소의 최신 상태 로그 1건
-     * 숨김 처리되지 않은 로그 중 최신 1개만 반환
+     * [2-2] 특정 장소의 최신 상태 로그 1건 [미사용]
+     * - 이후 요청조회 페이지에서 사용 // AJAX 용도
+     * - 숨김 처리되지 않은 로그 중 최신 1개만 반환
      */
     @GetMapping("/latest")
     public ResponseEntity<StatusLogDto> getLatestStatusLog(@RequestParam Long placeId) {
@@ -94,9 +96,9 @@ public class StatusLogController {
     }
 
     /**
-     * page: status/my-logs.jsp
      * [2-3] 내가 등록한 상태 로그 목록 조회
-     * 세션 사용자 ID 기반으로 내 기록만 조회
+     * page: status/my-logs.jsp
+     * - 세션 사용자 ID 기반으로 내 기록만 조회
      */
     @GetMapping("/my")
     public ResponseEntity<PageResult<StatusLogDto>> getMyStatusLogs(
@@ -117,8 +119,8 @@ public class StatusLogController {
     }
 
     /**
-     * page: request/detail.jsp
      * [2-4] 요청 ID로 연결된 답변 목록 조회 API
+     * - page: request/detail.jsp
      */
     @GetMapping("/by-request/{requestId}")
     public ResponseEntity<List<StatusLogDto>> getAnswersByRequest(@PathVariable Long requestId) {
@@ -127,9 +129,9 @@ public class StatusLogController {
     }
 
     /**
+     * [2-5] 현재 위치 기반 근처 상태 로그 조회 API [CHECK]
      * page: map/nearby.jsp
-     * [2-5] 현재 위치 기반 근처 상태 로그 조회 API
-     * 위도, 경도, 반경(m)을 기준으로 3시간 이내 상태 로그 조회
+     * - 위도, 경도, 반경(m)을 기준으로 3시간 이내 상태 로그 조회
      */
     @GetMapping("/nearby")
     public ResponseEntity<List<StatusLogDto>> getNearbyStatusLogs(
@@ -146,9 +148,10 @@ public class StatusLogController {
     // ─────────────────────────────────────────────
 
     /**
-     * page: request/detail.jsp
      * [3-1] 상태 로그 수정 API
-     * 로그인한 사용자가 본인이 작성한 상태 로그를 수정
+     * page: request/detail.jsp
+     * page: request/my-logs.jsp
+     * - 로그인한 사용자가 본인이 작성한 상태 로그를 수정
      */
     @PutMapping("/{id}")
     public ResponseEntity<String> updateStatusLog(
@@ -173,10 +176,10 @@ public class StatusLogController {
     }
 
     /**
-     * page: request/detail.jsp
      * [3-2] 요청 기반 답변 채택 API
-     * 요청 작성자만 자신이 받은 답변 중 하나를 채택 가능
-     * 해당 StatusLog에 isSelected = true, 요청 마감 처리
+     * page: request/detail.jsp
+     * - 요청 작성자만 자신이 받은 답변 중 하나를 채택 가능
+     * - 해당 StatusLog에 isSelected = true, 요청 마감 처리
      */
     @PostMapping("/select/{statusLogId}")
     public ResponseEntity<?> selectAnswer(@PathVariable Long statusLogId, HttpSession session) {
@@ -200,9 +203,10 @@ public class StatusLogController {
     // ─────────────────────────────────────────────
 
     /**
-     * page: request/detail.jsp
      * [4-1] 상태 로그 삭제 API
-     * 로그인한 사용자가 본인이 작성한 로그만 삭제 가능
+     * page: request/detail.jsp
+     * page: request/my-logs.jsp
+     * - 로그인한 사용자가 본인이 작성한 로그만 삭제 가능
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteStatusLog(
@@ -228,8 +232,7 @@ public class StatusLogController {
     // ────────────────────────────────────────
 
     /**
-     * [5-1] 관리자 전용 전체 StatusLog 목록 조회 API
-     * URL: GET /api/status/all
+     * [5-1] 관리자 전용 전체 StatusLog 목록 조회 API [미사용]
      * 조건: 로그인한 사용자가 관리자일 경우에만 전체 로그 반환
      * 반환: 모든 상태 로그 리스트 (StatusLogDto)
      */

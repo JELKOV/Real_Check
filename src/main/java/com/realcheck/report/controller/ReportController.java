@@ -10,7 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * ReportController
+ * ReportController (ALL DONE)
  * - 사용자 신고 요청을 처리하는 REST 컨트롤러
  */
 @RestController // REST API 전용 컨틀롤러임을 명시함
@@ -24,11 +24,11 @@ public class ReportController {
     // ─────────────────────────────────────────────
 
     /**
-     * page: user/detail.jsp
      * [1-1] 신고 등록 API
-     * 로그인한 사용자가 상태 로그(StatusLog)를 신고할 수 있도록 처리
-     * 신고 내용에는 대상 로그 ID와 사유가 포함됨
-     * 로그인하지 않은 경우 401 응답 반환
+     * page: user/detail.jsp
+     * - 로그인한 사용자가 상태 로그(StatusLog)를 신고할 수 있도록 처리
+     * - 신고 내용에는 대상 로그 ID와 사유가 포함됨
+     * - 로그인하지 않은 경우 401 응답 반환
      */
     @PostMapping
     public ResponseEntity<String> report(@RequestBody ReportDto dto, HttpSession session) {
@@ -50,10 +50,10 @@ public class ReportController {
     }
 
     /**
-     * page: user/detail.jsp
      * [1-2] 신고 취소 처리
-     * 로그인 사용자가 본인이 한 신고를 취소
-     * 신고 이력이 없거나 본인이 아닌 경우 400 응답
+     * page: user/detail.jsp
+     * - 로그인 사용자가 본인이 한 신고를 취소
+     * - 신고 이력이 없거나 본인이 아닌 경우 400 응답
      */
     @DeleteMapping
     public ResponseEntity<String> cancelReport(@RequestParam Long statusLogId, HttpSession session) {
@@ -73,9 +73,9 @@ public class ReportController {
     }
 
     /**
-     * page: user/detail.jsp
      * [1-3] 로그인 사용자가 특정 상태 로그에 신고했는지 확인
-     * 프론트에서 UI 버튼 상태 결정 시 사용
+     * page: user/detail.jsp
+     * - 프론트에서 UI 버튼 상태 결정 시 사용
      */
     @GetMapping("/check")
     public ResponseEntity<Boolean> checkReported(

@@ -178,13 +178,22 @@ function selectPlace(item) {
   $("#placeSearch").val(placeName);
 }
 
-// [11] 장소 세부 정보 로드
+// TODO: 고치기 recentINfo
+// [11] 장소 세부 정보 로드 
 function loadPlaceDetails(placeId) {
   $.get(`/api/place/${placeId}/details`, function (data) {
     $("#infoSection").show();
     $("#infoAddress").text(data.address || "주소 정보 없음");
     $("#infoRecent").text(data.recentInfo || "최근 정보 없음");
-    $("#infoLink").attr("href", data.communityLink).text("커뮤니티 페이지");
+    // 커뮤니티 링크 설정
+    if (data.communityLink) {
+      $("#infoLink")
+        .attr("href", data.communityLink)
+        .attr("target", "_blank") // 새 창으로 열기 (선택)
+        .text("커뮤니티 페이지");
+    } else {
+      $("#infoLink").hide();
+    }
 
     // 카테고리 필터링 적용
     if (data.allowedRequestTypes) {

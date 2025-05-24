@@ -22,7 +22,7 @@ public class ReportDto {
     private Long statusLogId;
     // 신고 횟수
     private int reportCount;
-
+    // 신고 한 시각
     private LocalDateTime createdAt;
 
     /**

@@ -139,8 +139,14 @@ function renderLog(log) {
             </div>
 
             <div class="mt-3 text-end">
-            <button class="btn btn-sm btn-primary btn-edit me-2">수정</button>
-            <button class="btn btn-sm btn-danger btn-delete">삭제</button>
+                ${
+                    log.selected
+                    ? `<span class="text-muted small">✅ 채택된 답변은 수정/삭제 불가</span>`
+                    : `
+                    <button class="btn btn-sm btn-primary btn-edit me-2">수정</button>
+                    <button class="btn btn-sm btn-danger btn-delete">삭제</button>
+                    `
+                }
             </div>
         </div>
         </div>

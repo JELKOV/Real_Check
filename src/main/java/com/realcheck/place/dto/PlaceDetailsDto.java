@@ -1,6 +1,5 @@
 package com.realcheck.place.dto;
 
-import com.realcheck.place.entity.Place;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -42,35 +41,13 @@ public class PlaceDetailsDto {
 
     // 최근 정보 (업데이트된 상태나 공지)
     private String recentInfo;
-    // 커뮤니티 링크 (외부 링크)
+    // 커뮤니티 페이지 링크 (내부 주소로 자동 생성됨)
     private String communityLink;
 
     // ─────────────────────────────────────────────
     // [3] 허용된 요청 타입 (공식 장소만)
     // ─────────────────────────────────────────────
-    
+
     // 허용된 요청 타입 목록 (Set<String>)
     private Set<String> allowedRequestTypes;
-
-    // ─────────────────────────────────────────────
-    // [4] Entity → DTO 변환 메서드
-    // ─────────────────────────────────────────────
-
-    /**
-     * Entity → DetailsDTO 변환
-     * Place 엔티티에서 상세 정보를 추출하여 DTO로 변환
-     * 허용된 요청 타입 (Set<String>) 포함
-     */
-    public static PlaceDetailsDto fromEntity(Place place, Set<String> allowedRequestTypes) {
-        return new PlaceDetailsDto(
-                place.getId(),
-                place.getName(),
-                place.getAddress(),
-                place.getLat(),
-                place.getLng(),
-                place.isApproved(),
-                place.getRecentInfo(),
-                place.getCommunityLink(),
-                allowedRequestTypes);
-    }
 }

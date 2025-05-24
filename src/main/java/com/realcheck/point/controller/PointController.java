@@ -27,8 +27,8 @@ public class PointController {
 
     /**
      * [1-1] 내 포인트 조회 API [미사용]
-     * 로그인된 사용자의 포인트 지급 내역을 반환
-     * 로그인 정보는 세션에서 확인
+     * - 로그인된 사용자의 포인트 지급 내역을 반환
+     * - 로그인 정보는 세션에서 확인
      */
     @GetMapping("/my")
     public ResponseEntity<List<PointDto>> getMyPoints(HttpSession session) {

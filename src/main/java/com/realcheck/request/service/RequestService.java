@@ -32,23 +32,20 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class RequestService {
 
-    // ─────────────────────────────────────────────
-    // [1] Repository 의존성 주입
-    // ─────────────────────────────────────────────
     private final RequestRepository requestRepository;
     private final PlaceRepository placeRepository;
     private final StatusLogRepository statusLogRepository;
     private final AllowedRequestTypeRepository allowedRequestTypeRepository;
 
     // ─────────────────────────────────────────────
-    // [2] 요청 등록 (Request 등록 로직)
+    // [1] 요청 등록 (Request 등록 로직)
     // ─────────────────────────────────────────────
 
     /**
+     * [1-1] 요청 등록
      * RequestController: createRequest
-     * [2-1] 요청 등록
-     * 유효성 검사
-     * 공식 장소 타입 검증
+     * - 유효성 검사
+     * - 공식 장소 타입 검증
      */
     @Transactional
     public Request createRequest(RequestDto dto, User user) {
@@ -74,37 +71,13 @@ public class RequestService {
         return requestRepository.save(request);
     }
 
-    // [2-1-A] 기본 요청 유효성 검사
-    private void validateRequestDto(RequestDto dto) {
-        if (dto.getCategory() == null) {
-            throw new IllegalArgumentException("질문의 카테고리를 선택해주세요.");
-        }
-        if (dto.getTitle() == null || dto.getTitle().isBlank()) {
-            throw new IllegalArgumentException("질문의 제목을 입력해주세요.");
-        }
-        if (dto.getContent() == null || dto.getContent().isBlank()) {
-            throw new IllegalArgumentException("질문의 내용을 입력해주세요.");
-        }
-    }
-
-    // [2-1-B] 공식 장소 타입 검증 로직 / 지정된 장소(Place)에 허용된 요청 타입인지 확인 / 사용자가 지정한 장소는 무조건 허용
-    public boolean isValidForPlace(Place place, RequestCategory category) {
-        // (1) 사용자 지정 장소인 경우 (place == null) → 항상 허용
-        if (place == null) {
-            return true;
-        }
-
-        // (2) 공식 장소일 경우 → Repository 직접 검증
-        return allowedRequestTypeRepository.existsByPlaceIdAndRequestType(place.getId(), category);
-    }
-
     // ─────────────────────────────────────────────
-    // [3] 요청 마감 처리 (수동 마감, 자동 마감)
+    // [2] 요청 마감 처리 (수동 마감, 자동 마감)
     // ─────────────────────────────────────────────
 
     /**
+     * [2-1] 요청자 요청취소 (스스로 마감처리)
      * RequestController: closeRequest
-     * [3-1] 요청자 요청취소 (스스로 마감처리)
      */
     @Transactional
     public void closeRequest(Long requestId, Long userId) {
@@ -133,12 +106,12 @@ public class RequestService {
     }
 
     /**
+     * [2-2] 자동 마감 대상 조회
      * AutoCloseRequestService: autoCloseExpiredRequests
-     * [3-2] 자동 마감 대상 조회
-     * 조건:
-     * 1. 마감되지 않았고 (isClosed = false)
-     * 2. 생성 시점이 기준(threshold)보다 이전이며
-     * 3. 숨김 처리되지 않은 답변이 1개 이상 존재하는 요청
+     * - 조건:
+     * - 1. 마감되지 않았고 (isClosed = false)
+     * - 2. 생성 시점이 기준(threshold)보다 이전이며
+     * - 3. 숨김 처리되지 않은 답변이 1개 이상 존재하는 요청
      */
     @Transactional(readOnly = true)
     public List<Request> findOpenRequestsWithAnswers(LocalDateTime threshold) {
@@ -146,9 +119,9 @@ public class RequestService {
     }
 
     /**
+     * [2-3] 요청 저장 메서드
      * AutoCloseRequestService: autoCloseExpiredRequests
-     * [3-2-A] 요청 저장 메서드
-     * 자동 마감 시 상태 변경 저장용
+     * - 자동 마감 시 상태 변경 저장용
      */
     @Transactional
     public Request save(Request request) {
@@ -156,12 +129,12 @@ public class RequestService {
     }
 
     // ─────────────────────────────────────────────
-    // [4] 요청 조회 (단건 조회, 리스트 조회)
+    // [3] 요청 조회 (단건 조회, 리스트 조회)
     // ─────────────────────────────────────────────
 
     /**
+     * [3-1] 요청 단건 조회 (ID로 조회)
      * RequestController: findRequestById
-     * [4-1] 요청 단건 조회 (ID로 조회)
      */
     @Transactional
     public Optional<Request> findById(Long id) {
@@ -169,11 +142,11 @@ public class RequestService {
     }
 
     /**
+     * [3-2] 지역 기반 요청이 3시간이 지나서 오픈된 요청 조회
      * RequestController: findOpenRequests
-     * [4-2] 지역 기반 요청이 3시간이 지나서 오픈된 요청 조회
-     * 미마감
-     * 답변 3개 미만
-     * 3시간 지난 요청
+     * - 미마감
+     * - 답변 3개 미만
+     * - 3시간 지난 요청
      */
     public List<RequestDto> findOpenRequests(int page, int size, double lat, double lng, double radius,
             String category) {
@@ -195,7 +168,7 @@ public class RequestService {
     }
 
     /**
-     * [4-2-A] 카테고리 파싱 (String → Enum)
+     * [3-2-A] 카테고리 파싱 (String → Enum)
      */
     private RequestCategory parseCategory(String category) {
         if (category == null || category.isBlank())
@@ -208,11 +181,11 @@ public class RequestService {
     }
 
     /**
+     * [3-3] 최신 요청 조회 (현재 사용자 위치 기준 / 지도 반경 기반)
      * RequestController: findNearbyOpenRequests
-     * [4-3] 최신 요청 조회 (현재 사용자 위치 기준 / 지도 반경 기반)
-     * 위도, 경도 기준으로 radius(m) 이내
-     * 장소 좌표가 존재하며 답변 수가 3개 미만인 요청 필터
-     * [FIX] 3시간 이내 수정 (테스트라 48시간으로 바꿈)
+     * - 위도, 경도 기준으로 radius(m) 이내
+     * - 장소 좌표가 존재하며 답변 수가 3개 미만인 요청 필터
+     * - TODO 3시간 이내 수정 (테스트라 48시간으로 바꿈)
      */
     public List<RequestDto> findNearbyValidRequests(double lat, double lng, double radiusMeters) {
         LocalDateTime timeLimit = LocalDateTime.now().minusHours(48);
@@ -226,23 +199,72 @@ public class RequestService {
     }
 
     /**
-     * RequestService: findNearbyValidRequests
-     * RequestService: findOpenRequests
-     * RequestController: findNearbyOpenRequests
-     * [4-2-B / 4-3-A]
-     * 숨김 처리되지 않은 상태 로그(답변) 수 조회
-     */
-    public int countVisibleStatusLogsByRequestId(Long requestId) {
-        return (int) statusLogRepository.countByRequestIdAndIsHiddenFalse(requestId);
-    }
-
-    /**
+     * [3-4] 특정 사용자(userId)의 요청 목록 조회
      * RequestController: findMyRequests
-     * [4-4] 특정 사용자(userId)의 요청 목록 조회
-     * 내 요청리스트를 조회
+     * - 내 요청리스트를 조회
      */
     public List<Request> findByUserId(Long userId) {
         return requestRepository.findByUserIdOrderByCreatedAtDesc(userId);
+    }
+
+    /**
+     * [3-5] 장소 ID 기준으로 요청 목록 조회
+     * PageController: showCommunityPage
+     */
+    public List<RequestDto> getRequestsByPlaceId(Long placeId) {
+        List<Request> requests = requestRepository.findByPlaceIdOrderByCreatedAtDesc(placeId);
+        return requests.stream()
+                .map(r -> {
+                    int visibleCount = countVisibleStatusLogsByRequestId(r.getId());
+                    return RequestDto.fromEntity(r, visibleCount);
+                })
+                .toList();
+    }
+
+    // ────────────────────────────────────────
+    // [*] 내부 공통 메서드
+    // ────────────────────────────────────────
+
+    /**
+     * [1] 기본 요청 유효성 검사
+     * RequestService: createRequest
+     */
+    private void validateRequestDto(RequestDto dto) {
+        if (dto.getCategory() == null) {
+            throw new IllegalArgumentException("질문의 카테고리를 선택해주세요.");
+        }
+        if (dto.getTitle() == null || dto.getTitle().isBlank()) {
+            throw new IllegalArgumentException("질문의 제목을 입력해주세요.");
+        }
+        if (dto.getContent() == null || dto.getContent().isBlank()) {
+            throw new IllegalArgumentException("질문의 내용을 입력해주세요.");
+        }
+    }
+
+    /**
+     * [2] 공식 장소 타입 검증 로직 / 지정된 장소(Place)에 허용된 요청 타입인지 확인 / 사용자가 지정한 장소는 무조건 허용
+     * RequestService: createRequest
+     */
+    public boolean isValidForPlace(Place place, RequestCategory category) {
+        // (1) 사용자 지정 장소인 경우 (place == null) → 항상 허용
+        if (place == null) {
+            return true;
+        }
+
+        // (2) 공식 장소일 경우 → Repository 직접 검증
+        return allowedRequestTypeRepository.existsByPlaceIdAndRequestType(place.getId(), category);
+    }
+
+    /**
+     * [3] 숨김 처리되지 않은 상태 로그(답변) 수 조회
+     * RequestService: findNearbyValidRequests
+     * RequestService: findOpenRequests
+     * RequestSerivce: getRequestsByPlaceId
+     * RequestController: findRequestById
+     * RequestController: findMyRequests
+     */
+    public int countVisibleStatusLogsByRequestId(Long requestId) {
+        return (int) statusLogRepository.countByRequestIdAndIsHiddenFalse(requestId);
     }
 
 }

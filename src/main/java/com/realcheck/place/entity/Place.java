@@ -90,19 +90,7 @@ public class Place {
     private User owner; // 장소 등록자 정보 (User 엔티티)
 
     // ─────────────────────────────────────────────
-    // [3] 장소 추가 정보 (최근 정보, 커뮤니티 링크)
-    // ─────────────────────────────────────────────
-
-    // 최근 장소 정보 (자유 입력, 선택적)
-    @Column(name = "recent_info", columnDefinition = "TEXT")
-    private String recentInfo;
-
-    // 커뮤니티 링크 (예: 블로그, SNS 링크, 선택적)
-    @Column(name = "community_link", length = 500)
-    private String communityLink;
-
-    // ─────────────────────────────────────────────
-    // [4] 허용된 요청 타입 (AllowedRequestType)
+    // [3] 허용된 요청 타입 (AllowedRequestType)
     // ─────────────────────────────────────────────
 
     /**

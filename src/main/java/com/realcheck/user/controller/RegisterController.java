@@ -25,8 +25,8 @@ public class RegisterController {
     // ─────────────────────────────────────────────
 
     /**
-     * common/header.jsp
      * [1-1] 회원가입 페이지 이동
+     * common/header.jsp
      */
     @GetMapping("/register")
     public String showRegisterForm(HttpSession session, Model model) {
@@ -44,9 +44,9 @@ public class RegisterController {
     // ─────────────────────────────────────────────
 
     /**
-     * page: user/register.jsp
      * [2] 회원가입 처리
-     * 비밀번호 확인 매칭
+     * page: user/register.jsp
+     * - 비밀번호 확인 매칭
      */
     @PostMapping("/register")
     public String register(@RequestParam String email,

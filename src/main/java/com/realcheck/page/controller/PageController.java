@@ -1,5 +1,11 @@
 package com.realcheck.page.controller;
 
+import com.realcheck.place.dto.PlaceDetailsDto;
+import com.realcheck.place.service.PlaceService;
+import com.realcheck.request.dto.RequestDto;
+import com.realcheck.request.service.RequestService;
+import com.realcheck.status.dto.StatusLogDto;
+import com.realcheck.status.service.StatusLogService;
 import com.realcheck.user.dto.UserDto;
 import com.realcheck.user.service.UserService;
 
@@ -25,6 +31,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 public class PageController {
 
     private final UserService userService;
+    private final PlaceService placeService;
+    private final StatusLogService statusLogService;
+    private final RequestService requestService;
 
     @Value("${naver.map.client.id}")
     private String naverMapClientId;
@@ -33,13 +42,18 @@ public class PageController {
     // [1] 사용자 일반 페이지
     // ─────────────────────────────────────────────
 
-    // 메인페이지 (진입페이지)
+    /**
+     * [1-1] 메인페이지 (진입페이지)
+     */
     @GetMapping
     public String mainPage() {
         return "index";
     }
 
-    // 마이페이지 - page: common/header.jsp
+    /**
+     * [1-2] 마이페이지
+     * page: common/header.jsp
+     */
     @GetMapping("/mypage")
     public String myPage(HttpSession session, Model model) {
         UserDto loginUser = (UserDto) session.getAttribute("loginUser");
@@ -56,8 +70,11 @@ public class PageController {
         return "user/mypage";
     }
 
-    // 탈퇴 예약 상태 페이지 이동 - page user/login.jsp
-    // LoginController 또는 AccountRestrictionController에서
+    /**
+     * [1-3] 탈퇴 예약 상태 페이지 이동
+     * page user/login.jsp
+     * - LoginController 또는 AccountRestrictionController에서
+     */
     @GetMapping("/account-restricted")
     public String accountRestrictedPage(HttpSession session, Model model) {
         UserDto loginUser = (UserDto) session.getAttribute("loginUser");
@@ -71,19 +88,28 @@ public class PageController {
         return "user/account-restricted";
     }
 
-    // 내 응답 관련 페이지 - page: common/header.jsp
+    /**
+     * [1-4] 내 응답 관련 페이지
+     * page: common/header.jsp
+     */
     @GetMapping("/my-logs")
     public String myLogsPage() {
         return "status/my-logs";
     }
 
-    // 마이페이지 -> 수정 - page: user/mypage.jsp
+    /**
+     * [1-5] 내 정보 수정 페이지
+     * page: user/mypage.jsp
+     */
     @GetMapping("/edit-profile")
     public String editProfilePage() {
         return "user/edit-profile";
     }
 
-    // 마이페이지 -> 비밀번호 변경 - page: user/mypage.jsp
+    /**
+     * [1-6] 내 비밀번호 변경 페이지
+     * page: user/mypage.jsp
+     */
     @GetMapping("/change-password")
     public String changePasswordPage() {
         return "user/change-password";
@@ -93,14 +119,20 @@ public class PageController {
     // [2] 요청 관련 페이지
     // ─────────────────────────────────────────────
 
-    // 요청 등록 페이지 (지도에서 질문 등록) - page : index.jsp
+    /**
+     * [2-1] 요청 등록 페이지 (지도에서 질문 등록)
+     * page : index.jsp
+     */
     @GetMapping("/request/register")
     public String requestRegisterPage(Model model) {
         model.addAttribute("naverMapClientId", naverMapClientId);
         return "request/register";
     }
 
-    // 요청 목록 페이지 (답변 가능한 요청 리스트) - page : index.jsp
+    /**
+     * [2-2] 요청 목록 페이지 (답변 가능한 요청 리스트)
+     * page : index.jsp
+     */
     @GetMapping("/request/list")
     public String requestListPage(Model model) {
         model.addAttribute("naverMapClientId", naverMapClientId);
@@ -108,11 +140,12 @@ public class PageController {
         return "request/list";
     }
 
-    // 요청 상세 페이지
-    // page:
-    // (1) request/list.jsp
-    // (2) map/request-list.jsp
-    // (3) request/my-requests.jsp
+    /**
+     * [2-3] 요청 상세 페이지
+     * page: request/list.jsp
+     * page: map/request-list.jsp
+     * page: request/my-requests.jsp
+     */
     @GetMapping("/request/{id}")
     public String requestDetailPage(@PathVariable Long id, Model model) {
         model.addAttribute("requestId", id);
@@ -121,7 +154,10 @@ public class PageController {
         return "request/detail";
     }
 
-    // 내 요청 관련 페이지 - page: header.jsp
+    /**
+     * [2-4] 내 요청 관련 페이지
+     * page: header.jsp
+     */
     @GetMapping("/my-requests")
     public String myRequestsPage() {
         return "request/my-requests";
@@ -131,7 +167,11 @@ public class PageController {
     // [3] 지도 관련 페이지
     // ─────────────────────────────────────────────
 
-    // 주변 졍보 확인 (답변 달린 내용) - page: index.jsp
+    /**
+     * [Check]
+     * [3-1] 주변 졍보 확인 (답변 달린 내용)
+     * page: index.jsp
+     */
     @GetMapping("/nearby")
     public String nearbyPage(Model model) {
         model.addAttribute("naverMapClientId", naverMapClientId);
@@ -139,7 +179,10 @@ public class PageController {
         return "map/nearby";
     }
 
-    // 주변 요청 확인 (답변할 요청) - page: index.jsp
+    /**
+     * [3-2] 주변 요청 확인 (답변할 요청)
+     * page: index.jsp
+     */
     @GetMapping("/nearby/request-list")
     public String nearbyRequestListPage(Model model) {
         model.addAttribute("naverMapClientId", naverMapClientId);
@@ -148,37 +191,80 @@ public class PageController {
     }
 
     // ─────────────────────────────────────────────
-    // [4] 관리자 페이지
+    // [4] 장소 관련 페이지
     // ─────────────────────────────────────────────
 
-    // 관라자페이지 이동 - page: common/header.jsp
+    /**
+     * [4-1] 장소 커뮤니티 이동
+     * page: request/detail.jsp
+     */
+    @GetMapping("/place/community/{placeId}")
+    public String showCommunityPage(@PathVariable Long placeId, Model model) {
+        PlaceDetailsDto place = placeService.getPlaceDetails(placeId);
+        List<StatusLogDto> registerLogs = statusLogService.getRegisterLogsByPlace(placeId);
+        List<StatusLogDto> recentLogs = statusLogService.getLogsByPlace(placeId); // 3시간 이내
+        StatusLogDto latestLog = statusLogService.getLatestVisibleLogByPlaceId(placeId); // 응답
+        List<RequestDto> placeRequests = requestService.getRequestsByPlaceId(placeId);
+
+        model.addAttribute("place", place);
+        model.addAttribute("registerLogs", registerLogs);
+        model.addAttribute("recentLogs", recentLogs);
+        model.addAttribute("latestLog", latestLog);
+        model.addAttribute("placeRequests", placeRequests);
+        return "place/community";
+    }
+
+    // ─────────────────────────────────────────────
+    // [5] 관리자 페이지
+    // ─────────────────────────────────────────────
+
+    /**
+     * [5-1] 관리자 페이지 이동
+     * page: common/header.jsp
+     */
     @GetMapping("/admin")
     public String adminPage(HttpSession session) {
         return isAdmin(session) ? "admin/admin" : "redirect:/login?error=unauthorized";
     }
 
-    // 관리자 통계보기 페이지 - page: admin/admin.jsp
+    /**
+     * [5-2] 관리자 통계보기 페이지
+     * page: admin/admin.jsp
+     */
     @GetMapping("/admin/stats")
     public String adminStatsPage(HttpSession session) {
         return isAdmin(session) ? "admin/stats" : "redirect:/login?error=unauthorized";
     }
 
-    // 관리자 사용자관리 페이지 - page: admin/admin.jsp
+    /**
+     * [5-3] 관리자 사용자 관리 페이지
+     * page: admin/admin.jsp
+     */
     @GetMapping("/admin/users")
     public String adminUsersPage(HttpSession session) {
         return isAdmin(session) ? "admin/users" : "redirect:/login?error=unauthorized";
     }
 
-    // 관리자 신고관리 페이지 - page: admin/admin.jsp
+    /**
+     * [5-4] 관리자 신고관리 페이지
+     * page: admin/admin.jsp
+     */
     @GetMapping("/admin/reports")
     public String adminReportsPage(HttpSession session) {
         return isAdmin(session) ? "admin/reports" : "redirect:/login?error=unauthorized";
     }
 
-    // ─────────────────────────────────────────────
-    // [5] 내부 메서드
-    // ─────────────────────────────────────────────
-
+    // ────────────────────────────────────────
+    // [*] 내부 공통 메서드
+    // ────────────────────────────────────────
+    
+    /**
+     * [1] ADMIN CHECK 메서드
+     * PageController: adminPage
+     * PageController: adminStatsPage
+     * PageController: adminUsersPage
+     * PageController: adminReportsPage
+     */
     private boolean isAdmin(HttpSession session) {
         UserDto loginUser = (UserDto) session.getAttribute("loginUser");
         return loginUser != null && "ADMIN".equals(loginUser.getRole());

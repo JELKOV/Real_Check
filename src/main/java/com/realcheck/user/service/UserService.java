@@ -43,10 +43,10 @@ public class UserService {
     // ─────────────────────────────────────────────
 
     /**
-     * RegisterController: register
      * [1-1] 회원가입 처리
-     * 이메일, 닉네임 중복 확인
-     * 비밀번호 암호화 후 저장
+     * RegisterController: register
+     * - 이메일, 닉네임 중복 확인
+     * - 비밀번호 암호화 후 저장
      */
     @Transactional
     public void register(UserDto dto, String rawPassword) {
@@ -74,29 +74,11 @@ public class UserService {
     }
 
     /**
-     * [1-1-A] 이메일 중복 확인
-     */
-    private void validateUniqueEmail(String email) {
-        if (userRepository.findByEmail(email).isPresent()) {
-            throw new RuntimeException("이미 사용 중인 이메일입니다.");
-        }
-    }
-
-    /**
-     * [1-1-B] 닉네임 중복 확인
-     */
-    private void validateUniqueNickname(String nickname) {
-        if (userRepository.findByNickname(nickname).isPresent()) {
-            throw new RuntimeException("이미 사용 중인 닉네임입니다.");
-        }
-    }
-
-    /**
-     * LoginController: login
      * [1-2] 로그인 처리
-     * 이메일로 사용자 조회
-     * 비밀번호 비교 (암호화된 비밀번호와 비교)
-     * 성공 시 DTO 반환
+     * LoginController: login
+     * - 이메일로 사용자 조회
+     * - 비밀번호 비교 (암호화된 비밀번호와 비교)
+     * - 성공 시 DTO 반환
      */
     @Transactional
     public UserDto login(String email, String rawPassword) {
@@ -121,19 +103,13 @@ public class UserService {
     }
 
     /**
-     * [1-2-A]사용자 존재 여부 확인 (Email)
-     */
-    private User validateUserByEmail(String email) {
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 이메일입니다."));
-    }
-
-    /**
+     * [1-3] UserDto → User 변환 (DB에서 조회하여 변환)
      * RequestController: createRequest
      * AnswerController: createAnswer
-     * StatusLogController: register / registerFreeShare / updateStatusLog /
-     * selectAnswer
-     * [1-3] UserDto → User 변환 (DB에서 조회하여 변환)
+     * StatusLogController: register
+     * StatusLogController: registerFreeShare
+     * StatusLogController: updateStatusLog
+     * StatusLogController: selectAnswer
      */
     public User convertToUser(UserDto dto) {
         return userRepository.findById(dto.getId())
@@ -145,10 +121,10 @@ public class UserService {
     // ─────────────────────────────────────────────
 
     /**
-     * UserController: updateProfile
      * [2-1] 사용자 프로필 수정
-     * 닉네임 또는 비밀번호 변경
-     * 닉네임은 단순 대체, 비밀번호는 암호화 후 저장
+     * UserController: updateProfile
+     * - 닉네임 또는 비밀번호 변경
+     * - 닉네임은 단순 대체, 비밀번호는 암호화 후 저장
      */
     @Transactional
     public void updateProfile(Long id, UserDto dto) {
@@ -178,9 +154,9 @@ public class UserService {
     }
 
     /**
-     * UserController: changePassword
      * [2-2] 비밀번호 변경
-     * 현재 비밀번호 확인 후 새 비밀번호로 변경
+     * UserController: changePassword
+     * - 현재 비밀번호 확인 후 새 비밀번호로 변경
      */
     @Transactional
     public void changePassword(Long userId, PasswordUpdateRequestDto dto) {
@@ -200,34 +176,26 @@ public class UserService {
     }
 
     /**
-     * [2-1/2-A] 사용자 존재 여부 확인 (ID)
-     */
-    private User validateUserById(Long userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
-    }
-
-    /**
-     * UserController: checkEmail
      * [2-3] 이메일 중복 여부 확인 (AJAX)
-     * 회원가입/프로필 수정 시 사용
+     * UserController: checkEmail
+     * - 회원가입/프로필 수정 시 사용
      */
     public boolean isEmailExists(String email) {
         return userRepository.findByEmail(email).isPresent();
     }
 
     /**
-     * UserController: checkNickname
      * [2-4] 닉네임 중복 여부 확인 (AJAX)
-     * 회원가입/프로필 수정 시 사용
+     * UserController: checkNickname
+     * - 회원가입/프로필 수정 시 사용
      */
     public boolean isNicknameExists(String nickname) {
         return userRepository.findByNickname(nickname).isPresent();
     }
 
     /**
-     * PageController: myPage
      * [2-5] 최근 활동 조회 (요청, 답변)
+     * PageController: myPage
      */
     public List<Map<String, Object>> getRecentActivities(Long userId) {
         List<Map<String, Object>> recentActivities = new ArrayList<>();
@@ -296,8 +264,8 @@ public class UserService {
     // ─────────────────────────────────────────────
 
     /**
-     * LoginController: requestAccountDeletion
      * [3-1] 회원 탈퇴 요청 처리 (7 일간 유예)
+     * LoginController: requestAccountDeletion
      */
     @Transactional
     public void requestAccountDeletion(Long userId) {
@@ -310,8 +278,8 @@ public class UserService {
     }
 
     /**
-     * LoginController: cancelAccountDeletion
      * [3-2] 회원 탈퇴 예약 취소 (7 일간 유예)
+     * LoginController: cancelAccountDeletion
      */
     @Transactional
     public void cancelAccountDeletion(Long userId) {
@@ -323,9 +291,9 @@ public class UserService {
     }
 
     /**
-     * LoginController: cancelAccountDeletion
      * [3-3] 사용자 정보 조회
-     * 로그인 유저 정보 갱신용
+     * LoginController: cancelAccountDeletion
+     * - 로그인 유저 정보 갱신용
      */
     public UserDto getUserDtoById(Long userId) {
         return userRepository.findById(userId)
@@ -334,8 +302,9 @@ public class UserService {
     }
 
     /**
+     * [3-4] 회원 및 관련 데이터 삭제 (요청, 답변)
      * UserDeletionScheduler:autoDeleteExpiredAccounts
-     * [3-4] 회원 및 관련 데이터 삭제 (요청, 답변) - 트랜잭션 적용
+     * - 트랜잭션 적용
      */
     @Transactional
     public void deleteUserAndRelatedData(Long userId) {
@@ -376,5 +345,48 @@ public class UserService {
         } else {
             System.out.println("이미 admin@example.com 계정이 존재합니다.");
         }
+    }
+
+    // ────────────────────────────────────────
+    // [*] 내부 공통 메서드
+    // ────────────────────────────────────────
+
+    /**
+     * [1] 이메일 중복 확인
+     * UserSerivce: register
+     */
+    private void validateUniqueEmail(String email) {
+        if (userRepository.findByEmail(email).isPresent()) {
+            throw new RuntimeException("이미 사용 중인 이메일입니다.");
+        }
+    }
+
+    /**
+     * [2] 닉네임 중복 확인
+     * UserService: register
+     */
+    private void validateUniqueNickname(String nickname) {
+        if (userRepository.findByNickname(nickname).isPresent()) {
+            throw new RuntimeException("이미 사용 중인 닉네임입니다.");
+        }
+    }
+
+    /**
+     * [3]사용자 존재 여부 확인 (Email)
+     * UserSerivce: login
+     */
+    private User validateUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 이메일입니다."));
+    }
+
+    /**
+     * [4] 사용자 존재 여부 확인 (ID)
+     * UserService: updateProfile
+     * UserService: changePassword
+     */
+    private User validateUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
     }
 }

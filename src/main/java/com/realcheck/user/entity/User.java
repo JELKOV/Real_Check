@@ -121,7 +121,7 @@ public class User {
     // ─────────────────────────────────────────────
 
     /**
-     * [2-1] 사용자가 등록한 요청 목록 (Request)
+     * 사용자가 등록한 요청 목록 (Request)
      * User (1) → (N) Request
      * 사용자 탈퇴 시 관련 요청들도 자동 삭제 (CascadeType.ALL)
      */
@@ -129,7 +129,7 @@ public class User {
     private List<Request> requests = new ArrayList<>();
 
     /**
-     * [2-2] 사용자가 작성한 상태 로그 (StatusLog)
+     * 사용자가 작성한 상태 로그 (StatusLog)
      * User (1) → (N) StatusLog
      * 사용자 탈퇴 시 관련 로그들도 자동 삭제 (CascadeType.ALL)
      */
@@ -137,7 +137,7 @@ public class User {
     private List<StatusLog> statusLogs = new ArrayList<>();
 
     /**
-     * [2-3] 사용자가 작성한 신고 (Report)
+     * 사용자가 작성한 신고 (Report)
      * User (1) → (N) Report
      * 사용자 탈퇴 시 관련 신고들도 자동 삭제 (CascadeType.ALL)
      */
@@ -145,7 +145,7 @@ public class User {
     private List<Report> reports = new ArrayList<>();
 
     /**
-     * [2-4] 사용자 포인트 내역 (Point)
+     * 사용자 포인트 내역 (Point)
      * User (1) → (N) Point
      * 사용자 탈퇴 시 관련 포인트 기록들도 자동 삭제 (CascadeType.ALL)
      */
@@ -153,7 +153,7 @@ public class User {
     private List<Point> pointLogs = new ArrayList<>();
 
     /**
-     * [2-5] 사용자가 소유한 장소 (Place)
+     * 사용자가 소유한 장소 (Place)
      * User (1) → (N) Place
      * 사용자 탈퇴 시 관련 장소들도 자동 삭제 (CascadeType.ALL)
      */

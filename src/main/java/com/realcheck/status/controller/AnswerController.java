@@ -11,6 +11,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * AnswerController (ALL DONE)
+ * - 사용자가 특정 요청(Request)에 대해 답변(StatusLog)을 등록할 수 있도록 지원하는 API 컨트롤러
+ * - 답변은 StatusType.ANSWER로 등록됨
+ */
 @RestController
 @RequestMapping("/api/answer")
 @RequiredArgsConstructor
@@ -20,9 +25,9 @@ public class AnswerController {
     private final UserService userService;
 
     /**
-     * page: request/detail.jsp
      * [1] 요청에 대한 답변 등록 → StatusLog(type: ANSWER)에 저장
-     * 사용자가 요청(Request)에 대해 답변(StatusLog)을 등록하는 컨트롤러
+     * page: request/detail.jsp
+     * - 사용자가 요청(Request)에 대해 답변(StatusLog)을 등록하는 컨트롤러
      */
     @PostMapping("/{requestId}")
     public ResponseEntity<?> createAnswer(

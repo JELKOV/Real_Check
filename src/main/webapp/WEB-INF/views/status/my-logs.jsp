@@ -17,27 +17,34 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
   <body>
     <%@ include file="../common/header.jsp" %>
 
-    <div class="container mt-5" style="max-width: 800px">
+    <div class="container mt-5" style="max-width: 1000px">
       <h3 class="text-center mb-4">내가 공유한 정보</h3>
 
-      <!-- 필터 영역 추가 (다음 스텝에서 활용) -->
-      <div class="d-flex justify-content-between mb-3">
-        <select id="statusTypeFilter" class="form-select w-50">
-          <option value="">전체</option>
-          <option value="ANSWER">정보 요청에 의한 답변</option>
-          <option value="FREE_SHARE">자발적 정보 공유</option>
-        </select>
+      <!-- 필터 영역 -->
+      <div class="d-flex align-items-end justify-content-between mb-4">
+        <!-- 상태 타입 선택 -->
+        <div class="w-75">
+          <label for="statusTypeFilter" class="form-label fw-bold"
+            >상태 유형</label
+          >
+          <select id="statusTypeFilter" class="form-select">
+            <option value="">전체</option>
+            <option value="ANSWER">📥 요청 → 답변</option>
+            <option value="FREE_SHARE">📢 정보 공유</option>
+          </select>
+        </div>
 
-        <div class="form-check">
+        <!-- 신고 제외 체크 -->
+        <div class="form-check mt-4 ms-3">
           <input
             class="form-check-input"
             type="checkbox"
             id="hideHiddenLogs"
             checked
           />
-          <label class="form-check-label" for="hideHiddenLogs"
-            >신고된 답변 제외</label
-          >
+          <label class="form-check-label fw-semibold" for="hideHiddenLogs">
+            🚫 신고처리 제외
+          </label>
         </div>
       </div>
 

@@ -23,9 +23,9 @@ public interface AllowedRequestTypeRepository extends JpaRepository<AllowedReque
         // ─────────────────────────────────────────────
 
         /**
-         * PlaceService: getPlaceDetails
          * [1-1] 특정 장소에 등록된 허용된 요청 타입 목록 조회
-         * Place ID로 허용된 요청 타입들을 조회
+         * PlaceService: getPlaceDetails
+         * - Place ID로 허용된 요청 타입들을 조회
          */
         @Query("""
                         SELECT art FROM AllowedRequestType art
@@ -34,10 +34,10 @@ public interface AllowedRequestTypeRepository extends JpaRepository<AllowedReque
         List<AllowedRequestType> findByPlaceId(@Param("placeId") Long placeId);
 
         /**
-         * RequestService: isValidForPlace
          * [1-2] 특정 장소에서 특정 요청 타입 존재 여부 확인
-         * 성능 최적화를 위해 DB에서 직접 확인
-         * true/false 반환
+         * RequestService: isValidForPlace
+         * - 성능 최적화를 위해 DB에서 직접 확인
+         * - true/false 반환
          */
         boolean existsByPlaceIdAndRequestType(Long placeId, RequestCategory requestType);
 
@@ -47,7 +47,7 @@ public interface AllowedRequestTypeRepository extends JpaRepository<AllowedReque
 
         /**
          * [2-1] 특정 장소의 특정 요청 타입 삭제 [미사용]
-         * 사용자가 지정된 요청 타입을 제거할 경우
+         * - 사용자가 지정된 요청 타입을 제거할 경우
          */
         @Modifying
         @Transactional
@@ -57,7 +57,7 @@ public interface AllowedRequestTypeRepository extends JpaRepository<AllowedReque
 
         /**
          * [2-2] 특정 장소의 모든 요청 타입 삭제 (장소 삭제 시) [미사용]
-         * 장소 삭제 또는 전체 타입 초기화 용도
+         * - 장소 삭제 또는 전체 타입 초기화 용도
          */
         @Modifying
         @Transactional

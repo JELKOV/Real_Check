@@ -27,10 +27,10 @@ public class UserController {
     // ─────────────────────────────────────────────
 
     /**
-     * page: user/register.jsp
      * [1-1] 이메일 중복 체크 API (AJAX)
-     * 사용자가 입력한 이메일이 이미 사용 중인지 확인
-     * 회원가입 시 이메일 중복 확인용
+     * page: user/register.jsp
+     * - 사용자가 입력한 이메일이 이미 사용 중인지 확인
+     * - 회원가입 시 이메일 중복 확인용
      */
     @GetMapping("/check-email")
     public ResponseEntity<Boolean> checkEmail(@RequestParam String email) {
@@ -40,11 +40,11 @@ public class UserController {
     }
 
     /**
+     * [1-2] 닉네임 중복 체크 API
      * page: user/register.jsp
      * page: user/edit-profile.jsp
-     * [1-2] 닉네임 중복 체크 API
-     * 사용자가 입력한 닉네임이 이미 사용 중인지 확인
-     * 회원가입 및 프로필 수정 시 닉네임 중복 확인용
+     * - 사용자가 입력한 닉네임이 이미 사용 중인지 확인
+     * - 회원가입 및 프로필 수정 시 닉네임 중복 확인용
      */
     @GetMapping("/check-nickname")
     public ResponseEntity<Boolean> checkNickname(@RequestParam String nickname) {
@@ -57,10 +57,10 @@ public class UserController {
     // ─────────────────────────────────────────────
 
     /**
-     * page: user/edit-profile.jsp
      * [2-1] 프로필 수정 API (닉네임/비밀번호)
-     * 로그인된 사용자만 본인의 닉네임 또는 비밀번호를 수정할 수 있음
-     * 세션에서 로그인된 사용자 정보를 가져와 해당 ID 기준으로 업데이트 진행
+     * page: user/edit-profile.jsp
+     * - 로그인된 사용자만 본인의 닉네임 또는 비밀번호를 수정할 수 있음
+     * - 세션에서 로그인된 사용자 정보를 가져와 해당 ID 기준으로 업데이트 진행
      */
     @PutMapping("/update")
     public ResponseEntity<String> updateProfile(@RequestBody UserDto dto, HttpSession session) {
@@ -84,9 +84,9 @@ public class UserController {
     }
 
     /**
-     * page: user/change-password.jsp
      * [2-2] 비밀번호 변경 전용 API
-     * 현재 비밀번호 확인 후 새 비밀번호로 교체
+     * page: user/change-password.jsp
+     * - 현재 비밀번호 확인 후 새 비밀번호로 교체
      */
     @PutMapping("/password")
     public ResponseEntity<String> changePassword(@RequestBody PasswordUpdateRequestDto dto, HttpSession session) {

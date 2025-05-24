@@ -33,10 +33,10 @@ public class UserAdminController {
     // ─────────────────────────────────────────────
 
     /**
-     * page: admin/users.jsp
      * [1-1] 사용자 검색 API
-     * 이메일 또는 닉네임에 키워드가 포함된 사용자 리스트 반환
-     * 관리자 화면에서 검색 기능에 사용
+     * page: admin/users.jsp
+     * - 이메일 또는 닉네임에 키워드가 포함된 사용자 리스트 반환
+     * - 관리자 화면에서 검색 기능에 사용
      */
     @GetMapping("/search")
     public ResponseEntity<List<UserDto>> searchUsers(@RequestParam String keyword) {
@@ -48,9 +48,9 @@ public class UserAdminController {
     // ─────────────────────────────────────────────
 
     /**
-     * page: admin/users.jsp
      * [2-1] 차단된 사용자 목록 조회 API
-     * 로그인된 관리자인지 확인 후, isActive = false인 사용자 리스트 반환
+     * page: admin/users.jsp
+     * - 로그인된 관리자인지 확인 후, isActive = false인 사용자 리스트 반환
      */
     @GetMapping("/blocked")
     public ResponseEntity<?> getBlockedUsers(HttpSession session) {
@@ -67,9 +67,9 @@ public class UserAdminController {
     }
 
     /**
-     * page: admin/users.jsp
      * [2-2] 사용자 차단 해제 API
-     * 특정 사용자 ID의 계정을 다시 활성화함 (isActive = true)
+     * page: admin/users.jsp
+     * - 특정 사용자 ID의 계정을 다시 활성화함 (isActive = true)
      */
     @PatchMapping("/{userId}/unblock")
     public ResponseEntity<String> unblockUser(@PathVariable Long userId) {
@@ -79,7 +79,7 @@ public class UserAdminController {
 
     /**
      * [미사용]
-     * [3] 신고된 사용자 목록 조회
+     * [2-3] 신고 누적 사용자 목록 (차단되지 않았지만 신고된 사용자)
      */
     @GetMapping("/reported")
     public ResponseEntity<List<UserDto>> getReportedUsers() {

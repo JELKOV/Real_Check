@@ -33,9 +33,10 @@ public class PointService {
     // ─────────────────────────────────────────────
 
     /**
-     * AutoCloseRequestService: distributePointsToAnswerers
-     * StatusLogService: giveUserPoint / selectAnswer
      * [1-1] 포인트 지급/차감 처리
+     * AutoCloseRequestService: distributePointsToAnswerers
+     * StatusLogService: giveUserPoint
+     * StatusLogService: selectAnswer
      */
     @Retryable(value = ObjectOptimisticLockingFailureException.class, maxAttempts = 3, backoff = @Backoff(delay = 100))
     @Transactional
@@ -53,21 +54,6 @@ public class PointService {
         userRepository.save(user);
     }
 
-    /**
-     * [1-1-A] 포인트 지급 금액 유효성 검사
-     * 0 포인트 지급 불가
-     * 차감 시 사용자의 포인트가 부족하면 예외 발생
-     */
-    private void validatePointAmount(int amount, User user) {
-        if (amount == 0) {
-            throw new IllegalArgumentException("지급할 포인트가 0입니다.");
-        }
-
-        if (amount < 0 && user.getPoints() < Math.abs(amount)) {
-            throw new IllegalArgumentException("포인트가 부족합니다.");
-        }
-    }
-
     // ─────────────────────────────────────────────
     // [2] 포인트 내역 조회
     // ─────────────────────────────────────────────
@@ -81,6 +67,26 @@ public class PointService {
         return pointRepository.findByUserId(userId).stream()
                 .map(PointDto::fromEntity)
                 .toList();
+    }
+
+    // ────────────────────────────────────────
+    // [*] 내부 공통 메서드
+    // ────────────────────────────────────────
+
+    /**
+     * [1] 포인트 지급 금액 유효성 검사
+     * PointService: givePoint
+     * - 0 포인트 지급 불가
+     * - 차감 시 사용자의 포인트가 부족하면 예외 발생
+     */
+    private void validatePointAmount(int amount, User user) {
+        if (amount == 0) {
+            throw new IllegalArgumentException("지급할 포인트가 0입니다.");
+        }
+
+        if (amount < 0 && user.getPoints() < Math.abs(amount)) {
+            throw new IllegalArgumentException("포인트가 부족합니다.");
+        }
     }
 
 }

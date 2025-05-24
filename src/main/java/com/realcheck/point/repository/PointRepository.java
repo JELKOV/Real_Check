@@ -14,9 +14,9 @@ public interface PointRepository extends JpaRepository<Point, Long> {
     // ─────────────────────────────────────────────
 
     /**
-     * AdminStatsService: getTotalPointSum
      * [1-1] 전체 포인트 지급 합계 조회
-     * 관리자 대시보드 통계용
+     * AdminStatsService: getTotalPointSum
+     * - 관리자 대시보드 통계용
      */
     @Query("SELECT SUM(p.amount) FROM Point p")
     Integer sumAllPoints();

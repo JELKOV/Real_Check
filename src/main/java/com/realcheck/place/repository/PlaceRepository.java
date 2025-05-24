@@ -18,10 +18,9 @@ public interface PlaceRepository extends JpaRepository<Place, Long> {
   // [1] 사용자별 장소 조회
   // ─────────────────────────────────────────────
 
-  /**
-   * PlaceService: findByOwner [미사용]
-   * [1-1] 특정 사용자가 등록한 모든 장소 목록 조회
-   * Spring Data JPA 메서드 네이밍 규칙을 따라 자동 쿼리 생성됨
+  /** 
+   * [1-1] 특정 사용자가 등록한 모든 장소 목록 조회 [미사용]
+   * PlaceService: findByOwner
    */
   List<Place> findByOwnerId(Long ownerId);
 
@@ -30,10 +29,10 @@ public interface PlaceRepository extends JpaRepository<Place, Long> {
   // ─────────────────────────────────────────────
 
   /**
-   * PlaceSerive: findNearbyPlaces [미사용]
-   * [2-1] 위도(lat), 경도(lng), 반경(m) 기준 근처 모든 장소 조회
-   * 거리 계산: MySQL의 ST_Distance_Sphere 함수 사용
-   * 거리 단위: 미터(m)
+   * [2-1] 위도(lat), 경도(lng), 반경(m) 기준 근처 모든 장소 조회 [미사용]
+   * PlaceSerive: findNearbyPlaces 
+   * - 거리 계산: MySQL의 ST_Distance_Sphere 함수 사용
+   * - 거리 단위: 미터(m)
    */
   @Query("""
           SELECT p FROM Place p
@@ -45,8 +44,8 @@ public interface PlaceRepository extends JpaRepository<Place, Long> {
       @Param("radiusInMeters") double radiusInMeters);
 
   /**
-   * PlaceSerive: findApprovedNearby [미사용]
-   * [2-2] 위도, 경도, 반경 기준 "승인된" 장소만 조회
+   * [2-2] 위도, 경도, 반경 기준 "승인된" 장소만 조회 [미사용]
+   * PlaceSerive: findApprovedNearby
    * - 일반 사용자에게 보여줄 때 사용 (isApproved = true)
    */
   @Query("""
@@ -64,15 +63,15 @@ public interface PlaceRepository extends JpaRepository<Place, Long> {
   // ─────────────────────────────────────────────
 
   /**
-   * 관리자용 [미사용]
-   * [3-1] 장소 이름에 특정 키워드가 포함된 항목 검색 (대소문자 무시)
-   * 예: "스타벅스" → "강남스타벅스", "STARBUCKS" 등도 포함
+   * [3-1] 장소 이름에 특정 키워드가 포함된 항목 검색 (대소문자 무시) [미사용]
+   * - 관리자용
+   * - 예: "스타벅스" → "강남스타벅스", "STARBUCKS" 등도 포함
    */
   List<Place> findByNameContainingIgnoreCase(String keyword);
 
   /**
-   * PlaceService: searchApprovedPlaces
    * [3-2] 승인된 장소 중 키워드 포함된 장소 검색 (대소문자 무시)
+   * PlaceService: searchApprovedPlaces
    */
   @Query("""
        SELECT p FROM Place p

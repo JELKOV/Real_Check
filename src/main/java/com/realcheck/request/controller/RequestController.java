@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * RequestController
+ * RequestController (ALL DONE)
  * - 요청(Request) 관련 REST API 컨트롤러
  * - 요청 등록, 조회, 반경 기반 필터링 등을 담당
  */
@@ -34,10 +34,10 @@ public class RequestController {
     // ────────────────────────────────────────
 
     /**
-     * page: request/register.jsp
      * [1-1] 요청 등록 API
-     * 세션 로그인 사용자만 가능
-     * RequestDto → Entity 변환은 Service 내부에서 처리
+     * page: request/register.jsp
+     * - 세션 로그인 사용자만 가능
+     * - RequestDto → Entity 변환은 Service 내부에서 처리
      */
     @PostMapping
     public ResponseEntity<?> createRequest(@Valid @RequestBody RequestDto dto, HttpSession session) {
@@ -59,11 +59,11 @@ public class RequestController {
     // ────────────────────────────────────────
 
     /**
-     * page: request/list.jsp
      * [2-1] 지역 기반 요청이 3시간이 지나서 오픈된 요청 조회 API
-     * 미마감 요청
-     * 답변 3개 미만
-     * 3시간 지난 요청
+     * page: request/list.jsp
+     * - 미마감 요청
+     * - 답변 3개 미만
+     * - 3시간 지난 요청
      */
     @GetMapping("/open")
     public ResponseEntity<List<RequestDto>> findOpenRequests(
@@ -79,10 +79,10 @@ public class RequestController {
     }
 
     /**
-     * page: map/requset-list.jsp
      * [2-2] 최신 요청 조회 (현재 사용자 위치 기준 / 지도 반경 기반) API
-     * 위도, 경도 기준으로 radius(m) 이내
-     * 장소 좌표가 존재하며 답변 수가 3개 미만인 요청 필터
+     * page: map/requset-list.jsp
+     * - 위도, 경도 기준으로 radius(m) 이내
+     * - 장소 좌표가 존재하며 답변 수가 3개 미만인 요청 필터
      */
     @GetMapping("/nearby")
     public ResponseEntity<List<RequestDto>> findNearbyOpenRequests(
@@ -95,8 +95,8 @@ public class RequestController {
     }
 
     /**
-     * page: request/detail.jsp
      * [2-3] 요청 단건 상세 조회 (ID로 조회) API
+     * page: request/detail.jsp
      */
     @GetMapping("/{id}")
     public ResponseEntity<?> findRequestById(@PathVariable Long id) {
@@ -110,9 +110,9 @@ public class RequestController {
     }
 
     /**
-     * page: request/my-requests.jsp
      * [2-4] 특정 사용자(userId)의 요청 목록 조회 API
-     * 내 요청리스트를 조회
+     * page: request/my-requests.jsp
+     * - 내 요청리스트를 조회
      */
     @GetMapping("/my")
     public ResponseEntity<?> findMyRequests(HttpSession session) {
@@ -136,9 +136,9 @@ public class RequestController {
     // ────────────────────────────────────────
 
     /**
-     * page: request/detail.jsp
      * [3-1] 요청자 요청취소 (스스로 마감처리) API
-     * 사용자가 질문이 한개도 안달린 상태에서 직접 취소 처리
+     * page: request/detail.jsp
+     * - 사용자가 질문이 한개도 안달린 상태에서 직접 취소 처리
      */
     @PatchMapping("/{id}/close")
     public ResponseEntity<?> closeRequest(

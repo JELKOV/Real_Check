@@ -21,7 +21,7 @@ public class WebConfig implements WebMvcConfigurer {
 
     /**
      * 생성자 주입 (Dependency Injection)
-     * AccountRestrictionInterceptor 객체를 생성자 주입으로 받아옴
+     * - AccountRestrictionInterceptor 객체를 생성자 주입으로 받아옴
      */
     @Autowired
     public WebConfig(AccountRestrictionInterceptor accountRestrictionInterceptor) {
@@ -30,8 +30,8 @@ public class WebConfig implements WebMvcConfigurer {
 
     /**
      * [1] 인터셉터 등록
-     * AccountRestrictionInterceptor를 모든 요청 경로에 적용
-     * 지정된 경로는 예외 처리 (인터셉터 적용 제외)
+     * - AccountRestrictionInterceptor를 모든 요청 경로에 적용
+     * - 지정된 경로는 예외 처리 (인터셉터 적용 제외)
      */
     @Override
     public void addInterceptors(@NonNull InterceptorRegistry registry) {
@@ -51,8 +51,8 @@ public class WebConfig implements WebMvcConfigurer {
 
     /**
      * [2] 정적 리소스 매핑 설정
-     * 웹에서 /uploads/** 경로로 요청되는 파일을 실제 서버 디렉토리에서 제공
-     * 파일 서버 기능을 사용하여 이미지, 파일 등을 직접 제공 가능
+     * - 웹에서 /uploads/** 경로로 요청되는 파일을 실제 서버 디렉토리에서 제공
+     * - 파일 서버 기능을 사용하여 이미지, 파일 등을 직접 제공 가능
      */
     @Override
     public void addResourceHandlers(@NonNull ResourceHandlerRegistry registry) {
@@ -62,8 +62,8 @@ public class WebConfig implements WebMvcConfigurer {
 
     /**
      * [3] CORS (Cross-Origin Resource Sharing) 설정 - naver 
-     * 클라이언트가 다른 도메인에서 서버 API를 호출할 수 있도록 허용
-     * 여기서는 localhost:8080에서 /api/reverse-geocode API 호출을 허용
+     * - 클라이언트가 다른 도메인에서 서버 API를 호출할 수 있도록 허용
+     * - 여기서는 localhost:8080에서 /api/reverse-geocode API 호출을 허용
      */
     @Override
     public void addCorsMappings(@NonNull CorsRegistry registry) {

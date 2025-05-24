@@ -18,7 +18,7 @@ import com.realcheck.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 
 /**
- * ReportService
+ * ReportService (ALL DONE)
  * - 사용자 신고 처리 및 신고 누적에 따른 자동 제재 처리
  */
 @Service // 비즈니스 로직을 수행하는 서비스 계층
@@ -29,11 +29,11 @@ public class ReportService {
     private final UserRepository userRepository;
 
     /**
-     * ReportController: report
      * [1] 신고 처리 로직
-     * 신고자가 다른 사용자의 상태 로그를 신고할 때 호출됨
-     * 신고 내용 저장 후, 신고 대상자의 누적 신고 수를 확인
-     * 일정 횟수(3회) 이상이면 자동으로 계정 비활성화 + 해당 로그 숨김 처리
+     * ReportController: report
+     * - 신고자가 다른 사용자의 상태 로그를 신고할 때 호출됨
+     * - 신고 내용 저장 후, 신고 대상자의 누적 신고 수를 확인
+     * - 일정 횟수(3회) 이상이면 자동으로 계정 비활성화 + 해당 로그 숨김 처리
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     @Retryable(value = ObjectOptimisticLockingFailureException.class, maxAttempts = 3, backoff = @Backoff(delay = 100))
@@ -66,19 +66,19 @@ public class ReportService {
     }
 
     /**
+     * [2] 중복 신고 확인 (사용자별)
      * ReportController: report
      * ReportController: checkReported
-     * [2] 중복 신고 확인 (사용자별)
      */
     public boolean hasAlreadyReported(Long userId, Long statusLogId) {
         return reportRepository.existsByReporterIdAndStatusLogId(userId, statusLogId);
     }
 
     /**
-     * ReportController: cancelReport
      * [3] 신고 취소 처리
-     * 신고 기록 삭제 + 대상 로그 및 사용자 신고 횟수 감소
-     * 본인이 신고한 기록이 없으면 예외 발생
+     * ReportController: cancelReport
+     * - 신고 기록 삭제 + 대상 로그 및 사용자 신고 횟수 감소
+     * - 본인이 신고한 기록이 없으면 예외 발생
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     @Retryable(value = ObjectOptimisticLockingFailureException.class, maxAttempts = 3, backoff = @Backoff(delay = 100))

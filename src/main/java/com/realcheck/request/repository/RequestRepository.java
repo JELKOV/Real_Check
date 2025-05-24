@@ -31,32 +31,38 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
   List<Request> findByIsClosedFalse();
 
   /**
-   * RequestService: findByUserId
    * [1-2] UserId로 사용자의 요청 목록 조회
-   * 내 요청 목록 조회
+   * RequestService: findByUserId
+   * - 내 요청 목록 조회
    */
   List<Request> findByUserIdOrderByCreatedAtDesc(Long userId);
 
   /**
-   * UserService: getRecentActivities
    * [1-3] UserId로 사용자의 최근 요청 5개 조회
+   * UserService: getRecentActivities
    */
   List<Request> findTop5ByUserIdOrderByCreatedAtDesc(Long userId);
+
+  /**
+   * [1-4] PlaceId로 요청 목록 조회
+   * RequestService: getRequestsByPlaceId
+   */
+  List<Request> findByPlaceIdOrderByCreatedAtDesc(Long placeId);
 
   // ─────────────────────────────────────────────
   // [2] 위치 기반 필터링 관련 메소드
   // ─────────────────────────────────────────────
 
   /**
-   * RequestService: findOpenRequestsWithLocation
    * [2-1] 위치 기반, 카테고리 필터링된 미마감 요청 조회
-   * 미마감
-   * 답변 3개 미만
-   * 위치(lat/lng) 존재
-   * 생성 시간 기준 조회
-   * 카테고리 및 반경 필터
-   * 페이지네이션
-   * 지도 기반 필터링 기능에서 사용됨
+   * RequestService: findOpenRequestsWithLocation
+   * - 미마감
+   * - 답변 3개 미만
+   * - 위치(lat/lng) 존재
+   * - 생성 시간 기준 조회
+   * - 카테고리 및 반경 필터
+   * - 페이지네이션
+   * - 지도 기반 필터링 기능에서 사용됨
    */
   @Query("""
       SELECT r
@@ -82,10 +88,10 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
       Pageable pageable);
 
   /**
-   * RequestService: findNearbyValidRequests
    * [2-2] 최신 요청 조회 (현재 위치 기준 / 반경 내 응답 부족 요청 조회)
-   * 장소 정보가 있는 요청만 대상으로 함
-   * 위도/경도 null 방지 포함
+   * RequestService: findNearbyValidRequests
+   * - 장소 정보가 있는 요청만 대상으로 함
+   * - 위도/경도 null 방지 포함
    */
   @Query("""
       SELECT r FROM Request r
@@ -106,11 +112,12 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
   // ─────────────────────────────────────────────
 
   /**
-   * RequestService: findOpenRequestsWithAnswers
    * [3-1] 자동 마감 대상 쿼리
-   * 3시간 이상 지난 요청 중
-   * 마감되지 않았으며
-   * 숨겨지지 않은(StatusLog.isHidden = false) 답변이 1개 이상 존재하는 요청만 조회
+   * RequestService: findOpenRequestsWithAnswers
+   * - 3시간 이상 지난 요청 중
+   * - 미마감
+   * - No Hidden (응답 중 Hidden 없음)
+   * - 답변이 1개 이상 존재하는 요청만 조회
    */
   @Query("""
           SELECT r

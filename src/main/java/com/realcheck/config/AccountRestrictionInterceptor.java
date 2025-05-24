@@ -13,17 +13,17 @@ import org.springframework.web.servlet.ModelAndView;
 
 /**
  * AccountRestrictionInterceptor
- * 탈퇴 예약 상태 사용자에 대한 서비스 이용 제한을 처리하는 인터셉터
- * 로그인된 사용자 중 탈퇴 예약된 사용자가 서비스 페이지에 접근할 수 없도록 제어
- * HandlerInterceptor 인터페이스 구현을 통해 각 요청 전/후 처리 가능
+ * - 탈퇴 예약 상태 사용자에 대한 서비스 이용 제한을 처리하는 인터셉터
+ * - 로그인된 사용자 중 탈퇴 예약된 사용자가 서비스 페이지에 접근할 수 없도록 제어
+ * - HandlerInterceptor 인터페이스 구현을 통해 각 요청 전/후 처리 가능
  */
 @Component
 public class AccountRestrictionInterceptor implements HandlerInterceptor {
 
     /**
-     * preHandle (요청 전 처리)
-     * 클라이언트 요청이 컨트롤러에 도달하기 전에 실행
-     * 탈퇴 예약 상태인 사용자 (로그인된 사용자)가 서비스 페이지에 접근할 수 없도록 제한
+     * [1] preHandle (요청 전 처리)
+     * - 클라이언트 요청이 컨트롤러에 도달하기 전에 실행
+     * - 탈퇴 예약 상태인 사용자 (로그인된 사용자)가 서비스 페이지에 접근할 수 없도록 제한
      */
     @Override
     public boolean preHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
@@ -44,9 +44,9 @@ public class AccountRestrictionInterceptor implements HandlerInterceptor {
     }
 
     /**
-     * postHandle (요청 처리 후, 응답 전 처리)
-     * 컨트롤러 메서드가 실행된 후, View가 렌더링되기 전에 실행
-     * 현재는 특별한 후처리 로직을 수행하지 않음
+     * [2] postHandle (요청 처리 후, 응답 전 처리)
+     * - 컨트롤러 메서드가 실행된 후, View가 렌더링되기 전에 실행
+     * - 현재는 특별한 후처리 로직을 수행하지 않음
      */
     @Override
     public void postHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
@@ -56,10 +56,10 @@ public class AccountRestrictionInterceptor implements HandlerInterceptor {
     }
 
     /**
-     * afterCompletion (응답 완료 후 처리)
-     * 클라이언트에게 응답이 전송된 후 실행
-     * 예외 발생 여부와 관계없이 항상 실행됨
-     * 주로 로깅, 자원 정리 등 후처리 로직에 사용
+     * [3] afterCompletion (응답 완료 후 처리)
+     * - 클라이언트에게 응답이 전송된 후 실행
+     * - 예외 발생 여부와 관계없이 항상 실행됨
+     * - 주로 로깅, 자원 정리 등 후처리 로직에 사용
      */
     @Override
     public void afterCompletion(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,

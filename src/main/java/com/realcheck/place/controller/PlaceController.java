@@ -39,8 +39,8 @@ public class PlaceController {
 
     /**
      * [1-1] 장소 등록 API (POST /api/place) [미사용]
-     * 프론트엔드에서 장소 정보를 JSON으로 보내면 등록됨
-     * 관리자 또는 인증된 사용자만 가능 (프론트에서 추가 검증 필요)
+     * - 프론트엔드에서 장소 정보를 JSON으로 보내면 등록됨
+     * - 관리자 또는 인증된 사용자만 가능 (프론트에서 추가 검증 필요)
      */
     @PostMapping
     public ResponseEntity<String> register(@Valid @RequestBody PlaceDto dto) {
@@ -54,8 +54,8 @@ public class PlaceController {
 
     /**
      * [2-1] 전체 장소 목록 조회 API (GET /api/place) [미사용]
-     * 모든 등록된 장소 조회 (관리자 전용)
-     * 예: 관리자 페이지에서 모든 장소 관리
+     * - 모든 등록된 장소 조회 (관리자 전용)
+     * - 예: 관리자 페이지에서 모든 장소 관리
      */
     @GetMapping
     public ResponseEntity<List<PlaceDto>> getAll() {
@@ -64,7 +64,7 @@ public class PlaceController {
 
     /**
      * [2-2] 내 장소 목록 조회 API (GET /api/place/my) [미사용]
-     * 로그인된 사용자가 등록한 장소만 조회
+     * - 로그인된 사용자가 등록한 장소만 조회
      */
     @GetMapping("/my")
     public ResponseEntity<List<PlaceDto>> getMyPlaces(HttpSession session) {
@@ -80,8 +80,8 @@ public class PlaceController {
 
     /**
      * [2-3] 현재 위치 기반 주변 장소 조회 API [미사용]
-     * 위도, 경도, 반경을 기반으로 인근 장소 필터링
-     * 지도에서 사용자 위치를 기준으로 인근 장소 표시
+     * - 위도, 경도, 반경을 기반으로 인근 장소 필터링
+     * - 지도에서 사용자 위치를 기준으로 인근 장소 표시
      */
     @GetMapping("/nearby")
     public ResponseEntity<List<PlaceDto>> getNearbyPlaces(
@@ -92,10 +92,10 @@ public class PlaceController {
     }
 
     /**
+     * [2-4] 장소 검색 API (검색어 기반)
      * page: request/register.jsp
-     * [2-4] 장소 검색 API (검색어 기반) (GET /api/place/search)
-     * 검색어를 기반으로 승인된 장소 조회
-     * 예: 장소 등록 시 협력 지정 위치의 업체 검색
+     * - 검색어를 기반으로 승인된 장소 조회
+     * - 장소 등록 시 협력 지정 위치의 업체 검색
      */
     @GetMapping("/search")
     public ResponseEntity<List<PlaceDto>> searchApprovedPlaces(@RequestParam String query) {
@@ -104,9 +104,9 @@ public class PlaceController {
     }
 
     /**
+     * [2-5] 공식 장소 상세 정보 조회 API
      * page: request/register.jsp
-     * [2-5] 공식 장소 상세 정보 조회 API (GET /api/place/{id}/details)
-     * 특정 장소의 상세 정보 조회
+     * - 특정 장소의 상세 정보 조회
      */
     @GetMapping("/{id}/details")
     public ResponseEntity<PlaceDetailsDto> getPlaceDetails(@PathVariable Long id) {

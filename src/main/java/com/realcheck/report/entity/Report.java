@@ -37,6 +37,7 @@ public class Report {
     // 신고 사유 (예: "정보가 틀림", "이미 영업 종료 상태")
     private String reason; 
 
+    // 신고 시각
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

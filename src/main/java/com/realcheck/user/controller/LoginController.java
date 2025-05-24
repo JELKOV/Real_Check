@@ -25,10 +25,10 @@ public class LoginController {
     // ─────────────────────────────────────────────
 
     /**
+     * [1-1] 로그인 페이지 진입
      * page: common/header.jsp
      * page: user/register.jsp
-     * [1-1] 로그인 페이지 진입
-     * 쿼리 파라미터에 error가 있으면 실패 메시지 전달
+     * - 쿼리 파라미터에 error가 있으면 실패 메시지 전달
      */
     @GetMapping("/login")
     public String loginPage(@RequestParam(required = false) String error, Model model, HttpSession session) {
@@ -51,10 +51,10 @@ public class LoginController {
     // ─────────────────────────────────────────────
 
     /**
-     * page: user/login.jsp
      * [2-1] 로그인 POST 처리
-     * 이메일/비밀번호 검증 후 세션 저장
-     * 실패 시 쿼리 파라미터로 에러 전달
+     * page: user/login.jsp
+     * - 이메일/비밀번호 검증 후 세션 저장
+     * - 실패 시 쿼리 파라미터로 에러 전달
      */
     @PostMapping("/login")
     public String login(@RequestParam String email,
@@ -87,9 +87,8 @@ public class LoginController {
     // ─────────────────────────────────────────────
 
     /**
-     * page: common/header.jsp
-     * page: user/login.jsp
      * [3-1] 로그아웃 처리
+     * page: common/header.jsp
      * - 세션 무효화 후 로그인 페이지로 이동
      */
     @PostMapping("/logout")
@@ -103,8 +102,8 @@ public class LoginController {
     // ─────────────────────────────────────────────
 
     /**
-     * page: mypage.jsp
      * [4-1] 회원 탈퇴 처리
+     * page: mypage.jsp
      */
     @GetMapping("/delete-account")
     public String requestAccountDeletion(HttpSession session, RedirectAttributes redirectAttributes) {
@@ -122,9 +121,9 @@ public class LoginController {
     }
 
     /**
-     * page: account-restricted.jsp
      * [4-2] 탈퇴 예약 취소 처리
-     * 사용자 탈퇴 예약을 취소하고 세션 정보를 갱신
+     * page: account-restricted.jsp
+     * - 사용자 탈퇴 예약을 취소하고 세션 정보를 갱신
      */
     @GetMapping("/cancel-account-deletion")
     public String cancelAccountDeletion(HttpSession session) {
