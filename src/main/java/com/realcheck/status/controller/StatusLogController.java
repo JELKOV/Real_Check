@@ -72,31 +72,7 @@ public class StatusLogController {
     // ─────────────────────────────────────────────
 
     /**
-     * [2-1] 장소별 최근 3시간 이내 상태 조회 [미사용]
-     * - 이후 요청조회 페이지에서 사용 // AJAX 용도
-     * - 해당 장소 ID로 3시간 이내의 최신 상태 목록 조회
-     */
-    @GetMapping("/place/{placeId}")
-    public ResponseEntity<List<StatusLogDto>> getByPlace(@PathVariable Long placeId) {
-        return ResponseEntity.ok(statusLogService.getLogsByPlace(placeId));
-    }
-
-    /**
-     * [2-2] 특정 장소의 최신 상태 로그 1건 [미사용]
-     * - 이후 요청조회 페이지에서 사용 // AJAX 용도
-     * - 숨김 처리되지 않은 로그 중 최신 1개만 반환
-     */
-    @GetMapping("/latest")
-    public ResponseEntity<StatusLogDto> getLatestStatusLog(@RequestParam Long placeId) {
-        StatusLogDto latest = statusLogService.getLatestVisibleLogByPlaceId(placeId);
-        if (latest == null) {
-            return ResponseEntity.noContent().build(); // 해당 장소에 표시할 로그가 없을 경우 204
-        }
-        return ResponseEntity.ok(latest);
-    }
-
-    /**
-     * [2-3] 내가 등록한 상태 로그 목록 조회
+     * [2-1] 내가 등록한 상태 로그 목록 조회
      * page: status/my-logs.jsp
      * - 세션 사용자 ID 기반으로 내 기록만 조회
      */
@@ -119,7 +95,7 @@ public class StatusLogController {
     }
 
     /**
-     * [2-4] 요청 ID로 연결된 답변 목록 조회 API
+     * [2-2] 요청 ID로 연결된 답변 목록 조회 API
      * - page: request/detail.jsp
      */
     @GetMapping("/by-request/{requestId}")
@@ -129,7 +105,7 @@ public class StatusLogController {
     }
 
     /**
-     * [2-5] 현재 위치 기반 근처 상태 로그 조회 API [CHECK]
+     * [2-3] 현재 위치 기반 근처 상태 로그 조회 API [CHECK]
      * page: map/nearby.jsp
      * - 위도, 경도, 반경(m)을 기준으로 3시간 이내 상태 로그 조회
      */

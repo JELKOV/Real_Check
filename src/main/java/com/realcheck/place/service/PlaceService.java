@@ -137,6 +137,9 @@ public class PlaceService {
                 // 3. 커뮤니티 링크 생성
                 String communityLink = "/place/community/" + id;
 
+                // 4. ownerId 가져오기
+                Long ownerId = (place.getOwner() != null) ? place.getOwner().getId() : null;
+
                 // 4. DTO 조립 (여기서 직접 생성)
                 return new PlaceDetailsDto(
                                 place.getId(),
@@ -145,6 +148,7 @@ public class PlaceService {
                                 place.getLat(),
                                 place.getLng(),
                                 place.isApproved(),
+                                ownerId,
                                 recentInfo,
                                 communityLink,
                                 allowedRequestTypes);

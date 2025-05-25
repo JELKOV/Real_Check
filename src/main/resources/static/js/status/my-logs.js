@@ -4,6 +4,8 @@ let editingId = null;
 let uploadedImageUrl = null;
 // 현재 페이지 번호 전역 변수
 let currentPage = 1;
+// 답변목록 담을 배열
+let logsList = [];
 
 // 카테고리 코드 → 라벨 매핑 (배지 및 필터용)
 const categoryLabelMap = {
@@ -71,6 +73,7 @@ function loadMyLogs(page = 1) {
 
 // 필터링된 로그 리스트 DOM에 출력
 function renderLogs(logs) {
+  logsList = logs;
   const $container = $("#logsBody").empty();
   logs.forEach((log) => {
     $container.append(renderLog(log));
@@ -82,45 +85,61 @@ function renderLog(log) {
   const badges = [];
 
   // 기본 뱃지
-  if (log.type === "ANSWER") badges.push("요청답변");
-  if (log.type === "FREE_SHARE") badges.push("자발공유");
+  if (log.type === "ANSWER") badges.push(`<span class="badge bg-primary me-1">요청답변</span>`);
+  if (log.type === "FREE_SHARE") badges.push(`<span class="badge bg-secondary me-1">자발공유</span>`);
 
-  // 채택됨 or 숨김 여부
   if (log.selected)
-    badges.push('<span class="badge bg-success">✅ 채택됨</span>');
+    badges.push('<span class="badge bg-success me-1">✅ 채택됨</span>');
   if (log.hidden)
-    badges.push('<span class="badge bg-secondary">🚫 신고 처리</span>');
+    badges.push('<span class="badge bg-secondary me-1">🚫 신고 처리</span>');
+  if (log.requestClosed)
+    badges.push('<span class="badge bg-warning text-dark me-1">🔒 마감됨</span>');
 
   // 카테고리 뱃지
   if (log.category) {
     const categoryLabel = categoryLabelMap[log.category] || log.category;
-    badges.push(`<span class="badge bg-info">${categoryLabel}</span>`);
+    badges.push(`<span class="badge bg-info text-dark">${categoryLabel}</span>`);
   }
 
-  // 이미지 또는 이미지 없음
   const imageHtml = log.imageUrl
-    ? `<img src="${log.imageUrl}" class="img-fluid rounded" style="max-height:150px;" />`
+    ? `<img src="${log.imageUrl}" class="img-fluid rounded border" style="max-height:150px;" />`
     : `<div class="text-muted small">이미지 없음</div>`;
 
-  // 상대 시간 텍스트
   const relativeTime = getRelativeTime(log.createdAt);
 
+  const requestInfoHtml =
+    log.type === "ANSWER" && log.requestTitle && log.requestContent
+      ? `<div class="bg-light p-2 rounded mb-2 small">
+           <strong class="d-block">📌 요청 정보</strong>
+           <div><strong>제목:</strong> ${log.requestTitle}</div>
+           <div><strong>내용:</strong> ${log.requestContent}</div>
+         </div>`
+      : "";
+
+  const categorySummary = getCategorySummary(log);
+
   return `
-    <div class="col-12" data-id="${log.id}">
-        <div class="card shadow-sm">
+    <div class="col-12 mb-3" data-id="${log.id}">
+      <div class="card shadow-sm">
         <div class="card-body">
-            <div class="d-flex justify-content-between mb-2">
+          <div class="d-flex justify-content-between align-items-center mb-2">
             <div>${badges.join(" ")}</div>
             <small class="text-muted">${relativeTime}</small>
-            </div>
+          </div>
 
-            <h5 class="card-title">${log.content}</h5>
+          <h5 class="mb-2">📝 답변 내용</h5>
+          <p class="mb-1">${log.content}</p>
+          ${
+            categorySummary
+              ? `<p class="text-muted small mb-2">${categorySummary}</p>`
+              : ""
+          }
 
-            <div class="mb-2">
-            ${imageHtml}
-            </div>
+          ${requestInfoHtml}
 
-            <div class="text-muted small">
+          <div class="mb-3">${imageHtml}</div>
+
+          <div class="text-muted small mb-3">
             작성자: ${log.nickname ?? "익명"} |
             장소: ${
               log.placeName
@@ -128,30 +147,62 @@ function renderLog(log) {
                 : log.customPlaceName
                 ? `<span class="text-muted">${log.customPlaceName}</span>`
                 : "사용자 지정 위치"
-            } |
+            } 
             ${
-              log.type === "ANSWER"
-                ? `요청ID: ${log.requestId ?? "-"}`
-                : log.type === "FREE_SHARE"
-                ? `조회수: ${log.viewCount ?? 0}`
+              log.type === "FREE_SHARE"
+                ? `| 조회수: ${log.viewCount ?? 0}`
                 : ""
             }
-            </div>
+          </div>
 
-            <div class="mt-3 text-end">
-                ${
-                    log.selected
-                    ? `<span class="text-muted small">✅ 채택된 답변은 수정/삭제 불가</span>`
-                    : `
-                    <button class="btn btn-sm btn-primary btn-edit me-2">수정</button>
-                    <button class="btn btn-sm btn-danger btn-delete">삭제</button>
-                    `
-                }
-            </div>
+          <div class="text-end">
+            ${
+              log.selected
+                ? `<span class="text-muted small">✅ 채택된 답변은 수정/삭제 불가</span>`
+                : log.requestClosed
+                ? `<span class="text-muted small">🔒 마감된 요청에 대한 답변은 수정/삭제 불가</span>`
+                : `
+                  <button class="btn btn-sm btn-outline-primary btn-edit me-2">수정</button>
+                  <button class="btn btn-sm btn-outline-danger btn-delete">삭제</button>
+                `
+            }
+          </div>
         </div>
-        </div>
+      </div>
     </div>
-    `;
+  `;
+}
+
+// 카테고리 값 가져오기
+function getCategorySummary(log) {
+  switch (log.category) {
+    case "WAITING_STATUS":
+      return `현재 대기 인원: ${log.waitCount ?? "-"}명`;
+    case "FOOD_MENU":
+      return `오늘의 메뉴: ${log.menuInfo ?? "정보 없음"}`;
+    case "BATHROOM":
+      return `화장실 있음 여부: ${log.hasBathroom ? "있음" : "없음"}`;
+    case "PARKING":
+      return `주차 가능 여부: ${log.isParkingAvailable ? "가능" : "불가능"}`;
+    case "NOISE_LEVEL":
+      return `소음 상태: ${log.noiseNote ?? "정보 없음"}`;
+    case "CROWD_LEVEL":
+      return `혼잡도: ${log.crowdLevel ?? "-"} / 10`;
+    case "WEATHER_LOCAL":
+      return `날씨 메모: ${log.weatherNote ?? "정보 없음"}`;
+    case "STREET_VENDOR":
+      return `노점 이름: ${log.vendorName ?? "정보 없음"}`;
+    case "PHOTO_REQUEST":
+      return `요청 메모: ${log.photoNote ?? "없음"}`;
+    case "BUSINESS_STATUS":
+      return `영업 여부: ${log.isOpen ? "영업 중" : "영업 안 함"}`;
+    case "OPEN_SEAT":
+      return `남은 좌석 수: ${log.seatCount ?? "-"}석`;
+    case "ETC":
+      return `기타 정보: ${log.extra ?? "없음"}`;
+    default:
+      return "";
+  }
 }
 
 // 상대 시간 포맷 함수

@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import com.realcheck.place.entity.Place;
+import com.realcheck.request.entity.Request;
 import com.realcheck.request.entity.RequestCategory;
 import com.realcheck.status.entity.StatusLog;
 import com.realcheck.status.entity.StatusType;
@@ -66,6 +67,12 @@ public class StatusLogDto {
     private Long requestId;
     // 요청 작성자 ID (답변 채택용)
     private Long requestOwnerId;
+    // 요청 마감 여부
+    private boolean isRequestClosed;
+    // 요청 제목
+    private String requestTitle;
+    // 요청 내역
+    private String requestContent;
 
     // 상태 타입 (ANSWER, FREE_SHARE 등)
     private StatusType type;
@@ -113,23 +120,33 @@ public class StatusLogDto {
 
     /**
      * DTO → Entity 변환 메서드
-     * - 컨트롤러/서비스에서 DTO를 받아 실제 DB에 저장할 수 있도록 Entity로 변환
+     * - StatusLogDto 데이터를 기반으로 실제 DB에 저장할 StatusLog 엔티티 객체 생성
+     * - 요청(Request)이 존재하고 place가 null일 경우, 요청에 연결된 place를 자동 설정
+     * - 유연 필드(category 기반 필드)는 요청 카테고리를 기준으로 불필요한 필드 제거 후 설정
      */
-    public StatusLog toEntity(User user, Place place) {
-        // 카테고리 필터링 (String → RequestCategory 변환)
+    public StatusLog toEntity(User user, Place place, Request request) {
+        
+        // (1) 요청 카테고리 정보가 있으면 해당 카테고리에 맞게 유연 필드 필터링
         if (this.category != null) {
-            RequestCategory categoryEnum = convertToCategory();
-            filterFieldsByCategory(categoryEnum);
+            RequestCategory categoryEnum = convertToCategory(); // String → Enum
+            filterFieldsByCategory(categoryEnum); // 해당 카테고리 외 필드는 null 처리
         }
 
+        // (2) place가 null인데 request로부터 연결된 place가 존재할 경우 자동 설정
+        if (place == null && request != null && request.getPlace() != null) {
+            place = request.getPlace();
+        }
+
+        // (3) StatusLog 엔티티 객체 생성
         StatusLog log = new StatusLog();
         log.setContent(this.content);
         log.setImageUrl(this.imageUrl);
         log.setSelected(this.isSelected);
         log.setReporter(user);
         log.setPlace(place);
-        log.setStatusType(this.type != null ? this.type : StatusType.ANSWER);
+        log.setStatusType(this.type != null ? this.type : StatusType.ANSWER); // 기본값: ANSWER
 
+        // (4) 좌표 정보 설정 (공식 장소가 있으면 place로부터, 없으면 수동 입력)
         if (place != null) {
             log.setLat(place.getLat());
             log.setLng(place.getLng());
@@ -138,7 +155,7 @@ public class StatusLogDto {
             log.setLng(this.lng);
         }
 
-        // 유연 필드 설정
+        // (5) 유연 필드 설정 (필요한 필드만 유지되어 있음)
         log.setWaitCount(this.waitCount);
         log.setHasBathroom(this.hasBathroom);
         log.setMenuInfo(this.menuInfo);
@@ -184,11 +201,14 @@ public class StatusLogDto {
                 .updatedAt(log.getUpdatedAt())
                 .type(log.getStatusType())
                 .requestId(log.getRequest() != null ? log.getRequest().getId() : null)
+                .isRequestClosed(log.getRequest() != null && log.getRequest().isClosed())
                 .nickname(log.getReporter() != null ? log.getReporter().getNickname() : null)
                 .requestOwnerId(
                         log.getRequest() != null && log.getRequest().getUser() != null
                                 ? log.getRequest().getUser().getId()
                                 : null)
+                .requestTitle(log.getRequest() != null ? log.getRequest().getTitle() : null)
+                .requestContent(log.getRequest() != null ? log.getRequest().getContent() : null)
 
                 // 유연 필드 포함
                 .category(

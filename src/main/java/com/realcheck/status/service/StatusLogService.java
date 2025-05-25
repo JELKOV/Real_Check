@@ -62,12 +62,16 @@ public class StatusLogService {
         Place place = validatePlace(dto.getPlaceId());
         // (3) 공식 장소의 경우 허용된 요청 타입 확인 - 사용자 지정 장소이면 전체 타입 허용
         Request request = validateAndFilterFieldsByRequest(dto);
+
+        // (4) 공식 장소일 경우 → 허용된 요청 카테고리인지 체크
         if (place != null) {
             validateAllowedRequestType(place, request);
         }
 
-        // 상태 로그 생성 및 저장
-        StatusLog log = dto.toEntity(user, place);
+        // (5) DTO → Entity 변환 (place가 null이어도 toEntity 내부에서 request.getPlace()로 자동 보완됨)
+        StatusLog log = dto.toEntity(user, place, request);
+
+        // (6) 타입 및 요청 객체 설정 후 저장
         log.setStatusType(type);
         log.setRequest(request);
         statusLogRepository.save(log);
@@ -270,14 +274,13 @@ public class StatusLogService {
     }
 
     /**
-     * [3-5] 특정 장소의 가장 최근 공개된 상태 1건 조회
+     * [3-5] 특정 장소의 가장 최근 공개된 공지로그 1건 조회
      * PageController: showCommunityPage
-     * - register / answer
-     * - 마커 클릭 시 정보 표시용 nearby 관련해서 중복사용 고민
+     * - REGISTER 공지로그
      */
-    public StatusLogDto getLatestVisibleLogByPlaceId(Long placeId) {
-        StatusLog log = statusLogRepository.findTopByPlaceIdAndIsHiddenFalseOrderByCreatedAtDesc(placeId);
-        return log != null ? StatusLogDto.fromEntity(log) : null;
+    public StatusLogDto getLatestRegisterLogByPlaceId(Long placeId) {
+        List<StatusLog> logs = statusLogRepository.findVisibleRegisterLogsByPlace(placeId);
+        return logs.isEmpty() ? null : StatusLogDto.fromEntity(logs.get(0));
     }
 
     /**

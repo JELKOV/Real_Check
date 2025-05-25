@@ -352,7 +352,11 @@ function loadAnswerList(requestId) {
 
     // 신고 버튼 상태 동기화 (렌더링 후 실행)
     answers.forEach((answer) => {
-      const canReport = loginUserIdNum !== answer.userId && !answer.selected;
+      const canReport =
+        loginUserIdNum !== null &&
+        loginUserIdNum !== answer.userId &&
+        !answer.selected &&
+        !answer.requestClosed;
       if (canReport) {
         updateReportButton(answer.id, answer.reportCount);
       }
@@ -435,11 +439,16 @@ function canEditOrDeleteAnswer(answer) {
 function generateActionButtons(answer, hasSelected) {
   const canSelect = canSelectAnswer(answer, hasSelected);
   const canEditOrDelete = canEditOrDeleteAnswer(answer);
-  const canReport = loginUserIdNum !== answer.userId;
+  const canReport =
+    loginUserIdNum !== null &&
+    loginUserIdNum !== answer.userId &&
+    !answer.selected &&
+    !answer.requestClosed;
 
-  const selectButton = canSelect
-    ? `<button class="btn btn-sm btn-outline-success select-answer-btn" data-id="${answer.id}">✅ 채택</button>`
-    : "";
+  const selectButton =
+    canSelect && !answer.selected && !answer.requestClosed
+      ? `<button class="btn btn-sm btn-outline-success select-answer-btn" data-id="${answer.id}">✅ 채택</button>`
+      : "";
 
   const editDeleteButtons = canEditOrDelete
     ? `
@@ -449,10 +458,9 @@ function generateActionButtons(answer, hasSelected) {
     : "";
 
   // report-toggle-btn은 렌더링 후 updateReportButton()에서 실제 상태 적용됨
-  const reportButton =
-    canReport && !answer.selected
-      ? `<button class="btn btn-sm btn-secondary report-toggle-btn" data-id="${answer.id}" disabled>🚨 신고 상태 확인 중...</button>`
-      : "";
+  const reportButton = canReport
+    ? `<button class="btn btn-sm btn-secondary report-toggle-btn" data-id="${answer.id}" disabled>🚨 신고 상태 확인 중...</button>`
+    : "";
 
   return `
     <div class="edit-delete-buttons d-flex flex-wrap gap-2 mt-2">

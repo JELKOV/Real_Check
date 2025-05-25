@@ -34,6 +34,8 @@ public class PlaceDetailsDto {
     private double lng;
     // 승인 여부 (공식 장소)
     private boolean isApproved;
+    // ID 소유자
+    private Long ownerId;
 
     // ─────────────────────────────────────────────
     // [2] 추가 정보 (선택적)

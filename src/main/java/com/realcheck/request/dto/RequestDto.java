@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.realcheck.place.entity.Place;
 import com.realcheck.request.entity.Request;
 import com.realcheck.request.entity.RequestCategory;
+import com.realcheck.status.entity.StatusLog;
 import com.realcheck.user.entity.User;
 
 import jakarta.validation.constraints.NotBlank;
@@ -67,6 +68,8 @@ public class RequestDto {
 
     // 요청 마감 여부
     private boolean isClosed;
+    // 요청 선택 처리 여부
+    private boolean hasSelectedAnswer;
 
     // 요청 등록 시각
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -176,6 +179,8 @@ public class RequestDto {
                 .lng(r.getLng())
                 .category(r.getCategory())
                 .isClosed(r.isClosed())
+                .hasSelectedAnswer(
+                        r.getStatusLogs().stream().anyMatch(StatusLog::isSelected))
                 .createdAt(r.getCreatedAt())
                 .updatedAt(r.getUpdatedAt())
                 .requesterId(r.getUser() != null ? r.getUser().getId() : null)

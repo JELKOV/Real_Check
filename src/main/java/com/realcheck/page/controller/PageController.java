@@ -203,7 +203,7 @@ public class PageController {
         PlaceDetailsDto place = placeService.getPlaceDetails(placeId);
         List<StatusLogDto> registerLogs = statusLogService.getRegisterLogsByPlace(placeId);
         List<StatusLogDto> recentLogs = statusLogService.getLogsByPlace(placeId); // 3시간 이내
-        StatusLogDto latestLog = statusLogService.getLatestVisibleLogByPlaceId(placeId); // 응답
+        StatusLogDto latestLog = statusLogService.getLatestRegisterLogByPlaceId(placeId); // 응답
         List<RequestDto> placeRequests = requestService.getRequestsByPlaceId(placeId);
 
         model.addAttribute("place", place);
@@ -211,6 +211,7 @@ public class PageController {
         model.addAttribute("recentLogs", recentLogs);
         model.addAttribute("latestLog", latestLog);
         model.addAttribute("placeRequests", placeRequests);
+        model.addAttribute("naverMapClientId", naverMapClientId);
         return "place/community";
     }
 

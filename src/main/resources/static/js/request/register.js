@@ -7,8 +7,11 @@ $(document).ready(function () {
 // [1] 지도 초기화
 let mainMap;
 let mainMarker = null;
-let customMarker = null; // 사용자 지정 장소 마커
+// 사용자 지정 장소 마커
+let customMarker = null;
 let currentFocus = -1;
+// ↓ 키 탐색 중에는 자동 검색(debounce AJAX)을 막기 위한 플래그
+let isNavigatingByKey = false;
 
 function initializeMap() {
   mainMap = new naver.maps.Map("mainMap", {
@@ -37,7 +40,22 @@ function bindEventListeners() {
   $("#placeSearch").on("input", debounce(handlePlaceSearch, 300));
   $("#placeSearchResults").on("mousedown", ".place-item", handlePlaceSelect);
   $("#placeSearchResults").on("mouseenter", ".place-item", highlightItem);
-  $("#placeSearch").on("keydown", handleKeyboardNavigation);
+  // 키보드 ↓ / ↑ / Enter 누를 때: 포커스 이동 + 자동 검색 차단
+  $("#placeSearch").on("keydown", function (e) {
+    if (["ArrowDown", "ArrowUp", "Enter"].includes(e.key)) {
+      // ↓키 등으로 리스트 탐색 중이라는 상태를 true로 설정
+      isNavigatingByKey = true;
+      // 항목 선택 / 포커스 처리 함수 실행
+      handleKeyboardNavigation(e);
+
+      // debounce보다 긴 시간(500ms) 이후 자동 검색 허용하도록 상태 초기화
+      // 이유: ↓키 입력 이후에도 input 이벤트가 발생해 debounce 검색이 트리거되기 때문
+      setTimeout(() => {
+        isNavigatingByKey = false;
+      }, 500); // debounce delay보다 충분히 큼
+    }
+  });
+
   $(document).click(handleDocumentClick);
 
   // 사용자 지정 장소 주소 검색
@@ -55,27 +73,55 @@ function bindEventListeners() {
 }
 
 // [4] 장소 검색 (AJAX)
+// - 검색창에 입력된 문자열을 기준으로 서버에 장소 검색 요청을 보냄
+// - 검색 결과는 renderSearchResults() 함수로 렌더링
 function handlePlaceSearch() {
+  // 현재 ↓ 키 탐색 중일 경우 (리스트 포커스 이동 중일 경우)
+  // → 검색 요청을 차단하여 리스트가 덮어써지는 현상을 방지
+  if (isNavigatingByKey) {
+    return;
+  }
+
+  // 검색어 가져오기 (앞뒤 공백 제거)
   const query = $("#placeSearch").val().trim();
+
+  // 검색어가 비어있으면: 검색 결과 숨기고 초기화
   if (!query) {
     $("#placeSearchResults").empty().hide();
+    // 선택된 장소 초기화
     resetSelectedPlace();
+    // 카테고리 드롭다운 전체 복원
     resetCategoryDropdown();
     return;
   }
 
+  // 정상적인 검색어가 존재하는 경우: 서버에 GET 요청
   $.get("/api/place/search", { query })
+    // 검색 성공 시 결과 렌더링
     .done(renderSearchResults)
     .fail(() => console.error("장소 검색 실패"));
 }
 
 // [5] 검색 결과 렌더링
+// - 서버에서 받은 장소 목록(places)을 <li>로 변환하여 화면에 표시
+// - 키보드 포커스 상태 유지도 함께 처리
 function renderSearchResults(places) {
+  // 장소가 존재할 경우 → 리스트 아이템 HTML 생성
+  // 장소가 없을 경우 → "검색 결과 없음" 메시지 출력
   const resultsHtml = places.length
     ? places.map(createPlaceItemHtml).join("")
     : '<li class="list-group-item">검색 결과가 없습니다.</li>';
+  // 결과 리스트를 DOM에 삽입하고 보이도록 설정
   $("#placeSearchResults").html(resultsHtml).show();
-  currentFocus = -1;
+
+  // 포커스 초기화 여부 판단
+  // - 새롭게 그려진 리스트 중에 .selected가 하나도 없다면 → 포커스를 초기화 (-1)
+  // - 만약 selected가 유지된 항목이 있다면 → 스크롤 위치 유지
+  if (!$(".place-item.selected").length) {
+    currentFocus = -1;
+  } else {
+    updateSelection($(".place-item"));
+  }
 }
 
 function createPlaceItemHtml(place) {
@@ -179,7 +225,7 @@ function selectPlace(item) {
 }
 
 // TODO: 고치기 recentINfo
-// [11] 장소 세부 정보 로드 
+// [11] 장소 세부 정보 로드
 function loadPlaceDetails(placeId) {
   $.get(`/api/place/${placeId}/details`, function (data) {
     $("#infoSection").show();
@@ -443,7 +489,7 @@ function submitRequest(e) {
   e.preventDefault();
 
   const isCustomPlace = $("#customPlaceSection").is(":visible");
-  console.log(isCustomPlace)
+  console.log(isCustomPlace);
 
   const requestData = {
     title: $("#title").val(),
@@ -456,17 +502,24 @@ function submitRequest(e) {
     customPlaceName: isCustomPlace ? $("#selectedPlaceName").val() : null,
   };
 
-  // 요청 유효성 검사
+  // 공통 필수 항목 검사
   if (!requestData.title || !requestData.content || !requestData.category) {
     alert("필수 입력 항목을 확인해주세요.");
     return;
   }
 
+  // 사용자 지정 장소일 경우: 주소/좌표/이름 필수
   if (
     isCustomPlace &&
     (!requestData.lat || !requestData.lng || !requestData.customPlaceName)
   ) {
     alert("사용자 지정 장소의 주소 또는 좌표가 정확하지 않습니다.");
+    return;
+  }
+
+  // 공식 장소일 경우: placeId 반드시 있어야 함
+  if (!isCustomPlace && !requestData.placeId) {
+    alert("공식 장소를 선택해주세요.");
     return;
   }
 

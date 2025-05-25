@@ -84,12 +84,13 @@ public interface StatusLogRepository extends JpaRepository<StatusLog, Long> {
         List<StatusLog> findRecentByPlaceId(@Param("placeId") Long placeId, @Param("cutoff") LocalDateTime cutoff);
 
         /**
-         * [2-2] 특정 장소의 가장 최신 상태 로그 1개 조회 [미사용]
-         * StatusLogService: getLatestVisibleLogByPlaceId
-         * - 사용자 화면에서 마커 클릭 시 최신 상태 표시용
+         * [2-2] 특정 장소의 가장 최신 공지(REGISTER) 로그 1개 조회
+         * StatusLogService: getLatestRegisterLogByPlaceId
+         * - 사용자 화면에서 마커에서 보여줌
          * - 숨김 처리되지 않은 최신 로그 1개만 반환
          */
-        StatusLog findTopByPlaceIdAndIsHiddenFalseOrderByCreatedAtDesc(Long placeId);
+        @Query("SELECT s FROM StatusLog s WHERE s.place.id = :placeId AND s.statusType = 'REGISTER' AND s.isHidden = false ORDER BY s.createdAt DESC")
+        List<StatusLog> findVisibleRegisterLogsByPlace(@Param("placeId") Long placeId);
 
         /**
          * [2-3] 특정 장소에 등록된 특정 타입의 상태 로그 조회 (REGISTER)
