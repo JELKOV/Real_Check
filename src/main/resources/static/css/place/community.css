@@ -1,0 +1,33 @@
+/* 기존 아이콘 제거 */
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+  background-image: none !important;
+  color: black;
+  font-size: 2rem;
+}
+
+/* 기본 after 제거 */
+.carousel-control-prev::after,
+.carousel-control-next::after {
+  content: "";
+}
+
+/* 직접 아이콘 삽입 (텍스트 화살표로 처리) */
+.carousel-control-prev::before,
+.carousel-control-next::before {
+  color: black;
+  font-size: 2rem;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.carousel-control-prev::before {
+  content: "◀";
+  left: 10px;
+}
+
+.carousel-control-next::before {
+  content: "▶";
+  right: 10px;
+}

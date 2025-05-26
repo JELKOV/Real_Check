@@ -35,7 +35,7 @@ public class StatusLogController {
      * [1-1] 공식 장소 상태 등록 API (REGISTER) [미완성]
      * - 장소 소유자나 관리자가 직접 상태 등록
      */
-    @PostMapping
+    @PostMapping("/register-public")
     public ResponseEntity<String> register(@RequestBody StatusLogDto dto, HttpSession session) {
         UserDto loginUserDto = (UserDto) session.getAttribute("loginUser");
         if (loginUserDto == null)

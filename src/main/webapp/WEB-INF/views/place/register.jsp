@@ -10,6 +10,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="/css/place/register.css" />
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   </head>
   <body>
@@ -22,85 +23,108 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
       <form id="registerForm">
         <input type="hidden" name="placeId" value="${param.placeId}" />
 
+        <!-- 공지 내용 -->
         <div class="mb-3">
           <label for="content" class="form-label">공지 내용</label>
+
+          <!-- 텍스트박스 -->
           <textarea
             id="content"
             name="content"
             class="form-control"
             rows="5"
+            maxlength="300"
             required
           ></textarea>
+
+          <!-- 글자 수 -->
+          <div class="d-flex justify-content-end mt-1">
+            <small id="contentCount" class="text-muted">0 / 300자</small>
+          </div>
         </div>
 
+        <!-- 공지 카테고리 선택 -->
         <div class="mb-3">
-          <label for="fileInput" class="form-label">이미지 첨부 (선택)</label>
-          <input type="file" class="form-control" id="fileInput" />
-          <div id="uploadedPreview" class="mt-2"></div>
+          <label for="category" class="form-label">카테고리</label>
+          <select id="category" name="category" class="form-select"></select>
         </div>
 
-        <button type="submit" class="btn btn-primary">등록하기</button>
-        <a href="/place/community/${param.placeId}" class="btn btn-secondary"
-          >취소</a
-        >
+        <!-- 카테고리별 필드 자동 렌더링 영역 -->
+        <div id="dynamicAnswerFields"></div>
+
+        <!-- 이미지 업로드 -->
+        <div class="mb-3">
+          <label class="form-label">이미지 첨부 (선택)</label>
+
+          <div id="dropArea" class="mb-2">
+            <p class="mb-1">📎 이미지를 드래그 / 파일 선택</p>
+            <button
+              type="button"
+              id="selectImageBtn"
+              class="btn btn-sm btn-outline-primary"
+            >
+              파일 선택
+            </button>
+            <input
+              type="file"
+              id="fileInput"
+              accept="image/*"
+              multiple
+              style="display: none"
+            />
+          </div>
+
+          <!-- 미리보기 + 전체 제거 버튼을 묶는 박스 -->
+          <div class="border rounded p-2 position-relative">
+            <!-- 전체 제거 버튼: 미리보기 블록 '바깥' 우측 상단 -->
+            <div class="d-flex justify-content-end mb-2">
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-danger d-none"
+                id="cancelImageBtn"
+              >
+                ❌ 전체 제거
+              </button>
+            </div>
+
+            <!-- 실제 미리보기 이미지 출력 영역 -->
+            <div id="uploadedPreview" class="d-flex flex-wrap gap-2"></div>
+          </div>
+        </div>
+
+        <!-- 버튼 -->
+        <div class="d-flex justify-content-end gap-2">
+          <button type="submit" class="btn btn-primary">등록하기</button>
+          <a href="/place/community/${param.placeId}" class="btn btn-secondary"
+            >취소</a
+          >
+        </div>
       </form>
     </div>
 
-    <script>
-      let uploadedImageUrl = null;
-
-      // 이미지 업로드 처리
-      $("#fileInput").on("change", function () {
-        const file = this.files[0];
-        if (!file) return;
-
-        const formData = new FormData();
-        formData.append("file", file);
-
-        $.ajax({
-          url: "/api/upload",
-          method: "POST",
-          data: formData,
-          processData: false,
-          contentType: false,
-          success: function (url) {
-            uploadedImageUrl = url;
-            $("#uploadedPreview").html(
-              `<img src="${url}" class="img-fluid border" style="max-height: 150px;" />`
-            );
-          },
-          error: function (xhr) {
-            alert("업로드 실패: " + xhr.responseText);
-          },
-        });
-      });
-
-      // 공지 등록 제출
-      $("#registerForm").on("submit", function (e) {
-        e.preventDefault();
-
-        const data = {
-          placeId: $("input[name='placeId']").val(),
-          content: $("#content").val(),
-          imageUrl: uploadedImageUrl,
-        };
-
-        $.ajax({
-          url: "/api/status",
-          method: "POST",
-          contentType: "application/json",
-          data: JSON.stringify(data),
-          success: function () {
-            alert("공지 등록 완료!");
-            location.href = "/place/community/" + data.placeId;
-          },
-          error: function (xhr) {
-            alert("등록 실패: " + xhr.responseText);
-          },
-        });
-      });
-    </script>
+    <!-- 사진 모달 -->
+    <div class="modal fade" id="imageModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-dark">
+          <div class="modal-body text-center">
+            <img id="modalImage" class="img-fluid rounded" />
+          </div>
+        </div>
+      </div>
+    </div>
 
     <%@ include file="../common/footer.jsp" %>
+    <script>
+      const allowedTypes = [
+        <c:forEach
+          var="type"
+          items="${place.allowedRequestTypes}"
+          varStatus="loop"
+        >
+          "${type}"<c:if test="${!loop.last}">,</c:if>
+        </c:forEach>,
+      ];
+    </script>
+    <script src="/js/place/register.js"></script>
   </body>
 </html>

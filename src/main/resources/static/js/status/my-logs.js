@@ -1,7 +1,7 @@
 // 현재 수정 중인 로그의 ID
 let editingId = null;
 // 새로 업로드된 이미지의 URL
-let uploadedImageUrl = null;
+let uploadedImageUrls = [];
 // 현재 페이지 번호 전역 변수
 let currentPage = 1;
 // 답변목록 담을 배열
@@ -85,88 +85,106 @@ function renderLog(log) {
   const badges = [];
 
   // 기본 뱃지
-  if (log.type === "ANSWER") badges.push(`<span class="badge bg-primary me-1">요청답변</span>`);
-  if (log.type === "FREE_SHARE") badges.push(`<span class="badge bg-secondary me-1">자발공유</span>`);
+  if (log.type === "ANSWER")
+    badges.push(`<span class="badge bg-primary me-1">요청답변</span>`);
+  if (log.type === "FREE_SHARE")
+    badges.push(`<span class="badge bg-secondary me-1">자발공유</span>`);
 
   if (log.selected)
     badges.push('<span class="badge bg-success me-1">✅ 채택됨</span>');
   if (log.hidden)
     badges.push('<span class="badge bg-secondary me-1">🚫 신고 처리</span>');
   if (log.requestClosed)
-    badges.push('<span class="badge bg-warning text-dark me-1">🔒 마감됨</span>');
+    badges.push(
+      '<span class="badge bg-warning text-dark me-1">🔒 마감됨</span>'
+    );
 
   // 카테고리 뱃지
   if (log.category) {
     const categoryLabel = categoryLabelMap[log.category] || log.category;
-    badges.push(`<span class="badge bg-info text-dark">${categoryLabel}</span>`);
+    badges.push(
+      `<span class="badge bg-info text-dark">${categoryLabel}</span>`
+    );
   }
 
+  // 이미지 HTML
   const imageHtml = log.imageUrl
     ? `<img src="${log.imageUrl}" class="img-fluid rounded border" style="max-height:150px;" />`
     : `<div class="text-muted small">이미지 없음</div>`;
 
   const relativeTime = getRelativeTime(log.createdAt);
+  const categorySummary = getCategorySummary(log);
 
+  // 답변 블록 (내가 쓴 답변)
+  const mainContentHtml = `
+    <h5 class="fw-bold mt-2 mb-3">✍️ 내가 쓴 답변</h5>
+    <div class="bg-light border rounded p-3 mb-3 small">
+      <div class="mb-2"><strong>📝 답변 내용:</strong> ${log.content}</div>
+      ${
+        categorySummary
+          ? `<div class="mb-2"><strong>📂 상세 정보:</strong> ${categorySummary}</div>`
+          : ""
+      }
+
+      <div class="d-flex justify-content-end text-muted small mt-3">
+        <div class="text-end">
+          <div><strong>장소:</strong> ${
+            log.placeName
+              ? `<span class="text-primary fw-bold">${log.placeName}</span>`
+              : log.customPlaceName
+              ? `<span class="text-muted">${log.customPlaceName}</span>`
+              : "사용자 지정 위치"
+          }</div>
+          <div><strong>작성자:</strong> ${log.nickname ?? "익명"}</div>
+          ${
+            log.type === "FREE_SHARE"
+              ? `<div><strong>조회수:</strong> ${log.viewCount ?? 0}</div>`
+              : ""
+          }
+        </div>
+      </div>
+    </div>
+    <div class="mb-3">${imageHtml}</div>
+  `;
+
+  // 요청 정보 블록
   const requestInfoHtml =
     log.type === "ANSWER" && log.requestTitle && log.requestContent
-      ? `<div class="bg-light p-2 rounded mb-2 small">
-           <strong class="d-block">📌 요청 정보</strong>
-           <div><strong>제목:</strong> ${log.requestTitle}</div>
-           <div><strong>내용:</strong> ${log.requestContent}</div>
-         </div>`
+      ? `
+      <h6 class="fw-bold mt-4 mb-2">📌 관련 요청 내용</h6>
+      <div class="bg-light border rounded p-3 mb-2 small">
+        <div class="mb-2"><strong>📍 요청 제목:</strong> ${log.requestTitle}</div>
+        <div><strong>📄 요청 내용:</strong> ${log.requestContent}</div>
+      </div>`
       : "";
 
-  const categorySummary = getCategorySummary(log);
+  const actionButtons = log.selected
+    ? `<span class="text-muted small">✅ 채택된 답변은 수정/삭제 불가</span>`
+    : log.requestClosed
+    ? `<span class="text-muted small">🔒 마감된 요청에 대한 답변은 수정/삭제 불가</span>`
+    : `
+        <button class="btn btn-sm btn-outline-primary btn-edit me-2">수정</button>
+        <button class="btn btn-sm btn-outline-danger btn-delete">삭제</button>`;
 
   return `
     <div class="col-12 mb-3" data-id="${log.id}">
       <div class="card shadow-sm">
         <div class="card-body">
+          
+          <!-- 상단 뱃지 + 시간 -->
           <div class="d-flex justify-content-between align-items-center mb-2">
             <div>${badges.join(" ")}</div>
             <small class="text-muted">${relativeTime}</small>
           </div>
 
-          <h5 class="mb-2">📝 답변 내용</h5>
-          <p class="mb-1">${log.content}</p>
-          ${
-            categorySummary
-              ? `<p class="text-muted small mb-2">${categorySummary}</p>`
-              : ""
-          }
+          <!-- 내가 쓴 답변 -->
+          ${mainContentHtml}
 
+          <!-- 관련 요청 내용 -->
           ${requestInfoHtml}
 
-          <div class="mb-3">${imageHtml}</div>
-
-          <div class="text-muted small mb-3">
-            작성자: ${log.nickname ?? "익명"} |
-            장소: ${
-              log.placeName
-                ? `<span class="text-primary fw-bold">${log.placeName}</span>`
-                : log.customPlaceName
-                ? `<span class="text-muted">${log.customPlaceName}</span>`
-                : "사용자 지정 위치"
-            } 
-            ${
-              log.type === "FREE_SHARE"
-                ? `| 조회수: ${log.viewCount ?? 0}`
-                : ""
-            }
-          </div>
-
-          <div class="text-end">
-            ${
-              log.selected
-                ? `<span class="text-muted small">✅ 채택된 답변은 수정/삭제 불가</span>`
-                : log.requestClosed
-                ? `<span class="text-muted small">🔒 마감된 요청에 대한 답변은 수정/삭제 불가</span>`
-                : `
-                  <button class="btn btn-sm btn-outline-primary btn-edit me-2">수정</button>
-                  <button class="btn btn-sm btn-outline-danger btn-delete">삭제</button>
-                `
-            }
-          </div>
+          <!-- 버튼 -->
+          <div class="mt-3 text-end">${actionButtons}</div>
         </div>
       </div>
     </div>
@@ -387,21 +405,31 @@ function getDynamicFieldsHTML(category, log) {
 // ─────────────────────────────────────
 
 function handleFileUpload() {
-  const file = this.files[0];
-  if (!file) return;
+  const files = this.files;
+  if (!files.length) return;
 
   const formData = new FormData();
-  formData.append("file", file);
+  for (const file of files) {
+    formData.append("files", file); // 복수 업로드 지원
+  }
 
   $.ajax({
-    url: "/api/upload",
+    url: "/api/upload/multi", // 다중 업로드용 엔드포인트
     method: "POST",
     data: formData,
     processData: false,
     contentType: false,
-    success: function (url) {
-      uploadedImageUrl = url;
-      $("#uploadedImage").html(`<img src="${url}" style="max-width:100px;" />`);
+    success: function (urls) {
+      uploadedImageUrls = urls; // 배열로 저장
+
+      // 렌더링
+      const previewHtml = urls
+        .map(
+          (url) =>
+            `<img src="${url}" class="img-fluid border rounded me-2 mb-2" style="max-height: 100px;" />`
+        )
+        .join("");
+      $("#uploadedImage").html(previewHtml);
     },
     error: function (xhr) {
       alert("업로드 실패: " + xhr.responseText);
@@ -421,7 +449,7 @@ function submitEdit(e) {
 
   const updatedData = {
     content: $("#editContent").val(),
-    imageUrl: uploadedImageUrl,
+    imageUrls: uploadedImageUrls,
   };
 
   switch (log.category) {

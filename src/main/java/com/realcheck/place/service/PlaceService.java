@@ -93,7 +93,7 @@ public class PlaceService {
         }
 
         /**
-         * [2-4] 승인된 장소만 필터링 (사용자 노출용) [미사용]
+         * [2-4] 승인된 장소만 필터링 (사용자 노출용) [미사용] - 장소 검색 페이지
          * - 사용자에게 보여줄 장소를 제한함
          */
         public List<PlaceDto> findApprovedNearby(double lat, double lng, double radiusMeters) {
@@ -116,6 +116,7 @@ public class PlaceService {
 
         /**
          * [2-6] 장소 상세 정보 조회 (공식 장소)
+         * PageController: getPlaceForRegister
          * PageController: showCommunityPage
          * PlaceController: getPlaceDetails
          * - 장소 상세 정보 + 허용된 요청 타입 목록 반환

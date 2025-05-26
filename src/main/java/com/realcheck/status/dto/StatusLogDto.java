@@ -34,8 +34,8 @@ public class StatusLogDto {
     private Long id;
     // 대기 상황 설명 (예: "현재 3명 대기 중")
     private String content;
-    // 이미지 URL (선택 사항)
-    private String imageUrl;
+    // 이미지 URL (선택 사항) (다중 이미지 리스트)
+    private List<String> imageUrls;
     // 답변 채택 여부 (요청 답변일 경우)
     private boolean isSelected;
     // 신고 횟수
@@ -125,11 +125,14 @@ public class StatusLogDto {
      * - 유연 필드(category 기반 필드)는 요청 카테고리를 기준으로 불필요한 필드 제거 후 설정
      */
     public StatusLog toEntity(User user, Place place, Request request) {
+
+        StatusLog log = new StatusLog();
         
         // (1) 요청 카테고리 정보가 있으면 해당 카테고리에 맞게 유연 필드 필터링
         if (this.category != null) {
             RequestCategory categoryEnum = convertToCategory(); // String → Enum
             filterFieldsByCategory(categoryEnum); // 해당 카테고리 외 필드는 null 처리
+            log.setCategory(categoryEnum);
         }
 
         // (2) place가 null인데 request로부터 연결된 place가 존재할 경우 자동 설정
@@ -138,9 +141,8 @@ public class StatusLogDto {
         }
 
         // (3) StatusLog 엔티티 객체 생성
-        StatusLog log = new StatusLog();
         log.setContent(this.content);
-        log.setImageUrl(this.imageUrl);
+        log.setImageUrls(this.imageUrls);
         log.setSelected(this.isSelected);
         log.setReporter(user);
         log.setPlace(place);
@@ -185,7 +187,7 @@ public class StatusLogDto {
                 .id(log.getId())
                 .content(log.getContent())
                 .isSelected(log.isSelected())
-                .imageUrl(log.getImageUrl())
+                .imageUrls(log.getImageUrls())
                 .reportCount(log.getReportCount())
                 .isHidden(log.isHidden())
                 .userId(log.getReporter() != null ? log.getReporter().getId() : null)
@@ -212,9 +214,11 @@ public class StatusLogDto {
 
                 // 유연 필드 포함
                 .category(
-                        log.getRequest() != null && log.getRequest().getCategory() != null
-                                ? log.getRequest().getCategory().name()
-                                : null)
+                        log.getCategory() != null
+                                ? log.getCategory().name()
+                                : (log.getRequest() != null && log.getRequest().getCategory() != null
+                                        ? log.getRequest().getCategory().name()
+                                        : null))
 
                 // 유연 필드 설정
                 .hasBathroom(log.getHasBathroom())

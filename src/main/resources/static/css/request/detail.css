@@ -18,3 +18,36 @@
   z-index: 10;
   display: none; /* 기본적으로 숨기되, 수정 모드에서만 표시 */
 }
+
+/* 캐러셀 좌우 화살표 아이콘 색상 변경 */
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+  background-image: none !important;
+  color: black;
+  font-size: 2rem;
+}
+
+.carousel-control-prev::after,
+.carousel-control-next::after {
+  content: "";
+}
+
+/* 직접 아이콘 넣기 (→ 대신 텍스트로 사용하거나 커스텀 가능) */
+.carousel-control-prev::before,
+.carousel-control-next::before {
+  color: black;
+  font-size: 2rem;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.carousel-control-prev::before {
+  content: "◀";
+  left: 10px;
+}
+
+.carousel-control-next::before {
+  content: "▶";
+  right: 10px;
+}

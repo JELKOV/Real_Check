@@ -8,7 +8,7 @@ package com.realcheck.status.entity;
  * - ANSWER: 요청에 대한 답변
  */
 public enum StatusType {
+    ANSWER,
     FREE_SHARE,
-    REGISTER,
-    ANSWER
+    REGISTER
 }

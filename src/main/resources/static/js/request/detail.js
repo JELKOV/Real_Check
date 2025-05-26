@@ -1,5 +1,9 @@
+// ─────────────────────────────────────────────────────────────
+// [0] 전역 변수 및 유틸 함수
+// ─────────────────────────────────────────────────────────────
 let loginUserIdNum = null;
 let requestId = null;
+let uploadedImageUrls = [];
 
 // 카테고리 코드 → 라벨 매핑 (배지 및 필터용)
 const categoryLabelMap = {
@@ -17,6 +21,38 @@ const categoryLabelMap = {
   ETC: "❓ 기타",
 };
 
+// 공통 유틸: 입력 필드 값 변환 (boolean, number 등)
+function parseFieldValue(input) {
+  const val = input.val();
+  if (val === "") return null;
+  if (input.attr("type") === "number") return parseInt(val, 10);
+  if (val === "true" || val === "false") return val === "true";
+  return val;
+}
+
+// 공통 유틸: 이미지 삭제 버튼 처리
+function handleImageRemoveBtn(e) {
+  const $btn = $(e.target);
+  const $wrapper = $btn.closest(".position-relative");
+  const url = $wrapper.find("img").data("url");
+
+  // 배열에서도 삭제 (등록용 이미지 미리보기일 때만)
+  uploadedImageUrls = uploadedImageUrls.filter((item) => item !== url);
+
+  $wrapper.remove();
+}
+
+// 공통 유틸: 이미지 미리보기 모달 열기
+function handleImagePreviewModal() {
+  const imageUrl = $(this).data("url");
+  $("#modalImage").attr("src", imageUrl);
+  const modal = new bootstrap.Modal(document.getElementById("imageModal"));
+  modal.show();
+}
+
+// ─────────────────────────────────────────────────────────────
+// [1] 문서 준비 및 이벤트 바인딩
+// ─────────────────────────────────────────────────────────────
 $(document).ready(function () {
   const loginUserIdElement = document.getElementById("loginUserId");
 
@@ -37,43 +73,51 @@ $(document).ready(function () {
   loadAnswerList(requestId);
 });
 
-/**
- * [1] 이벤트 리스너 바인딩
- */
+// 이벤트 리스너 바인딩 함수
 function bindEventListeners() {
-  // 답변 채택 버튼 클릭
-  $(document).on("click", ".select-answer-btn", handleSelectAnswer);
+  // (1) 등록 / 제출 관련
 
   // 답변 등록 처리
   $("#answerForm").on("submit", submitAnswer);
+  // 사진 올리기 (파일선택) 클릭
+  $(document).on("change", "#fileInput", handleImageFileChange);
+  // 수정용 이미지 업로드 핸들러
+  $(document).on("change", ".edit-file-input", handleEditImageUpload);
 
-  // 요청 마감 버튼 클릭
-  $(document).on("click", "#closeRequestBtn", function () {
-    closeRequest();
-  });
+  // (2) 수정 관련
 
   // 답변 수정 버튼 클릭 (수정 모드 활성화)
   $(document).on("click", ".edit-answer-btn", activateEditMode);
-
   // 답변 수정 저장 버튼 클릭
   $(document).on("click", ".save-edit-btn", saveEditedAnswer);
-
   // 답변 수정 취소 버튼 클릭
   $(document).on("click", ".cancel-edit-btn", cancelEditMode);
-
   // 답변 삭제 버튼 클릭
   $(document).on("click", ".delete-answer-btn", deleteAnswer);
 
+  // (3) 채택 및 마감
+
+  // 답변 채택 버튼 클릭
+  $(document).on("click", ".select-answer-btn", handleSelectAnswer);
+
+  //(4) 신고 관련
+
   // 신고 버튼 클릭 (toggle 방식으로 대체)
   $(document).on("click", ".report-toggle-btn", handleReportToggle);
-
   // 신고 사유 선택 후 전송 버튼 클릭
   $(document).on("click", "#submitReportBtn", handleSubmitReportReason);
+
+  // (5) 이미지 관련
+
+  // 수정 이미지 삭제 버튼 클릭 + 초기 업로드 삭제도 포함
+  $(document).on("click", ".delete-image-btn", handleImageRemoveBtn);
+  // 이미지 미리보기 (확대) 핸들러
+  $(document).on("click", ".carousel-image", handleImagePreviewModal);
 }
 
-/**
- * [2] 요청 상세 정보 로드
- */
+// ─────────────────────────────────────────────────────────────
+// [2] 요청 상세 정보 로딩 및 렌더링
+// ─────────────────────────────────────────────────────────────
 
 // [2-1] 상세 정보 관련 전체 로드 헬퍼 함수
 function loadRequestDetail(requestId) {
@@ -324,9 +368,9 @@ function renderAnswerFields(category) {
   container.append(fieldHtml);
 }
 
-/**
- * [3] 답변 리스트 함수
- */
+// ─────────────────────────────────────────────────────────────
+// [3] 답변 관련 기능
+// ─────────────────────────────────────────────────────────────
 
 // [3-1] 답변 리스트 로드
 function loadAnswerList(requestId) {
@@ -366,7 +410,7 @@ function loadAnswerList(requestId) {
   });
 }
 
-// [3-1-1] 답변 자동 마감 안내
+// [3-2] 답변 자동 마감 안내
 function updateAutoCloseNotice(visibleAnswerCount) {
   if (visibleAnswerCount > 0) {
     $("#autoCloseNotice").html(`
@@ -379,11 +423,8 @@ function updateAutoCloseNotice(visibleAnswerCount) {
   }
 }
 
-// [3-2] 답변 행 생성 함수 (버튼 위치 개선)
+// [3-3] 답변 행 생성 함수
 function generateAnswerRow(answer, hasSelected) {
-  const imageHtml = answer.imageUrl
-    ? `<img src="${answer.imageUrl}" style="max-width:100px;" class="mt-2" />`
-    : "";
   const nickname = answer.nickname || "익명 사용자";
   const selectedBadge = answer.selected
     ? `<span class="badge bg-success ms-2">✅ 채택됨</span>`
@@ -399,6 +440,42 @@ function generateAnswerRow(answer, hasSelected) {
   const actionButtons = generateActionButtons(answer, hasSelected);
   const formattedDate = new Date(answer.createdAt).toLocaleString("ko-KR");
 
+  // 캐러셀 생성 (imageUrls 기준)
+  const carouselId = `carousel-${answer.id}`;
+  let carouselHtml = "";
+  if (Array.isArray(answer.imageUrls) && answer.imageUrls.length > 0) {
+    const indicators = answer.imageUrls
+      .map(
+        (_, i) =>
+          `<button type="button" data-bs-target="#${carouselId}" data-bs-slide-to="${i}" ${
+            i === 0 ? "class='active'" : ""
+          } aria-label="Slide ${i + 1}"></button>`
+      )
+      .join("");
+
+    const slides = answer.imageUrls
+      .map(
+        (url, i) =>
+          `<div class="carousel-item ${i === 0 ? "active" : ""}">
+          <img src="${url}" class="d-block w-100 img-thumbnail carousel-image" style="max-height: 200px; object-fit: contain;" data-url="${url}" />
+        </div>`
+      )
+      .join("");
+
+    carouselHtml = `
+      <div id="${carouselId}" class="carousel slide mt-2" data-bs-ride="carousel">
+        <div class="carousel-indicators">${indicators}</div>
+        <div class="carousel-inner">${slides}</div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#${carouselId}" data-bs-slide="prev">
+          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#${carouselId}" data-bs-slide="next">
+          <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        </button>
+      </div>
+    `;
+  }
+
   return `
     <li class="list-group-item answer-item" data-answer-data='${JSON.stringify(
       answer
@@ -408,34 +485,32 @@ function generateAnswerRow(answer, hasSelected) {
       <div class="dynamic-fields">
         ${renderExtraAnswerFields(answer)}
       </div>
-      ${imageHtml}
+      ${carouselHtml}
       <br><small class="text-muted">${formattedDate}</small>
       ${actionButtons}
     </li>`;
 }
 
-/**
- * [3-3] 수정 / 삭제 관련 로직
- */
-
-// [3-3-1] 답변 채택 가능 여부 판단 함수
+// [3-4] 답변 채택 가능 여부 판단 함수
 function canSelectAnswer(answer, hasSelected) {
   if (!loginUserIdNum) return false; // 로그인 여부 확인
   if (answer.selected) return false; // 이미 선택된 답변은 선택 불가
   if (hasSelected) return false; // 이미 다른 답변이 선택된 경우
   if (loginUserIdNum !== answer.requestOwnerId) return false; // 요청 작성자만 채택 가능
+  if (answer.requestClosed) return false; // 요청 마감된 경우 불가
   return true;
 }
 
-// [3-3-2] 답변 수정/삭제 가능 여부 판단 함수
+// [3-5] 답변 수정/삭제 가능 여부 판단 함수
 function canEditOrDeleteAnswer(answer) {
   if (!loginUserIdNum) return false; // 로그인 여부 확인
   if (loginUserIdNum !== answer.userId) return false; // 답변 작성자만 수정/삭제 가능
   if (answer.selected) return false; // 채택된 답변은 수정/삭제 불가
+  if (answer.requestClosed) return false; // 마감된 요청이면 불가
   return true;
 }
 
-// [3-3-3] 수정/삭제/신고 버튼 생성 함수
+// [3-6] 수정/삭제/신고 버튼 생성 함수
 function generateActionButtons(answer, hasSelected) {
   const canSelect = canSelectAnswer(answer, hasSelected);
   const canEditOrDelete = canEditOrDeleteAnswer(answer);
@@ -475,7 +550,41 @@ function generateActionButtons(answer, hasSelected) {
   `;
 }
 
-// [3-3-4] 답변 수정 모드 활성화
+// [3-7] 수정 - 이미지 업로드 로직
+function handleEditImageUpload() {
+  const files = this.files;
+  const $preview = $(this).closest("li").find(".edit-uploaded-preview");
+  if (files.length === 0) return;
+
+  const formData = new FormData();
+  for (let i = 0; i < files.length; i++) {
+    formData.append("files", files[i]);
+  }
+
+  $.ajax({
+    url: "/api/upload/multi",
+    method: "POST",
+    data: formData,
+    processData: false,
+    contentType: false,
+    success: function (res) {
+      res.forEach((url) => {
+        $preview.append(`
+          <div class="position-relative d-inline-block">
+            <img src="${url}" data-url="${url}" class="img-thumbnail me-2 mb-2" style="max-width:100px;" />
+            <button type="button" class="btn btn-sm btn-close position-absolute top-0 end-0 delete-image-btn"
+                    style="background-color: rgba(0,0,0,0.6); color: white;" title="삭제"></button>
+          </div>
+        `);
+      });
+    },
+    error: function (xhr) {
+      alert("이미지 업로드 실패: " + xhr.responseText);
+    },
+  });
+}
+
+// [3-8] 답변 수정 모드 활성화
 function activateEditMode() {
   const answerId = $(this).data("id");
   const answerRow = $(`li[data-answer-data*='"id":${answerId}']`);
@@ -483,44 +592,85 @@ function activateEditMode() {
   const originalText = answerTextElement.text().trim();
   const answer = JSON.parse(answerRow.attr("data-answer-data"));
 
-  // 수정 모드로 변경
+  // 1. 본문 텍스트 수정 영역
   answerTextElement.html(`
     <textarea class="form-control edit-answer-input" data-id="${answerId}">${originalText}</textarea>
   `);
 
-  // 동적 필드 수정 가능하게 렌더링
-  answerRow.find(".dynamic-fields").html(renderExtraAnswerFields(answer, true));
+  // 2. 이미지 업로드 영역
+  const imageHtml = `
+    <label class="mt-2">이미지 수정</label>
+    <input type="file" class="form-control edit-file-input" accept="image/*" multiple />
+    <div class="edit-uploaded-preview mt-2 d-flex flex-wrap gap-2">
+      ${
+        Array.isArray(answer.imageUrls)
+          ? answer.imageUrls
+              .map(
+                (url) => `
+                <div class="position-relative d-inline-block">
+                  <img src="${url}" data-old="true" data-url="${url}" class="me-2 mb-2 img-thumbnail" style="max-width:100px;" />
+                  <button type="button" class="btn btn-sm btn-close position-absolute top-0 end-0 delete-image-btn"
+                          style="background-color: rgba(0,0,0,0.6); color: white;" title="삭제"></button>
+                </div>
+              `
+              )
+              .join("")
+          : ""
+      }
+    </div>
+  `;
 
-  // 버튼 토글 (저장/취소 표시, 수정/삭제 숨기기)
+  // 3. 동적 필드 + 이미지 같이 렌더링
+  const extraFieldHtml = renderExtraAnswerFields(answer, true);
+  answerRow.find(".dynamic-fields").html(extraFieldHtml + imageHtml);
+
+  // 4. 버튼 전환
   answerRow.find(".edit-delete-buttons").hide();
   answerRow.find(".save-cancel-buttons").show();
 }
-// [3-3-5] 수정 취소 처리
+
+// [3-9] 수정 취소 처리
 function cancelEditMode() {
   loadAnswerList(requestId); // 원래 답변 목록으로 되돌리기
 }
 
-// [3-3-6] 수정 저장 처리
+// [3-10] 수정 저장 처리
 function saveEditedAnswer() {
   const answerId = $(this).data("id");
   const answerRow = $(`li[data-answer-data*='"id":${answerId}']`);
   const newText = answerRow.find(".edit-answer-input").val().trim();
   const extraFields = {};
 
-  // 동적 필드 값 수집
+  // 1. 동적 필드 값 수집
   answerRow.find(".edit-extra-input").each(function () {
-    const field = $(this).data("field");
-    extraFields[field] = $(this).val();
+    const input = $(this);
+    const field = input.data("field");
+    const value = parseFieldValue(input);
+    if (value !== null) extraFields[field] = value;
   });
 
+  // 2. 본문 텍스트 검증
   if (!newText) {
     alert("내용을 입력해주세요.");
     return;
   }
 
-  // 수정 데이터 구성
-  const dto = { content: newText, ...extraFields };
+  // 3. 이미지 URL 수집 (최신 DOM 기준)
+  const imageUrls = answerRow
+    .find(".edit-uploaded-preview img")
+    .map(function () {
+      return $(this).attr("data-url"); // 주의: .data("url") 말고 attr() 사용 추천
+    })
+    .get();
 
+  // 4. 전송 DTO 구성
+  const dto = {
+    content: newText,
+    imageUrls,
+    ...extraFields,
+  };
+
+  // 5. 서버에 PUT 요청
   $.ajax({
     url: `/api/status/${answerId}`,
     method: "PUT",
@@ -528,7 +678,7 @@ function saveEditedAnswer() {
     data: JSON.stringify(dto),
     success: function () {
       alert("답변이 수정되었습니다.");
-      loadAnswerList(requestId); // 수정 후 목록 새로고침
+      loadAnswerList(requestId); // 수정 후 목록 다시 로드
     },
     error: function (xhr) {
       alert("수정 실패: " + xhr.responseText);
@@ -536,7 +686,7 @@ function saveEditedAnswer() {
   });
 }
 
-// [3-3-7] 답변 삭제 처리
+// [3-11] 답변 삭제 처리
 function deleteAnswer() {
   const answerId = $(this).data("id");
   if (!confirm("정말로 이 답변을 삭제하시겠습니까?")) return;
@@ -554,11 +704,11 @@ function deleteAnswer() {
   });
 }
 
-/**
- * [3-4] 신고 버튼 관련 함수
- */
+// ─────────────────────────────────────────────────────────────
+// [4] 신고 관련 기능
+// ─────────────────────────────────────────────────────────────
 
-//[3-4-1] 신고버튼 UI 업데이트 토글 형식
+//[4-1] 신고버튼 UI 업데이트 토글 형식
 function updateReportButton(statusLogId, reportCount) {
   $.get(`/api/report/check?statusLogId=${statusLogId}`, function (isReported) {
     const btn = $(`.report-toggle-btn[data-id=${statusLogId}]`);
@@ -578,7 +728,7 @@ function updateReportButton(statusLogId, reportCount) {
   });
 }
 
-// [3-4-1] 신고 버튼 클릭 처리 : 모달 생성
+// [4-2] 신고 버튼 클릭 처리 : 모달 생성
 function handleReportToggle() {
   const statusLogId = $(this).data("id");
   const btn = $(this);
@@ -610,7 +760,7 @@ function handleReportToggle() {
   }
 }
 
-// [3-4-2] 신고 처리 하기
+// [4-3] 신고 처리 하기
 function handleSubmitReportReason() {
   const statusLogId = $("#reportTargetStatusLogId").val();
   const reason = $("#reportReasonSelect").val();
@@ -639,7 +789,7 @@ function handleSubmitReportReason() {
   });
 }
 
-// [3-5] 유틸 함수: 응답 필드 표시용 텍스트 생성 (수정 모드 지원)
+// [4-4] 유틸 함수: 응답 필드 표시용 텍스트 생성 (수정 모드 지원)
 function renderExtraAnswerFields(answer, isEditMode = false) {
   const fieldMap = {
     PARKING: {
@@ -702,8 +852,55 @@ function renderExtraAnswerFields(answer, isEditMode = false) {
   }</div>`;
 }
 
+// [4-5] 파일 선택 시 실행될 함수
+function handleImageFileChange(e) {
+  const files = e.target.files;
+  if (files.length > 0) {
+    handleFileUpload(files);
+  }
+}
+
+// [4-6] 다중 사진 업로드 함수
+function handleFileUpload(files) {
+  const formData = new FormData();
+  for (let i = 0; i < files.length; i++) {
+    formData.append("files", files[i]); // 다중 파일 전송
+  }
+
+  $.ajax({
+    url: "/api/upload/multi",
+    method: "POST",
+    data: formData,
+    processData: false,
+    contentType: false,
+    success: function (res) {
+      uploadedImageUrls = res; // 서버에서 받은 URL 배열
+      renderImagePreview(); // 미리보기 렌더링
+    },
+    error: function (xhr) {
+      alert("이미지 업로드 실패: " + xhr.responseText);
+    },
+  });
+}
+
+// [4-7] 업로드 미리보기 사진
+function renderImagePreview() {
+  const html = uploadedImageUrls
+    .map(
+      (url) => `
+        <div class="position-relative d-inline-block">
+          <img src="${url}" data-url="${url}" class="me-2 mb-2 img-thumbnail" style="max-width:100px;" />
+          <button type="button" class="btn btn-sm btn-close position-absolute top-0 end-0 delete-image-btn"
+                  style="background-color: rgba(0,0,0,0.6); color: white;" title="삭제" data-url="${url}"></button>
+        </div>
+      `
+    )
+    .join("");
+  $("#uploadedPreview").html(html);
+}
+
 /**
- * [4] 답변 채택 버튼 처리
+ * [4-8] 답변 채택 버튼 처리
  */
 function handleSelectAnswer() {
   const statusLogId = $(this).data("id");
@@ -724,29 +921,25 @@ function handleSelectAnswer() {
 }
 
 /**
- * [5] 답변 제출 처리 (중복 방지)
+ * [4-9] 답변 제출 처리 (중복 방지)
  */
 function submitAnswer(e) {
   e.preventDefault();
   const content = $("#answerContent").val();
-  const dto = { content, requestId: requestId };
+  const dto = {
+    content,
+    requestId,
+    imageUrls: uploadedImageUrls,
+  };
 
   // 유연 필드 동적 추가 (카테고리별 필드)
   $("#dynamicAnswerFields")
     .find("input, select")
     .each(function () {
-      const name = $(this).attr("name");
-      let value = $(this).val();
-
-      if (value === "") return;
-
-      if ($(this).attr("type") === "number") {
-        value = parseInt(value);
-      } else if (value === "true" || value === "false") {
-        value = value === "true";
-      }
-
-      dto[name] = value;
+      const input = $(this);
+      const name = input.attr("name");
+      const value = parseFieldValue(input);
+      if (value !== null) dto[name] = value;
     });
 
   // 사용자 중복 답변 확인
@@ -767,6 +960,10 @@ function submitAnswer(e) {
       success: function () {
         alert("답변이 등록되었습니다.");
         $("#answerContent").val(""); // 입력 필드 초기화
+        $("#fileInput").val(""); // 파일 input 초기화
+        $("#uploadedPreview").empty(); // 미리보기 제거
+        uploadedImageUrls = []; // 사진 배열 초기화
+
         loadAnswerList(requestId); // 답변 목록 즉시 새로고침
         loadRequestDetail(requestId); // 답변 카운트 갱신
       },

@@ -23,14 +23,14 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
     <div class="container mt-5">
       <h3 class="text-center mb-4">요청 등록</h3>
 
-      <!-- 👉 지도 + 폼 2단 구성 -->
+      <!-- 지도 + 폼 2단 구성 -->
       <div class="row">
-        <!-- [왼쪽] 지도 -->
+        <!-- 왼쪽 지도 -->
         <div class="col-md-6 mb-4">
           <div id="mainMap" class="map-container"></div>
         </div>
 
-        <!-- [오른쪽] 입력 폼 -->
+        <!-- 오른쪽 입력 폼 -->
         <div class="col-md-6">
           <form id="requestForm">
             <!-- 장소 선택 방식 -->

@@ -104,10 +104,18 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
                 <input
                   type="file"
                   id="fileInput"
-                  name="file"
+                  name="files"
+                  multiple
                   style="display: none"
                 />
-                <div id="uploadedImage" class="mt-2"></div>
+                <div id="uploadedPreview" class="mt-2"></div>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-danger mt-2 d-none"
+                  id="cancelImageBtn"
+                >
+                  ❌ 이미지 제거
+                </button>
               </div>
             </div>
             <div class="modal-footer">

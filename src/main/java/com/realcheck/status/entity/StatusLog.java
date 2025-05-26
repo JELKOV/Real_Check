@@ -1,11 +1,13 @@
 package com.realcheck.status.entity;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.realcheck.place.entity.Place;
 import com.realcheck.report.entity.Report;
 import com.realcheck.request.entity.Request;
+import com.realcheck.request.entity.RequestCategory;
 import com.realcheck.user.entity.User;
 
 import jakarta.persistence.*;
@@ -56,9 +58,11 @@ public class StatusLog {
     @Column(nullable = false)
     private boolean rewarded = false;
 
-    // 이미지 경로 (선택적)
-    @Column(nullable = true)
-    private String imageUrl;
+    // 여러 이미지 URL을 저장하는 필드로
+    @ElementCollection
+    @CollectionTable(name = "status_log_images", joinColumns = @JoinColumn(name = "status_log_id"))
+    @Column(name = "image_url")
+    private List<String> imageUrls = new ArrayList<>();
 
     // 답변 채택 여부 (요청 답변일 경우만 사용)
     private boolean isSelected = false;
@@ -115,6 +119,10 @@ public class StatusLog {
     // [2] 유연 필드 (카테고리별 동적 사용)
     // - 카테고리에 따라 동적으로 사용되며, null 허용
     // ─────────────────────────────────────────────
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = true)
+    private RequestCategory category;
 
     // 화장실 여부 (BATHROOM)
     @Column

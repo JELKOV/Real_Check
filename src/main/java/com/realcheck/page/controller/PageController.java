@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * PageController
@@ -163,6 +164,32 @@ public class PageController {
         return "request/my-requests";
     }
 
+    /**
+     * [2-5] 공지 등록, 페이지로 이동 (해당 장소의 owner만 접근 가능)
+     * page: place/community.jsp
+     */
+    @GetMapping("/status/register")
+    public String showRegisterNoticePage(@RequestParam("placeId") Long placeId,
+                                         HttpSession session,
+                                         Model model) {
+        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
+
+        if (loginUser == null) {
+            return "redirect:/login";
+        }
+
+        PlaceDetailsDto place = placeService.getPlaceDetails(placeId);
+
+        // 소유자 확인
+        if (!loginUser.getId().equals(place.getOwnerId())) {
+            throw new IllegalStateException("공지 등록 권한이 없습니다.");
+        }
+
+        model.addAttribute("place", place);
+        return "place/register";
+    }
+
+
     // ─────────────────────────────────────────────
     // [3] 지도 관련 페이지
     // ─────────────────────────────────────────────
@@ -206,6 +233,8 @@ public class PageController {
         StatusLogDto latestLog = statusLogService.getLatestRegisterLogByPlaceId(placeId); // 응답
         List<RequestDto> placeRequests = requestService.getRequestsByPlaceId(placeId);
 
+        System.out.println("📡 recentLogs size: " + recentLogs.size());
+        
         model.addAttribute("place", place);
         model.addAttribute("registerLogs", registerLogs);
         model.addAttribute("recentLogs", recentLogs);
@@ -258,7 +287,7 @@ public class PageController {
     // ────────────────────────────────────────
     // [*] 내부 공통 메서드
     // ────────────────────────────────────────
-    
+
     /**
      * [1] ADMIN CHECK 메서드
      * PageController: adminPage

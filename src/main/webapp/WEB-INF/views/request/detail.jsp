@@ -60,9 +60,21 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
             ></textarea>
           </div>
 
+          <!-- 이미지 업로드 필드 -->
           <div class="mb-3">
-            <input type="file" name="file" class="form-control" />
+            <label class="form-label">이미지 첨부 (선택)</label>
+            <input
+              type="file"
+              name="files"
+              id="fileInput"
+              class="form-control"
+              multiple
+            />
+
+            <!-- 미리보기 영역 -->
+            <div id="uploadedPreview" class="mt-2"></div>
           </div>
+
           <button type="submit" class="btn btn-success w-100">
             답변 등록하기
           </button>
@@ -109,6 +121,22 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
             >
               취소
             </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 이미지 확대 모달 -->
+    <div class="modal fade" id="imageModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-dark">
+          <div class="modal-body text-center p-0">
+            <img
+              id="modalImage"
+              src=""
+              class="img-fluid rounded"
+              style="max-height: 90vh"
+            />
           </div>
         </div>
       </div>

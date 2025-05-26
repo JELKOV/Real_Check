@@ -1,0 +1,25 @@
+/* 공지 등록 페이지 전용 스타일 */
+
+#dropArea {
+  border: 2px dashed #ccc;
+  padding: 20px;
+  text-align: center;
+  color: #999;
+  border-radius: 8px;
+  transition: border-color 0.3s ease;
+  cursor: pointer;
+}
+
+#dropArea.dragover {
+  border-color: #007bff;
+  color: #007bff;
+  background-color: #f8f9fa;
+}
+
+#contentCount {
+  white-space: nowrap;
+  direction: ltr;
+  display: inline-block;
+  min-width: 60px;
+  text-align: right;
+}

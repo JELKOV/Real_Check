@@ -28,6 +28,12 @@ $(document).ready(function () {
   renderCategorySummaries();
   // 카테고리 뱃지 텍스트 처리
   renderCategoryBadges();
+
+  // 이미지 클릭 시 확대 모달 띄우기
+  $(document).on("click", ".log-image", function () {
+    const src = $(this).data("img");
+    $("#modalImage").attr("src", src);
+  });
 });
 
 // ─────────────────────────────────────────────
@@ -103,6 +109,7 @@ function renderCategorySummaries() {
 // 요약 텍스트 생성 로직 (개별 항목 처리)
 function renderCategorySummaryText(el) {
   const category = el.dataset.category;
+  console.log("🧪 rendering summary for:", el.dataset);
   const label = categoryLabelMap[category] || "";
 
   switch (category) {
@@ -151,6 +158,7 @@ function renderCategorySummaryText(el) {
     default:
       el.textContent = "";
   }
+
 }
 
 // ─────────────────────────────────────────────

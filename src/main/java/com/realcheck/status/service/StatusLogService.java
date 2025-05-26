@@ -10,6 +10,7 @@ import com.realcheck.place.repository.PlaceRepository;
 import com.realcheck.point.entity.PointType;
 import com.realcheck.point.service.PointService;
 import com.realcheck.request.entity.Request;
+import com.realcheck.request.entity.RequestCategory;
 import com.realcheck.user.entity.User;
 import com.realcheck.user.repository.UserRepository;
 
@@ -133,6 +134,12 @@ public class StatusLogService {
 
         // (1) 장소 소유자 확인
         validatePlaceOwnership(userId, dto.getPlaceId());
+
+        // category가 존재하면 수동 필터링
+        if (dto.getCategory() != null) {
+            dto.filterFieldsByCategory(RequestCategory.valueOf(dto.getCategory()));
+        }
+        
         // (2) 상태 로그 등록 (공통 로직 호출)
         registerInternal(userId, dto, StatusType.REGISTER);
     }
@@ -318,6 +325,10 @@ public class StatusLogService {
             throw new IllegalStateException("채택된 답변은 수정할 수 없습니다.");
         }
 
+        if (log.getRequest() != null && log.getRequest().isClosed()) {
+            throw new IllegalStateException("종료된 요청에 대한 응답은 수정할 수 없습니다.");
+        }
+
         // 수정 가능한 필드만 갱신
         log.setContent(dto.getContent());
         if (dto.getWaitCount() != null)
@@ -340,6 +351,8 @@ public class StatusLogService {
             log.setIsOpen(dto.getIsOpen());
         if (dto.getSeatCount() != null)
             log.setSeatCount(dto.getSeatCount());
+
+        log.setImageUrls(dto.getImageUrls());
 
         statusLogRepository.save(log);
     }
@@ -409,6 +422,14 @@ public class StatusLogService {
 
         if (!log.getReporter().getId().equals(userId)) {
             throw new IllegalStateException("해당 로그를 삭제할 권한이 없습니다.");
+        }
+
+        if (log.isSelected()) {
+            throw new IllegalStateException("채택된 응답은 삭제할 수 없습니다.");
+        }
+
+        if (log.getRequest() != null && log.getRequest().isClosed()) {
+            throw new IllegalStateException("종료된 요청에 대한 응답은 삭제할 수 없습니다.");
         }
 
         statusLogRepository.delete(log);
