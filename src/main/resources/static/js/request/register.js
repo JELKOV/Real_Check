@@ -224,7 +224,6 @@ function selectPlace(item) {
   $("#placeSearch").val(placeName);
 }
 
-// TODO: 고치기 recentINfo
 // [11] 장소 세부 정보 로드
 function loadPlaceDetails(placeId) {
   $.get(`/api/place/${placeId}/details`, function (data) {

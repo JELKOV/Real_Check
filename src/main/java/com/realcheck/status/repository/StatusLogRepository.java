@@ -93,12 +93,12 @@ public interface StatusLogRepository extends JpaRepository<StatusLog, Long> {
         List<StatusLog> findVisibleRegisterLogsByPlace(@Param("placeId") Long placeId);
 
         /**
-         * [2-3] 특정 장소에 등록된 특정 타입의 상태 로그 조회 (REGISTER)
-         * StatusLogService: getRegisterLogsByPlace
-         * - 커뮤니티 페이지에서 공식 등록글(StatusType.REGISTER)만 조회
-         * - 정렬 기준: 최신순 (createdAt 내림차순)
+         * [2-3] 특정 장소의 REGISTER 타입 상태 로그를 페이지 단위로 조회
+         * StatusLogService: getPagedRegisterLogsByPlace
+         * - 공식 공지글 리스트를 프론트에서 페이지네이션 처리 가능하도록 제공
+         * - 정렬 기준: createdAt 내림차순
          */
-        List<StatusLog> findByPlaceIdAndStatusTypeOrderByCreatedAtDesc(Long placeId, StatusType statusType);
+        Page<StatusLog> findByPlaceIdAndStatusType(Long placeId, StatusType statusType, Pageable pageable);
 
         /**
          * [2-4] 특정 장소의 가장 최신 상태 로그 1건 조회 (특정 타입에 대해)

@@ -1,0 +1,29 @@
+/* my-logs 전용 캐러셀 화살표 스타일 */
+#logsBody .carousel-control-prev-icon,
+#logsBody .carousel-control-next-icon {
+  background-image: none !important;
+}
+
+#logsBody .carousel-control-prev::after,
+#logsBody .carousel-control-next::after {
+  content: "";
+}
+
+#logsBody .carousel-control-prev::before,
+#logsBody .carousel-control-next::before {
+  color: black;
+  font-size: 2rem;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+#logsBody .carousel-control-prev::before {
+  content: "◀";
+  left: 10px;
+}
+
+#logsBody .carousel-control-next::before {
+  content: "▶";
+  right: 10px;
+}

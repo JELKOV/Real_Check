@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %> <%@ taglib
-prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+prefix="c" uri="http://java.sun.com/jsp/jstl/core" %> <%@ taglib prefix="fn"
+uri="http://java.sun.com/jsp/jstl/functions" %>
 <!DOCTYPE html>
 <html lang="ko">
   <head>
@@ -55,6 +56,91 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
         class="mb-4 border rounded"
       ></div>
 
+      <c:if test="${not empty latestLog}">
+        <div class="alert alert-info mt-3">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="fw-bold">📢 최근 공지</div>
+              <div class="mt-1">${latestLog.content}</div>
+
+              <!-- 카테고리 요약 정보 -->
+              <c:if test="${not empty latestLog.category}">
+                <div
+                  class="mt-2 small text-muted category-summary"
+                  data-category="${latestLog.category}"
+                  data-wait-count="${latestLog.waitCount}"
+                  data-has-bathroom="${latestLog.hasBathroom}"
+                  data-menu-info="${latestLog.menuInfo}"
+                  data-weather-note="${latestLog.weatherNote}"
+                  data-vendor-name="${latestLog.vendorName}"
+                  data-photo-note="${latestLog.photoNote}"
+                  data-noise-note="${latestLog.noiseNote}"
+                  data-is-parking-available="${latestLog.isParkingAvailable}"
+                  data-is-open="${latestLog.isOpen}"
+                  data-seat-count="${latestLog.seatCount}"
+                  data-crowd-level="${latestLog.crowdLevel}"
+                  data-extra="${latestLog.extra}"
+                ></div>
+              </c:if>
+            </div>
+
+            <!-- 캐러셀 (있을 경우) -->
+            <c:if test="${not empty latestLog.imageUrls}">
+              <div
+                id="carousel-latest-log"
+                class="carousel slide ms-3"
+                style="width: 180px; max-height: 200px"
+                data-bs-ride="carousel"
+              >
+                <div
+                  class="carousel-inner border rounded"
+                  style="max-height: 200px; overflow: hidden"
+                >
+                  <c:forEach
+                    var="img"
+                    items="${latestLog.imageUrls}"
+                    varStatus="status"
+                  >
+                    <div class="carousel-item ${status.first ? 'active' : ''}">
+                      <img
+                        src="${img}"
+                        class="d-block w-100 log-image"
+                        style="object-fit: contain; height: 200px"
+                        data-bs-toggle="modal"
+                        data-bs-target="#imageModal"
+                        data-img="${img}"
+                      />
+                    </div>
+                  </c:forEach>
+                </div>
+
+                <c:if test="${fn:length(latestLog.imageUrls) > 1}">
+                  <button
+                    class="carousel-control-prev"
+                    type="button"
+                    data-bs-target="#carousel-latest-log"
+                    data-bs-slide="prev"
+                  >
+                    <span class="carousel-control-prev-icon"></span>
+                  </button>
+                  <button
+                    class="carousel-control-next"
+                    type="button"
+                    data-bs-target="#carousel-latest-log"
+                    data-bs-slide="next"
+                  >
+                    <span class="carousel-control-next-icon"></span>
+                  </button>
+                </c:if>
+              </div>
+            </c:if>
+          </div>
+          <div class="text-muted small mt-2">
+            🕒 <span data-created-at="${latestLog.createdAt}"></span>
+          </div>
+        </div>
+      </c:if>
+
       <!-- 공식 공지글 -->
       <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
         <h5 class="mb-0">📢 공식 공지글</h5>
@@ -69,9 +155,9 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
       </div>
 
       <c:choose>
-        <c:when test="${not empty registerLogs}">
+        <c:when test="${not empty pagedNotices.content}">
           <div class="row gy-3">
-            <c:forEach var="log" items="${registerLogs}">
+            <c:forEach var="log" items="${pagedNotices.content}">
               <div class="col-12">
                 <div class="card">
                   <div class="card-body">
@@ -126,30 +212,65 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
                             </div>
                           </c:forEach>
                         </div>
-                        <button
-                          class="carousel-control-prev"
-                          type="button"
-                          data-bs-target="#carousel-${log.id}"
-                          data-bs-slide="prev"
-                        >
-                          <span class="carousel-control-prev-icon"></span>
-                        </button>
-                        <button
-                          class="carousel-control-next"
-                          type="button"
-                          data-bs-target="#carousel-${log.id}"
-                          data-bs-slide="next"
-                        >
-                          <span class="carousel-control-next-icon"></span>
-                        </button>
+                        <c:if test="${fn:length(log.imageUrls) > 1}">
+                          <button
+                            class="carousel-control-prev"
+                            type="button"
+                            data-bs-target="#carousel-${log.id}"
+                            data-bs-slide="prev"
+                          >
+                            <span class="carousel-control-prev-icon"></span>
+                          </button>
+                          <button
+                            class="carousel-control-next"
+                            type="button"
+                            data-bs-target="#carousel-${log.id}"
+                            data-bs-slide="next"
+                          >
+                            <span class="carousel-control-next-icon"></span>
+                          </button>
+                        </c:if>
                       </div>
                     </c:if>
+
                     <div class="text-muted small mt-2">
                       등록일: <span data-created-at="${log.createdAt}"></span>
                     </div>
+
+                    <c:if
+                      test="${loginUser != null && loginUser.id == log.userId}"
+                    >
+                      <div class="d-flex justify-content-end gap-2 mt-3">
+                        <a
+                          href="/status/edit?logId=${log.id}"
+                          class="btn btn-sm btn-outline-secondary"
+                        >
+                          ✏️ 수정
+                        </a>
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-outline-danger"
+                          onclick="confirmDelete('${log.id}', '${place.id}')"
+                        >
+                          🗑️ 삭제
+                        </button>
+                      </div>
+                    </c:if>
                   </div>
                 </div>
               </div>
+            </c:forEach>
+          </div>
+
+          <!-- 페이지네이션 버튼 -->
+          <div class="mt-3 text-center">
+            <c:forEach var="i" begin="1" end="${pagedNotices.totalPages}">
+              <a
+                href="?page=${i}"
+                class="btn btn-sm ${pagedNotices.currentPage == i ? 'btn-primary' : 'btn-outline-primary'} mx-1"
+              >
+                ${i}
+              </a>
             </c:forEach>
           </div>
         </c:when>
@@ -294,22 +415,24 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
                         </div>
 
                         <!-- 좌우 이동 버튼 (ID 맞춰야 함) -->
-                        <button
-                          class="carousel-control-prev"
-                          type="button"
-                          data-bs-target="#carousel-recent-${log.id}"
-                          data-bs-slide="prev"
-                        >
-                          <span class="carousel-control-prev-icon"></span>
-                        </button>
-                        <button
-                          class="carousel-control-next"
-                          type="button"
-                          data-bs-target="#carousel-recent-${log.id}"
-                          data-bs-slide="next"
-                        >
-                          <span class="carousel-control-next-icon"></span>
-                        </button>
+                        <c:if test="${fn:length(log.imageUrls) > 1}">
+                          <button
+                            class="carousel-control-prev"
+                            type="button"
+                            data-bs-target="#carousel-recent-${log.id}"
+                            data-bs-slide="prev"
+                          >
+                            <span class="carousel-control-prev-icon"></span>
+                          </button>
+                          <button
+                            class="carousel-control-next"
+                            type="button"
+                            data-bs-target="#carousel-recent-${log.id}"
+                            data-bs-slide="next"
+                          >
+                            <span class="carousel-control-next-icon"></span>
+                          </button>
+                        </c:if>
                       </div>
                     </c:if>
 

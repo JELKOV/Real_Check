@@ -20,6 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -124,7 +125,7 @@ public class StatusLogService {
     }
 
     /**
-     * [2-2] 장소 기반 정보 공유 (공식 장소) [미사용]
+     * [2-2] 장소 기반 정보 공유 (공식 장소)
      * StatusLogController: register
      * - 요청 없이 해당 장소 관리자가 직접 공유
      * - 공식 등록된 장소(placeId 있음)
@@ -139,7 +140,7 @@ public class StatusLogService {
         if (dto.getCategory() != null) {
             dto.filterFieldsByCategory(RequestCategory.valueOf(dto.getCategory()));
         }
-        
+
         // (2) 상태 로그 등록 (공통 로직 호출)
         registerInternal(userId, dto, StatusType.REGISTER);
     }
@@ -291,16 +292,21 @@ public class StatusLogService {
     }
 
     /**
-     * [3-6] REGISTER로 등록된 로그들 가져오기
+     * [3-7] 특정 장소의 REGISTER 타입 공지 로그를 페이지 단위로 조회
      * PageController: showCommunityPage
-     * - 장소별 공지용
+     * - 공식 공지글 리스트를 페이지네이션 형식으로 제공
+     * - 숨김 여부는 무시하고 전체 REGISTER 로그를 대상으로 함
      */
-    public List<StatusLogDto> getRegisterLogsByPlace(Long placeId) {
-        return statusLogRepository.findByPlaceIdAndStatusTypeOrderByCreatedAtDesc(
-                placeId,
-                StatusType.REGISTER).stream()
+    public PageResult<StatusLogDto> getPagedRegisterLogsByPlace(Long placeId, int page, int size) {
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<StatusLog> pageResult = statusLogRepository.findByPlaceIdAndStatusType(
+                placeId, StatusType.REGISTER, pageable);
+
+        List<StatusLogDto> dtoList = pageResult.getContent().stream()
                 .map(StatusLogDto::fromEntity)
                 .toList();
+
+        return new PageResult<>(dtoList, pageResult.getTotalPages(), page);
     }
 
     // ─────────────────────────────────────────────
@@ -358,7 +364,35 @@ public class StatusLogService {
     }
 
     /**
-     * [4-2] 요청 기반 답변 채택 처리
+     * [4-2] 수정 가능한 상태 로그 조회
+     * pageController: showEditForm
+     * - 작성자 본인만 접근 가능
+     * - REGISTER(공지) 타입만 수정 대상
+     * 
+     * @throws AccessDeniedException or IllegalArgumentException
+     */
+    @Transactional(readOnly = true)
+    public StatusLogDto getEditableLog(Long logId, Long userId) {
+        // 1. 로그 조회
+        StatusLog log = statusLogRepository.findById(logId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 공지를 찾을 수 없습니다."));
+
+        // 2. 본인 확인
+        if (!log.getReporter().getId().equals(userId)) {
+            throw new AccessDeniedException("공지 수정은 작성자만 가능합니다.");
+        }
+
+        // 3. 공지 타입인지 확인
+        if (log.getStatusType() != StatusType.REGISTER) {
+            throw new IllegalArgumentException("해당 로그는 공지 형식이 아닙니다.");
+        }
+
+        // 4. DTO 변환 후 반환
+        return StatusLogDto.fromEntity(log);
+    }
+
+    /**
+     * [4-3] 요청 기반 답변 채택 처리
      * StatusLogController : selectAnswer
      * - 요청 작성자가 본인 요청에 연결된 답변을 선택
      * - 상태 로그의 selected = true, 요청 마감 처리
@@ -424,12 +458,14 @@ public class StatusLogService {
             throw new IllegalStateException("해당 로그를 삭제할 권한이 없습니다.");
         }
 
-        if (log.isSelected()) {
-            throw new IllegalStateException("채택된 응답은 삭제할 수 없습니다.");
-        }
-
-        if (log.getRequest() != null && log.getRequest().isClosed()) {
-            throw new IllegalStateException("종료된 요청에 대한 응답은 삭제할 수 없습니다.");
+        // 공지가 아닌 경우에만 추가 제약
+        if (log.getStatusType() != StatusType.REGISTER) {
+            if (log.isSelected()) {
+                throw new IllegalStateException("채택된 응답은 삭제할 수 없습니다.");
+            }
+            if (log.getRequest() != null && log.getRequest().isClosed()) {
+                throw new IllegalStateException("종료된 요청에 대한 응답은 삭제할 수 없습니다.");
+            }
         }
 
         statusLogRepository.delete(log);

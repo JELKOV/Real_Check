@@ -28,6 +28,13 @@
   margin: 0 auto;
 }
 
+#infoLink:hover {
+  background-color: #0dcaf0;
+  color: white;
+  transition: 0.2s ease-in-out;
+  text-decoration: none;
+}
+
 /* Hover 시 파란색 배경 제거 (Bootstrap 기본 버튼) */
 .btn-primary:hover {
   background-color: #000000 !important;

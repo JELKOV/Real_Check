@@ -1,5 +1,6 @@
 package com.realcheck.page.controller;
 
+import com.realcheck.common.dto.PageResult;
 import com.realcheck.place.dto.PlaceDetailsDto;
 import com.realcheck.place.service.PlaceService;
 import com.realcheck.request.dto.RequestDto;
@@ -94,7 +95,12 @@ public class PageController {
      * page: common/header.jsp
      */
     @GetMapping("/my-logs")
-    public String myLogsPage() {
+    public String myLogsPage(HttpSession session) {
+        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            return "redirect:/login";
+        }
+
         return "status/my-logs";
     }
 
@@ -103,7 +109,12 @@ public class PageController {
      * page: user/mypage.jsp
      */
     @GetMapping("/edit-profile")
-    public String editProfilePage() {
+    public String editProfilePage(HttpSession session) {
+        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            return "redirect:/login";
+        }
+
         return "user/edit-profile";
     }
 
@@ -112,7 +123,12 @@ public class PageController {
      * page: user/mypage.jsp
      */
     @GetMapping("/change-password")
-    public String changePasswordPage() {
+    public String changePasswordPage(HttpSession session) {
+        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            return "redirect:/login";
+        }
+
         return "user/change-password";
     }
 
@@ -125,7 +141,12 @@ public class PageController {
      * page : index.jsp
      */
     @GetMapping("/request/register")
-    public String requestRegisterPage(Model model) {
+    public String requestRegisterPage(HttpSession session, Model model) {
+        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            return "redirect:/login";
+        }
+
         model.addAttribute("naverMapClientId", naverMapClientId);
         return "request/register";
     }
@@ -160,7 +181,12 @@ public class PageController {
      * page: header.jsp
      */
     @GetMapping("/my-requests")
-    public String myRequestsPage() {
+    public String myRequestsPage(HttpSession session) {
+        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            return "redirect:/login";
+        }
+
         return "request/my-requests";
     }
 
@@ -170,8 +196,8 @@ public class PageController {
      */
     @GetMapping("/status/register")
     public String showRegisterNoticePage(@RequestParam("placeId") Long placeId,
-                                         HttpSession session,
-                                         Model model) {
+            HttpSession session,
+            Model model) {
         UserDto loginUser = (UserDto) session.getAttribute("loginUser");
 
         if (loginUser == null) {
@@ -189,6 +215,25 @@ public class PageController {
         return "place/register";
     }
 
+    /**
+     * [2-6] 공지 수정 페이지로 이동 (해당 장소의 owner만 접근 가능)
+     * page: place/community.jsp
+     */
+    @GetMapping("/status/edit")
+    public String showEditForm(@RequestParam Long logId, Model model, HttpSession session) {
+        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
+        if (loginUser == null)
+            return "redirect:/login";
+
+        // 작성자 + 상태 검증 포함된 헬퍼
+        StatusLogDto dto = statusLogService.getEditableLog(logId, loginUser.getId());
+        PlaceDetailsDto place = placeService.getPlaceDetails(dto.getPlaceId());
+
+        model.addAttribute("statusLog", dto);
+        model.addAttribute("place", place);
+        
+        return "place/edit";
+    }
 
     // ─────────────────────────────────────────────
     // [3] 지도 관련 페이지
@@ -226,17 +271,19 @@ public class PageController {
      * page: request/detail.jsp
      */
     @GetMapping("/place/community/{placeId}")
-    public String showCommunityPage(@PathVariable Long placeId, Model model) {
+    public String showCommunityPage(@PathVariable Long placeId,
+            @RequestParam(defaultValue = "1") int page,
+            Model model) {
         PlaceDetailsDto place = placeService.getPlaceDetails(placeId);
-        List<StatusLogDto> registerLogs = statusLogService.getRegisterLogsByPlace(placeId);
+        PageResult<StatusLogDto> pagedNotices = statusLogService.getPagedRegisterLogsByPlace(placeId, page, 3); // 5개씩
         List<StatusLogDto> recentLogs = statusLogService.getLogsByPlace(placeId); // 3시간 이내
-        StatusLogDto latestLog = statusLogService.getLatestRegisterLogByPlaceId(placeId); // 응답
+        StatusLogDto latestLog = statusLogService.getLatestRegisterLogByPlaceId(placeId); // 최근 장소 응답
         List<RequestDto> placeRequests = requestService.getRequestsByPlaceId(placeId);
 
         System.out.println("📡 recentLogs size: " + recentLogs.size());
-        
+
         model.addAttribute("place", place);
-        model.addAttribute("registerLogs", registerLogs);
+        model.addAttribute("pagedNotices", pagedNotices);
         model.addAttribute("recentLogs", recentLogs);
         model.addAttribute("latestLog", latestLog);
         model.addAttribute("placeRequests", placeRequests);

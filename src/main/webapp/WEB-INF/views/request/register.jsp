@@ -90,7 +90,9 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
                     주소 검색
                   </button>
                 </div>
-                <p class="text-muted">지도를 클릭하거나 도로명 주소/지번을 입력하세요.</p>
+                <p class="text-muted">
+                  지도를 클릭하거나 도로명 주소/지번을 입력하세요.
+                </p>
               </div>
 
               <!-- 선택된 장소 정보 -->
@@ -128,9 +130,15 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
                       <strong>📢 관리자 공지:</strong>
                       <span id="infoRecent">정보 없음</span>
                     </p>
-                    <a href="#" target="_blank" id="infoLink" class="info-link"
-                      >🌐 커뮤니티 페이지 바로가기</a
+                    <a
+                      href="#"
+                      target="_blank"
+                      id="infoLink"
+                      class="btn btn-outline-info w-100 mt-2 d-flex align-items-center justify-content-center gap-2"
+                      style="font-weight: 500"
                     >
+                      🌐 <span>커뮤니티 페이지</span>
+                    </a>
                   </div>
                 </div>
 

@@ -32,7 +32,8 @@ public class StatusLogController {
     // ─────────────────────────────────────────────
 
     /**
-     * [1-1] 공식 장소 상태 등록 API (REGISTER) [미완성]
+     * [1-1] 공식 장소 상태 등록 API (REGISTER)
+     * page: place/register.jsp
      * - 장소 소유자나 관리자가 직접 상태 등록
      */
     @PostMapping("/register-public")
@@ -127,6 +128,7 @@ public class StatusLogController {
      * [3-1] 상태 로그 수정 API
      * page: request/detail.jsp
      * page: request/my-logs.jsp
+     * page: place/edit.jsp
      * - 로그인한 사용자가 본인이 작성한 상태 로그를 수정
      */
     @PutMapping("/{id}")
@@ -182,6 +184,7 @@ public class StatusLogController {
      * [4-1] 상태 로그 삭제 API
      * page: request/detail.jsp
      * page: request/my-logs.jsp
+     * page: place/community.jsp
      * - 로그인한 사용자가 본인이 작성한 로그만 삭제 가능
      */
     @DeleteMapping("/{id}")

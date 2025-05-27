@@ -39,6 +39,12 @@ function bindEventListeners() {
   $("#editForm").on("submit", submitEdit);
   $("#logsBody").on("click", ".btn-edit", openEditModal);
   $("#logsBody").on("click", ".btn-delete", deleteLog);
+
+  $(document).on("click", ".delete-image-btn", function () {
+    const url = $(this).siblings("img").data("url");
+    uploadedImageUrls = uploadedImageUrls.filter((u) => u !== url);
+    $(this).closest(".position-relative").remove();
+  });
 }
 
 // ─────────────────────────────────────
@@ -108,9 +114,50 @@ function renderLog(log) {
   }
 
   // 이미지 HTML
-  const imageHtml = log.imageUrl
-    ? `<img src="${log.imageUrl}" class="img-fluid rounded border" style="max-height:150px;" />`
-    : `<div class="text-muted small">이미지 없음</div>`;
+  let imageHtml = `<div class="text-muted small">이미지 없음</div>`;
+  if (Array.isArray(log.imageUrls) && log.imageUrls.length > 0) {
+    const carouselId = `carousel-${log.id}`;
+    const indicators =
+      log.imageUrls.length > 1
+        ? `<div class="carousel-indicators">
+          ${log.imageUrls
+            .map(
+              (_, i) =>
+                `<button type="button" data-bs-target="#${carouselId}" data-bs-slide-to="${i}" ${
+                  i === 0 ? 'class="active"' : ""
+                } aria-label="Slide ${i + 1}"></button>`
+            )
+            .join("")}
+        </div>`
+        : "";
+
+    const slides = log.imageUrls
+      .map(
+        (url, i) => `
+      <div class="carousel-item ${i === 0 ? "active" : ""}">
+        <img src="${url}" class="d-block w-100 rounded" style="max-height:200px; object-fit:contain;" />
+      </div>`
+      )
+      .join("");
+
+    const controls =
+      log.imageUrls.length > 1
+        ? `
+      <button class="carousel-control-prev" type="button" data-bs-target="#${carouselId}" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon"></span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#${carouselId}" data-bs-slide="next">
+        <span class="carousel-control-next-icon"></span>
+      </button>`
+        : "";
+
+    imageHtml = `
+    <div id="${carouselId}" class="carousel slide" data-bs-ride="carousel">
+      ${indicators}
+      <div class="carousel-inner">${slides}</div>
+      ${controls}
+    </div>`;
+  }
 
   const relativeTime = getRelativeTime(log.createdAt);
   const categorySummary = getCategorySummary(log);
@@ -273,9 +320,23 @@ function openEditModal() {
   if (!log) return;
 
   $("#editContent").val(log.content);
-  uploadedImageUrl = null;
-  $("#uploadedImage").empty();
+
+  // [1] 동적 필드 렌더링
   $("#dynamicFields").html(getDynamicFieldsHTML(log.category, log));
+  // [2] 기존 이미지 배열 저장
+  uploadedImageUrls = [...(log.imageUrls || [])];
+  // [3] 기존 이미지 미리보기 렌더링
+  const previewHtml = uploadedImageUrls
+    .map(
+      (url) => `
+    <div class="position-relative d-inline-block">
+      <img src="${url}" data-url="${url}" class="me-2 mb-2 img-thumbnail" style="max-width:100px;" />
+      <button type="button" class="btn btn-sm btn-close position-absolute top-0 end-0 delete-image-btn"
+              style="background-color: rgba(0,0,0,0.6); color: white;" title="삭제"></button>
+    </div>`
+    )
+    .join("");
+  $("#uploadedPreview").html(previewHtml);
 
   const modal = new bootstrap.Modal(document.getElementById("editModal"));
   modal.show();
@@ -420,16 +481,20 @@ function handleFileUpload() {
     processData: false,
     contentType: false,
     success: function (urls) {
-      uploadedImageUrls = urls; // 배열로 저장
+      uploadedImageUrls.push(...urls);
 
-      // 렌더링
       const previewHtml = urls
         .map(
-          (url) =>
-            `<img src="${url}" class="img-fluid border rounded me-2 mb-2" style="max-height: 100px;" />`
+          (url) => `
+      <div class="position-relative d-inline-block">
+        <img src="${url}" data-url="${url}" class="me-2 mb-2 img-thumbnail" style="max-width:100px;" />
+        <button type="button" class="btn btn-sm btn-close position-absolute top-0 end-0 delete-image-btn"
+                style="background-color: rgba(0,0,0,0.6); color: white;" title="삭제"></button>
+      </div>`
         )
         .join("");
-      $("#uploadedImage").html(previewHtml);
+
+      $("#uploadedPreview").append(previewHtml);
     },
     error: function (xhr) {
       alert("업로드 실패: " + xhr.responseText);

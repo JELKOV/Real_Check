@@ -1,3 +1,5 @@
+// TODO: 수정 모드시 UI 겹침 제거 (edit-delete-buttons 비활성화 방식 개선)
+
 // ─────────────────────────────────────────────────────────────
 // [0] 전역 변수 및 유틸 함수
 // ─────────────────────────────────────────────────────────────
@@ -466,12 +468,18 @@ function generateAnswerRow(answer, hasSelected) {
       <div id="${carouselId}" class="carousel slide mt-2" data-bs-ride="carousel">
         <div class="carousel-indicators">${indicators}</div>
         <div class="carousel-inner">${slides}</div>
-        <button class="carousel-control-prev" type="button" data-bs-target="#${carouselId}" data-bs-slide="prev">
-          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-        </button>
-        <button class="carousel-control-next" type="button" data-bs-target="#${carouselId}" data-bs-slide="next">
-          <span class="carousel-control-next-icon" aria-hidden="true"></span>
-        </button>
+        ${
+          answer.imageUrls.length > 1
+            ? `
+          <button class="carousel-control-prev" type="button" data-bs-target="#${carouselId}" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+          </button>
+          <button class="carousel-control-next" type="button" data-bs-target="#${carouselId}" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+          </button>
+        `
+            : ""
+        }
       </div>
     `;
   }
@@ -591,7 +599,7 @@ function activateEditMode() {
   const answerTextElement = answerRow.find(`#answer-text-${answerId}`);
   const originalText = answerTextElement.text().trim();
   const answer = JSON.parse(answerRow.attr("data-answer-data"));
-
+  
   // 1. 본문 텍스트 수정 영역
   answerTextElement.html(`
     <textarea class="form-control edit-answer-input" data-id="${answerId}">${originalText}</textarea>

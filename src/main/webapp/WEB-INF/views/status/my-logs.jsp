@@ -11,6 +11,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="/css/status/my-logs.css" />
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   </head>
@@ -94,13 +95,17 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
               <div class="mb-3">
                 <label>이미지 업로드</label><br />
-                <button
-                  type="button"
-                  class="btn btn-outline-secondary btn-sm"
-                  id="uploadBtn"
-                >
-                  이미지 선택
-                </button>
+                <div class="d-flex align-items-center gap-2">
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-sm"
+                    id="uploadBtn"
+                  >
+                    이미지 선택
+                  </button>
+                </div>
+
+                <!-- 미리보기 영역 -->
                 <input
                   type="file"
                   id="fileInput"
@@ -109,13 +114,6 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
                   style="display: none"
                 />
                 <div id="uploadedPreview" class="mt-2"></div>
-                <button
-                  type="button"
-                  class="btn btn-sm btn-outline-danger mt-2 d-none"
-                  id="cancelImageBtn"
-                >
-                  ❌ 이미지 제거
-                </button>
               </div>
             </div>
             <div class="modal-footer">

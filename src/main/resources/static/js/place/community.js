@@ -97,7 +97,7 @@ function renderCategoryBadges() {
 }
 
 // ─────────────────────────────────────────────
-// [5] 카테고리별 요약 텍스트 렌더링
+// [5] 카테고리별 텍스트 렌더링
 // - .category-summary 요소 대상
 // ─────────────────────────────────────────────
 function renderCategorySummaries() {
@@ -106,11 +106,9 @@ function renderCategorySummaries() {
   });
 }
 
-// 요약 텍스트 생성 로직 (개별 항목 처리)
+// 텍스트 생성 로직 (개별 항목 처리)
 function renderCategorySummaryText(el) {
   const category = el.dataset.category;
-  console.log("🧪 rendering summary for:", el.dataset);
-  const label = categoryLabelMap[category] || "";
 
   switch (category) {
     case "WAITING_STATUS":
@@ -158,7 +156,6 @@ function renderCategorySummaryText(el) {
     default:
       el.textContent = "";
   }
-
 }
 
 // ─────────────────────────────────────────────
@@ -173,5 +170,24 @@ function formatDateTime(iso) {
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
+  });
+}
+
+// ─────────────────────────────────────────────
+// [7] 공지 삭제 API 호출
+// ─────────────────────────────────────────────
+function confirmDelete(logId, placeId) {
+  if (!confirm("정말 삭제하시겠습니까?")) return;
+
+  $.ajax({
+    url: `/api/status/${logId}`,
+    method: "DELETE",
+    success: function () {
+      alert("삭제가 완료되었습니다.");
+      location.href = "/place/community/" + placeId;
+    },
+    error: function (xhr) {
+      alert("삭제 실패: " + xhr.responseText);
+    },
   });
 }
