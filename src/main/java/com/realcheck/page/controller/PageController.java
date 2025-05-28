@@ -133,7 +133,7 @@ public class PageController {
     }
 
     // ─────────────────────────────────────────────
-    // [2] 요청 관련 페이지
+    // [2] 요청 /응답 관련 페이지
     // ─────────────────────────────────────────────
 
     /**
@@ -231,7 +231,7 @@ public class PageController {
 
         model.addAttribute("statusLog", dto);
         model.addAttribute("place", place);
-        
+
         return "place/edit";
     }
 
@@ -269,6 +269,8 @@ public class PageController {
     /**
      * [4-1] 장소 커뮤니티 이동
      * page: request/detail.jsp
+     * page: place/page-search.jsp
+     * - 해당 장소의 커뮤니티 페이지로 이동
      */
     @GetMapping("/place/community/{placeId}")
     public String showCommunityPage(@PathVariable Long placeId,
@@ -289,6 +291,16 @@ public class PageController {
         model.addAttribute("placeRequests", placeRequests);
         model.addAttribute("naverMapClientId", naverMapClientId);
         return "place/community";
+    }
+
+    /**
+     * [4-2] 공식 장소 커뮤니티 검색 페이지
+     * page: index.jsp
+     */
+    @GetMapping("/place/search")
+    public String showPlaceSearchPage(Model model) {
+        model.addAttribute("naverMapClientId", naverMapClientId);
+        return "place/place-search"; // JSP 파일명
     }
 
     // ─────────────────────────────────────────────

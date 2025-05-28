@@ -79,8 +79,9 @@ public class PlaceController {
     }
 
     /**
-     * [2-3] 현재 위치 기반 주변 장소 조회 API [미사용]
-     * - 위도, 경도, 반경을 기반으로 인근 장소 필터링
+     * [2-3] 현재 위치 기반 주변 장소 조회 API
+     * page: place/place-search.jsp
+     * - 위도(lat), 경도(lng), 반경(radiusMeters)을 기반으로 인근 장소 조회
      * - 지도에서 사용자 위치를 기준으로 인근 장소 표시
      */
     @GetMapping("/nearby")
@@ -94,6 +95,7 @@ public class PlaceController {
     /**
      * [2-4] 장소 검색 API (검색어 기반)
      * page: request/register.jsp
+     * page: place/page-search.jsp
      * - 검색어를 기반으로 승인된 장소 조회
      * - 장소 등록 시 협력 지정 위치의 업체 검색
      */
@@ -112,5 +114,48 @@ public class PlaceController {
     public ResponseEntity<PlaceDetailsDto> getPlaceDetails(@PathVariable Long id) {
         PlaceDetailsDto details = placeService.getPlaceDetails(id);
         return ResponseEntity.ok(details);
+    }
+
+    // ─────────────────────────────────────────────
+    // [3] 즐겨 찾기
+    // ─────────────────────────────────────────────
+
+    /**
+     * [3-1] 즐겨찾기 토글 API (POST /api/place/{placeId}/favorite)
+     * page: place/place-search.jsp
+     * - 로그인한 사용자가 해당 장소를 즐겨찾기 등록 또는 해제
+     * - 이미 등록된 상태면 삭제, 아니면 추가
+     */
+    @PostMapping("/{placeId}/favorite")
+    public ResponseEntity<?> toggleFavoritePlace(@PathVariable Long placeId, HttpSession session) {
+        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
+
+        if (loginUser == null)
+            return ResponseEntity.status(401).body("로그인이 필요합니다.");
+
+        boolean isFavorite = placeService.toggleFavoritePlace(placeId, loginUser.getId());
+
+        return ResponseEntity.ok(
+                isFavorite ? "즐겨찾기 등록 완료" : "즐겨찾기 해제 완료");
+    }
+
+    /**
+     * [3-2] 즐겨찾기 여부 확인 API (GET /api/place/{placeId}/is-favorite)
+     * page: place/place-search.jsp 
+     * - 현재 로그인한 사용자가 해당 장소를 즐겨찾기 중인지 여부 확인
+     * - 즐겨찾기 상태에 따라 버튼 UI를 초기화하기 위해 사용
+     * - 프론트에서 장소 선택 시 호출됨
+     */
+    @GetMapping("/{placeId}/is-favorite")
+    public ResponseEntity<Boolean> isFavorite(@PathVariable Long placeId, HttpSession session) {
+        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
+
+        // 로그인 상태 확인
+        if (loginUser == null)
+            return ResponseEntity.status(401).build();
+
+        // 즐겨찾기 여부 조회
+        boolean isFavorite = placeService.isFavorite(placeId, loginUser.getId());
+        return ResponseEntity.ok(isFavorite);
     }
 }

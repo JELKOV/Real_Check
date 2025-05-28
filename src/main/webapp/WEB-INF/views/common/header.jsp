@@ -1,5 +1,11 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <link rel="stylesheet" href="/css/header.css" />
+<script>
+  const isLoggedIn = (
+    <c:out value="${not empty sessionScope.loginUser}" default="false" />
+  );
+</script>
+
 <header class="bg-dark text-white py-3 mb-4 shadow-sm">
   <div class="container d-flex justify-content-between align-items-center">
     <!-- 로고 버튼화 -->

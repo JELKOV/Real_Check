@@ -13,8 +13,10 @@ import org.springframework.transaction.annotation.Transactional;
 import com.realcheck.place.dto.PlaceDetailsDto;
 import com.realcheck.place.dto.PlaceDto;
 import com.realcheck.place.entity.AllowedRequestType;
+import com.realcheck.place.entity.FavoritePlace;
 import com.realcheck.place.entity.Place;
 import com.realcheck.place.repository.AllowedRequestTypeRepository;
+import com.realcheck.place.repository.FavoritePlaceRepository;
 import com.realcheck.place.repository.PlaceRepository;
 import com.realcheck.request.entity.RequestCategory;
 import com.realcheck.status.entity.StatusLog;
@@ -36,6 +38,7 @@ public class PlaceService {
         private final PlaceRepository placeRepository;
         private final UserRepository userRepository;
         private final StatusLogRepository statusLogRepository;
+        private final FavoritePlaceRepository favoritePlaceRepository;
         private final AllowedRequestTypeRepository allowedRequestTypeRepository;
 
         // ─────────────────────────────────────────────
@@ -84,6 +87,7 @@ public class PlaceService {
 
         /**
          * [2-3] 현재 위치 기준 반경 내 장소 조회 [미사용]
+         * pageController: getNearbyPlaces
          * - 사용자의 위도(lat), 경도(lng)를 기반으로 주변 장소 조회
          */
         public List<PlaceDto> findNearbyPlaces(double lat, double lng, double radiusMeters) {
@@ -189,4 +193,37 @@ public class PlaceService {
                                 RequestCategory.valueOf(requestType));
         }
 
+        // ─────────────────────────────────────────────
+        // [4] 장소 즐겨찾기 (favoritePlaceRepository)
+        // ─────────────────────────────────────────────
+
+        /**
+         * [4-1] 즐겨찾기 등록/해제
+         * PlaceController: toggleFavoritePlace
+         * - 사용자가 특정 장소를 즐겨찾기 등록 또는 해제
+         */
+        @Transactional
+        public boolean toggleFavoritePlace(Long placeId, Long userId) {
+                boolean isFavorite = favoritePlaceRepository.existsByUserIdAndPlaceId(userId, placeId);
+
+                if (isFavorite) {
+                        favoritePlaceRepository.deleteByUserIdAndPlaceId(userId, placeId);
+                        return false; // 해제됨
+                } else {
+                        FavoritePlace favorite = new FavoritePlace();
+                        favorite.setUser(userRepository.getReferenceById(userId));
+                        favorite.setPlace(placeRepository.getReferenceById(placeId));
+                        favoritePlaceRepository.save(favorite);
+                        return true; // 등록됨
+                }
+        }
+
+        /**
+         * [4-2] 사용자가 해당 장소를 즐겨찾기했는지 여부 조회
+         * PlaceController: isFavoritePlace
+         * - 특정 사용자가 특정 장소를 즐겨찾기했는지 확인
+         */
+        public boolean isFavorite(Long placeId, Long userId) {
+                return favoritePlaceRepository.existsByUserIdAndPlaceId(userId, placeId);
+        }
 }

@@ -18,7 +18,6 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
     <%@ include file="common/header.jsp" %>
 
     <div class="container mt-5">
-      
       <!-- 회원 탈퇴 성공 메시지 (Flash Attribute) -->
       <c:if test="${deletionRequested}">
         <div class="alert alert-success text-center mb-4">
@@ -110,6 +109,22 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
               <a href="/my-logs" class="btn btn-outline-secondary mt-auto"
                 >내 정보 관리</a
               >
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. 공식 장소 검색 -->
+        <div class="col-md-3">
+          <div class="card shadow-sm h-100">
+            <div class="card-body d-flex flex-column">
+              <h5 class="card-title">공식 장소 검색</h5>
+              <p class="card-text flex-grow-1">
+                인증된 장소를 검색하여 커뮤니티 페이지를 확인하세요.<br />
+                공지와 답변을 한눈에 볼 수 있습니다.
+              </p>
+              <a href="/place/search" class="btn btn-outline-success mt-auto">
+                장소 검색하기
+              </a>
             </div>
           </div>
         </div>

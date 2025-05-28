@@ -29,7 +29,7 @@ public interface PlaceRepository extends JpaRepository<Place, Long> {
   // ─────────────────────────────────────────────
 
   /**
-   * [2-1] 위도(lat), 경도(lng), 반경(m) 기준 근처 모든 장소 조회 [미사용]
+   * [2-1] 위도(lat), 경도(lng), 반경(m) 기준 근처 모든 장소 조회
    * PlaceSerive: findNearbyPlaces 
    * - 거리 계산: MySQL의 ST_Distance_Sphere 함수 사용
    * - 거리 단위: 미터(m)
