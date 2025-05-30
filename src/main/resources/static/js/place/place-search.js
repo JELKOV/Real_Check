@@ -1,24 +1,25 @@
+// 공식 장소 검색 페이지 JS
 let currentFocus = -1; // 현재 키보드로 포커싱된 검색 결과 인덱스
 let isNavigatingByKey = false; // 키보드 탐색 중 여부 플래그
 let mainMap = null; // 네이버 지도 인스턴스
 let placeMarkers = []; // 지도에 표시된 마커 목록
-let selectedPlaceId = null;
+let selectedPlaceId = null; // 현재 선택된 장소 ID
+let openInfoWindow = null; // 현재 열려 있는 InfoWindow 참조
 
 // DOM 로딩 후 초기 실행
 $(document).ready(function () {
   initializeMap(); // [1] 지도 초기화
-  bindMapControlEvents(); // [2] 지도 버튼 이벤트 연결 (내 위치, 새로고침)
+  bindMapControlEvents(); // [2] 지도 컨트롤 버튼 이벤트 연결
   bindSearchInputEvents(); // [3] 검색창 입력 및 키보드 탐색 이벤트 연결
-  bindSearchResultEvents(); // [4] 검색 결과 클릭, hover, 즐겨찾기 버튼 이벤트
+  bindSearchResultEvents(); // [4] 검색 결과 클릭 및 hover 이벤트 바인딩
 });
 
 // [1] 지도 초기화
 function initializeMap() {
   mainMap = new naver.maps.Map("mainMap", {
-    center: new naver.maps.LatLng(37.5665, 126.978), // 서울 기본
+    center: new naver.maps.LatLng(37.5665, 126.978),
     zoom: 13,
   });
-
   getUserLocation();
 }
 
@@ -198,6 +199,11 @@ function renderSearchResults(places) {
 
 // [4] 특정 장소를 선택했을 때 정보 표시 및 마커 이동
 function renderSelectedPlaceInfo(id, name, address, lat, lng) {
+  if (openInfoWindow) {
+    openInfoWindow.close();
+    openInfoWindow = null;
+  }
+  // 선택된 장소 정보 표시
   $("#placeName").text(name);
   $("#placeAddress").text("📍 " + address);
   $("#communityLink").attr("href", `/place/community/${id}`);
@@ -216,12 +222,6 @@ function renderSelectedPlaceInfo(id, name, address, lat, lng) {
     $("#favoriteBtn").hide(); // 로그인 안 되어 있으면 숨김
   }
 
-  // 지도 이동 및 마커 표시
-  const latlng = new naver.maps.LatLng(lat, lng);
-  mainMap.setCenter(latlng);
-  clearMarkers();
-  addPlaceMarker({ lat, lng, name });
-
   // 즐겨찾기 상태 확인 후 버튼 초기화
   if (isLoggedIn) {
     $.get(`/api/place/${id}/is-favorite`).done((isFavorite) => {
@@ -231,6 +231,12 @@ function renderSelectedPlaceInfo(id, name, address, lat, lng) {
       btn.text(isFavorite ? "⭐ 즐겨찾기 완료" : "☆ 즐겨찾기 추가");
     });
   }
+
+  // 지도 이동 및 마커 표시
+  const latlng = new naver.maps.LatLng(lat, lng);
+  mainMap.setCenter(latlng);
+  clearMarkers();
+  addPlaceMarker({ lat, lng, name });
 }
 
 // [5] 마커 추가
@@ -241,21 +247,28 @@ function addPlaceMarker(place) {
     title: place.name,
   });
 
-  placeMarkers.push(marker);
-
   const infoWindow = new naver.maps.InfoWindow({
     content: `<div style="padding:5px;">${place.name}</div>`,
   });
 
   naver.maps.Event.addListener(marker, "click", function () {
+    if (openInfoWindow) openInfoWindow.close();
     infoWindow.open(mainMap, marker);
+    openInfoWindow = infoWindow;
   });
+
+  placeMarkers.push(marker);
 }
 
 // [6] 마커 전체 제거
 function clearMarkers() {
   placeMarkers.forEach((m) => m.setMap(null));
   placeMarkers = [];
+
+  if (openInfoWindow) {
+    openInfoWindow.close();
+    openInfoWindow = null;
+  }
 }
 
 // [7] 내 위치 받아오기 및 지도 중심 설정
@@ -294,25 +307,55 @@ function loadNearbyPlaces(lat, lng) {
         });
 
         naver.maps.Event.addListener(marker, "click", () => {
+          if (openInfoWindow) openInfoWindow.close(); // 기존 인포윈도우 닫기
           infoWindow.open(mainMap, marker);
+          openInfoWindow = infoWindow;
         });
 
         placeMarkers.push(marker);
       });
+      // 리스트 카드 렌더링도 함께 실행
+      renderNearbyPlaceList(places);
     }
   );
+}
+
+// [9] 주변 장소 리스트 렌더링
+function renderNearbyPlaceList(places) {
+  if (!places.length) {
+    $("#placeSearchResults")
+      .html('<li class="list-group-item text-muted">주변 장소 없음</li>')
+      .show();
+    return;
+  }
+
+  const html = places
+    .map((place) => {
+      return `<li class="list-group-item place-item" 
+                 data-id="${place.id}" 
+                 data-name="${place.name}" 
+                 data-address="${place.address}" 
+                 data-lat="${place.lat}" 
+                 data-lng="${place.lng}">
+                <strong>${place.name}</strong><br/>
+                <small class="text-muted">${place.address}</small>
+              </li>`;
+    })
+    .join("");
+
+  $("#placeSearchResults").html(html).show();
 }
 
 /**
  * 3. 유틸리티 함수
  */
 
-// [9] 정규식 특수문자 이스케이프 처리
+// [10] 정규식 특수문자 이스케이프 처리
 function escapeRegex(text) {
   return text.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
 }
 
-// [10] 디바운스 유틸 함수
+// [11] 디바운스 유틸 함수
 function debounce(fn, delay) {
   let timeout;
   return function () {
@@ -321,7 +364,7 @@ function debounce(fn, delay) {
   };
 }
 
-// [11] 즐겨찾기 버튼 UI 상태 업데이트
+// [12] 즐겨찾기 버튼 UI 상태 업데이트
 function updateFavoriteButtonUI(btn) {
   const isNowFavorite = !btn.hasClass("btn-warning"); // 현재가 즐겨찾기 아님 → 등록되는 상태
   btn.toggleClass("btn-outline-warning", !isNowFavorite);

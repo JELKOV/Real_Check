@@ -108,7 +108,7 @@ public class PlaceService {
         }
 
         /**
-         * [2-5] 검색어 기반 장소 조회 (승인된 장소만)
+         * [2-5] 검색어 기반 장소 조회 - 승인된 장소만
          * PlaceController: searchApprovedPlaces
          * - 승인된 장소 & 검색어 기반 조회
          */
