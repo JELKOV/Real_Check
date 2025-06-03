@@ -44,6 +44,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
             <th>이메일</th>
             <th>닉네임</th>
             <th>상태</th>
+            <th>상세보기</th>
             <th>조치</th>
           </tr>
         </thead>
@@ -53,81 +54,26 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
       </table>
     </div>
 
-    <script>
-      $(document).ready(function () {
-        loadBlockedUsers();
+    <!-- 사용자 상세정보 모달 -->
+    <div class="modal fade" id="userDetailModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">사용자 상세 정보</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body" id="userDetailModalBody">
+            <!-- AJAX로 채워짐 -->
+          </div>
+        </div>
+      </div>
+    </div>
 
-        // 사용자 검색
-        $("#searchBtn").on("click", function () {
-          const keyword = $("#searchInput").val().trim();
-
-          if (keyword.length > 0) {
-            $.get(`/api/admin/users/search`, { keyword }, function (users) {
-              renderUsers(users);
-            });
-          } else {
-            loadBlockedUsers();
-          }
-        });
-
-        // 차단 사용자 목록 불러오기
-        function loadBlockedUsers() {
-          $.get("/api/admin/users/blocked", function (users) {
-            renderUsers(users);
-          });
-        }
-
-        // 사용자 목록 렌더링
-        function renderUsers(users) {
-          const $tbody = $("#userTableBody");
-          $tbody.empty();
-
-          console.log("렌더링 대상 users", users);
-
-          if (!Array.isArray(users) || users.length === 0) {
-            $tbody.append(`<tr><td colspan="5">사용자가 없습니다.</td></tr>`);
-            return;
-          }
-
-          users.forEach((user) => {
-            const isActive =
-              String(user.active) === "true" || user.active === true;
-            const statusText = isActive ? "정상" : "차단됨";
-            const unblockBtn = !isActive
-              ? `<button class="btn btn-sm btn-success" onclick="unblockUser(${"${user.id}"})">해제</button>`
-              : "-";
-
-            const row = `
-        <tr>
-          <td>${"${user.id}"}</td>
-          <td>${"${user.email}"}</td>
-          <td>${"${user.nickname}"}</td>
-          <td>${"${statusText}"}</td>
-          <td>${"${unblockBtn}"}</td>
-        </tr>
-      `;
-            $tbody.append(row);
-          });
-        }
-
-        // 사용자 차단 해제
-        window.unblockUser = function (userId) {
-          if (!confirm("정말 차단 해제하시겠습니까?")) return;
-
-          $.ajax({
-            url: `/api/admin/users/${"${userId}"}/unblock`,
-            type: "PATCH",
-            success: function () {
-              alert("차단 해제 완료!");
-              loadBlockedUsers();
-            },
-            error: function () {
-              alert("차단 해제 실패!");
-            },
-          });
-        };
-      });
-    </script>
+    <script src="/js/admin/users.js"></script>
 
     <%@ include file="../common/footer.jsp" %>
   </body>

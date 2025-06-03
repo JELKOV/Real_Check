@@ -1,7 +1,9 @@
 package com.realcheck.place.entity;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import com.realcheck.user.entity.User;
@@ -102,4 +104,17 @@ public class Place {
     @Builder.Default
     @OneToMany(mappedBy = "place", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private final Set<AllowedRequestType> allowedRequestTypes = new HashSet<>();
+
+    // ─────────────────────────────────────────────
+    // [4] 즐겨찾기된 장소 정보 (FavoritePlace)
+    // ─────────────────────────────────────────────
+
+    /**
+     * 이 장소를 즐겨찾기한 사용자 정보 목록
+     * - 장소 삭제 시 즐겨찾기 항목도 함께 제거됨
+     * - 사용자 입장에서는 FavoritePlaceRepository를 통해 조회
+     */
+    @Builder.Default
+    @OneToMany(mappedBy = "place", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<FavoritePlace> favoritePlaces = new ArrayList<>();
 }

@@ -68,8 +68,19 @@ public class UserAdminService {
     }
 
     /**
-     * [2-2] 신고된 사용자 목록 조회 (신고 횟수 1회 이상) [미사용]
-     * UserAdminController: getReportedUsers 
+     * [2-2] 사용자 단건 조회
+     * UserAdminController: getUserDetails
+     * - 사용자 ID로 단건 조회 후 UserDto로 변환하여 반환
+     */
+    public UserDto getUserDto(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+        return UserDto.fromEntity(user);
+    }
+
+    /**
+     * [2-3] 신고된 사용자 목록 조회 (신고 횟수 1회 이상) [미사용]
+     * UserAdminController: getReportedUsers
      * - 신고 받은 사용자는 StatusLog를 신고 받은 사용자
      * - 신고된 사용자와 신고 횟수를 함께 반환
      */

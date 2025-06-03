@@ -1,6 +1,8 @@
 package com.realcheck.user.admin.controller;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.realcheck.status.service.StatusLogService;
 import com.realcheck.user.admin.service.UserAdminService;
 import com.realcheck.user.dto.UserDto;
 
@@ -27,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 public class UserAdminController {
 
     private final UserAdminService userAdminService;
+    private final StatusLogService statusLogService;
 
     // ─────────────────────────────────────────────
     // [1] 사용자 검색 기능 (이메일 / 닉네임 기반)
@@ -41,6 +45,30 @@ public class UserAdminController {
     @GetMapping("/search")
     public ResponseEntity<List<UserDto>> searchUsers(@RequestParam String keyword) {
         return ResponseEntity.ok(userAdminService.searchUsers(keyword));
+    }
+
+    /**
+     * [1-2] 사용자 상세 정보 조회 API
+     * page: admin/users.jsp
+     * - 특정 사용자 ID의 상세 정보와 해당 사용자의 로그 수 반환
+     * - 관리자 권한 확인 후에만 접근 가능
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getUserDetails(@PathVariable Long id, HttpSession session) {
+        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
+
+        if (loginUser == null || !"ADMIN".equals(loginUser.getRole())) {
+            return ResponseEntity.status(403).body("관리자 권한이 필요합니다.");
+        }
+
+        UserDto userDto = userAdminService.getUserDto(id);
+        long totalLogs = statusLogService.countLogsByUserId(id);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("user", userDto);
+        response.put("totalLogs", totalLogs);
+
+        return ResponseEntity.ok(response);
     }
 
     // ─────────────────────────────────────────────

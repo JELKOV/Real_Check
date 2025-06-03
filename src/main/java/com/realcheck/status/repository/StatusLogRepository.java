@@ -71,6 +71,14 @@ public interface StatusLogRepository extends JpaRepository<StatusLog, Long> {
          */
         List<StatusLog> findByIsHiddenTrue();
 
+        /**
+         * [1-8] 특정 사용자가 작성한 상태 로그의 총 개수 조회 - 관리자용
+         * StatusLogService: countLogsByUserId
+         * - 관리자 페이지에서 사용자별 상태 로그 개수 통계용
+         * - 숨김 여부와 관계없이 전체 로그 개수 반환
+         */
+        long countByReporter_Id(Long userId);
+
         // ─────────────────────────────────────────────
         // [2] 장소 기반 조건 조회
         // ─────────────────────────────────────────────

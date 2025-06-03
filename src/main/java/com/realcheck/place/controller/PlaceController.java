@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.realcheck.place.dto.FavoritePlaceDto;
 import com.realcheck.place.dto.PlaceDetailsDto;
 import com.realcheck.place.dto.PlaceDto;
 import com.realcheck.place.service.PlaceService;
@@ -141,7 +142,7 @@ public class PlaceController {
 
     /**
      * [3-2] 즐겨찾기 여부 확인 API (GET /api/place/{placeId}/is-favorite)
-     * page: place/place-search.jsp 
+     * page: place/place-search.jsp
      * - 현재 로그인한 사용자가 해당 장소를 즐겨찾기 중인지 여부 확인
      * - 즐겨찾기 상태에 따라 버튼 UI를 초기화하기 위해 사용
      * - 프론트에서 장소 선택 시 호출됨
@@ -157,5 +158,24 @@ public class PlaceController {
         // 즐겨찾기 여부 조회
         boolean isFavorite = placeService.isFavorite(placeId, loginUser.getId());
         return ResponseEntity.ok(isFavorite);
+    }
+
+    /**
+     * [3-3] 즐겨찾기 목록 조회 API (GET /api/place/favorites) [미사용]
+     * page: 즐겨찾기 페이지(추후 구현 예정)
+     * - 현재 로그인한 사용자가 등록한 즐겨찾기 장소 목록을 조회
+     * - FavoritePlace 엔티티 기반으로 FavoritePlaceDto 리스트 반환
+     */
+    @GetMapping("/favorites")
+    public ResponseEntity<List<FavoritePlaceDto>> getMyFavorites(HttpSession session) {
+        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
+
+        // 로그인 확인
+        if (loginUser == null)
+            return ResponseEntity.status(401).build();
+
+        // 해당 사용자의 즐겨찾기 장소 리스트 조회
+        List<FavoritePlaceDto> favorites = placeService.getFavoritesByUser(loginUser.getId());
+        return ResponseEntity.ok(favorites);
     }
 }

@@ -10,6 +10,7 @@ import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.realcheck.place.dto.FavoritePlaceDto;
 import com.realcheck.place.dto.PlaceDetailsDto;
 import com.realcheck.place.dto.PlaceDto;
 import com.realcheck.place.entity.AllowedRequestType;
@@ -225,5 +226,17 @@ public class PlaceService {
          */
         public boolean isFavorite(Long placeId, Long userId) {
                 return favoritePlaceRepository.existsByUserIdAndPlaceId(userId, placeId);
+        }
+
+        /**
+         * [4-3] 사용자 즐겨찾기 목록 조회 [미사용]
+         * PlaceController: getMyFavorites
+         * - 특정 사용자가 등록한 즐겨찾기 장소를 조회
+         * - FavoritePlace → FavoritePlaceDto 로 변환
+         */
+        public List<FavoritePlaceDto> getFavoritesByUser(Long userId) {
+                return favoritePlaceRepository.findByUserId(userId).stream()
+                                .map(FavoritePlaceDto::fromEntity)
+                                .toList();
         }
 }

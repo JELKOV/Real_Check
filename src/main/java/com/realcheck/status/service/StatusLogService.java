@@ -485,6 +485,15 @@ public class StatusLogService {
                 .toList();
     }
 
+    /**
+     * [6-2] 사용자의 답변 등록 로그 반환 (관리자용) 
+     * UserAdminController: getUserDetails
+     * - 특정 사용자가 작성한 상태 로그의 총 개수 조회
+     */
+    public long countLogsByUserId(Long userId) {
+        return statusLogRepository.countByReporter_Id(userId);
+    }
+
     // ────────────────────────────────────────
     // [*] 내부 공통 메서드
     // ────────────────────────────────────────
