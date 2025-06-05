@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -12,6 +13,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.realcheck.common.dto.PageResult;
+import com.realcheck.report.dto.ReportDto;
+import com.realcheck.request.dto.RequestDto;
+import com.realcheck.status.dto.StatusLogDto;
 import com.realcheck.status.service.StatusLogService;
 import com.realcheck.user.admin.service.UserAdminService;
 import com.realcheck.user.dto.UserDto;
@@ -71,6 +76,71 @@ public class UserAdminController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * [1-3] 사용자 활동 로그 조회 API
+     * page: admin/users.jsp
+     * - 사용자 ID에 해당하는 전체 활동 이력 조회
+     * - 상태 로그 / 요청 / 신고 내역 포함
+     */
+    @GetMapping("/{id}/logs/status")
+    public ResponseEntity<PageResult<StatusLogDto>> getUserStatusLogs(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String type) {
+
+        Page<StatusLogDto> logsPage = userAdminService.getUserStatusLogs(id, page, size, type);
+
+        PageResult<StatusLogDto> result = new PageResult<>(
+                logsPage.getContent(),
+                logsPage.getTotalPages(),
+                logsPage.getNumber());
+
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * [1-4] 사용자 등록 요청 목록 조회 (페이지네이션)
+     * page: admin/users.jsp
+     * - 특정 사용자 ID의 요청 내역을 페이지네이션하여 조회
+     */
+    @GetMapping("/{id}/logs/requests")
+    public ResponseEntity<PageResult<RequestDto>> getUserRequests(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Page<RequestDto> requests = userAdminService.getUserRequests(id, page, size);
+
+        PageResult<RequestDto> result = new PageResult<>(
+                requests.getContent(),
+                requests.getTotalPages(),
+                requests.getNumber());
+
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * [1-5] 사용자 신고 내역 조회 (페이지네이션)
+     * page: admin/users.jsp
+     * - 특정 사용자 ID의 신고 내역을 페이지네이션하여 조회
+     */
+    @GetMapping("/{id}/logs/reports")
+    public ResponseEntity<PageResult<ReportDto>> getUserReports(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Page<ReportDto> reports = userAdminService.getUserReports(id, page, size);
+
+        PageResult<ReportDto> result = new PageResult<>(
+                reports.getContent(),
+                reports.getTotalPages(),
+                reports.getNumber());
+
+        return ResponseEntity.ok(result);
+    }
+
     // ─────────────────────────────────────────────
     // [2] 차단 사용자 관리 기능
     // ─────────────────────────────────────────────
@@ -95,7 +165,25 @@ public class UserAdminController {
     }
 
     /**
-     * [2-2] 사용자 차단 해제 API
+     * [2-2] 사용자 차단 API
+     * page: admin/users.jsp
+     * - 특정 사용자 ID의 계정을 비활성화함 (isActive = false)
+     * - 관리자 권한 확인 후에만 접근 가능
+     */
+    @PatchMapping("/{id}/block")
+    public ResponseEntity<?> blockUser(@PathVariable Long id, HttpSession session) {
+        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
+
+        if (loginUser == null || !"ADMIN".equals(loginUser.getRole())) {
+            return ResponseEntity.status(403).body("관리자 권한이 필요합니다.");
+        }
+
+        userAdminService.blockUser(id, loginUser.getId());
+        return ResponseEntity.ok("사용자 차단 완료");
+    }
+
+    /**
+     * [2-3] 사용자 차단 해제 API
      * page: admin/users.jsp
      * - 특정 사용자 ID의 계정을 다시 활성화함 (isActive = true)
      */

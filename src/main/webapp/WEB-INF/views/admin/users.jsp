@@ -56,7 +56,8 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
     <!-- 사용자 상세정보 모달 -->
     <div class="modal fade" id="userDetailModal" tabindex="-1">
-      <div class="modal-dialog">
+      <div class="modal-dialog modal-xl">
+        <!-- ★ modal-xl 추가 -->
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">사용자 상세 정보</h5>

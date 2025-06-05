@@ -16,6 +16,8 @@ public class ReportDto {
     // 동시성 제어용 버전 필드 추가
     private Integer version;
 
+    // PK
+    private Long id;
     // 신고사유(ex. "정보가 틀려요")
     private String reason;
     // 신고 대상 상태 로그 ID
@@ -42,6 +44,7 @@ public class ReportDto {
     public static ReportDto fromEntity(Report report) {
         return new ReportDto(
                 report.getVersion(),
+                report.getId(),
                 report.getReason(),
                 report.getStatusLog() != null ? report.getStatusLog().getId() : null,
                 report.getStatusLog() != null ? report.getStatusLog().getReportCount() : 0,

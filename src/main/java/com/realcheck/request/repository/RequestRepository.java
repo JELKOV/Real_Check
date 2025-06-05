@@ -33,6 +33,7 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
   /**
    * [1-2] UserId로 사용자의 요청 목록 조회
    * RequestService: findByUserId
+   * - 사용자의 모든 요청을 생성 시간 기준으로 내림차순 정렬하여 조회
    * - 내 요청 목록 조회
    */
   List<Request> findByUserIdOrderByCreatedAtDesc(Long userId);
@@ -48,6 +49,12 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
    * RequestService: getRequestsByPlaceId
    */
   List<Request> findByPlaceIdOrderByCreatedAtDesc(Long placeId);
+
+  /**
+   * [1-5] UserId로 페이지네이션된 요청 목록 조회
+   * UserAdminService: getUserRequests
+   */
+  Page<Request> findByUserId(Long userId, Pageable pageable);
 
   // ─────────────────────────────────────────────
   // [2] 위치 기반 필터링 관련 메소드
