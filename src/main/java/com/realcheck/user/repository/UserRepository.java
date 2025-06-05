@@ -1,6 +1,8 @@
 package com.realcheck.user.repository;
 
 import com.realcheck.user.entity.User;
+import com.realcheck.user.entity.UserRole;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -71,4 +73,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * - UserDeletionScheduler: autoDeleteExpiredAccounts
      */
     List<User> findByIsPendingDeletionTrueAndDeletionScheduledAtBefore(LocalDateTime now);
+
+    /**
+     * [3-3] 특정 역할(Role)에 해당하는 사용자 목록 조회
+     * UserService: findAllAdmins
+     * - 관리자 페이지에서 특정 역할을 가진 사용자 목록 조회
+     */
+    List<User> findByRole(UserRole role);
 }

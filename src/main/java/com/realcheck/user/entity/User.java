@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.realcheck.admin.entity.AdminActionLog;
 import com.realcheck.place.entity.Place;
 import com.realcheck.point.entity.Point;
 import com.realcheck.report.entity.Report;
@@ -160,4 +161,11 @@ public class User {
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Place> places = new ArrayList<>();
 
+    /**
+     * 사용자가 작성한 관리자 행동 로그 (AdminActionLog)
+     * User (1) → (N) AdminActionLog
+     * 사용자 탈퇴 시 관련 로그들도 자동 삭제 (CascadeType.ALL)
+     */
+    @OneToMany(mappedBy = "admin", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<AdminActionLog> actionLogs = new ArrayList<>();
 }

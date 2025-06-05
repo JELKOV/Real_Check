@@ -10,6 +10,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.realcheck.admin.entity.ActionType;
+import com.realcheck.admin.entity.TargetType;
+import com.realcheck.admin.service.AdminActionLogService;
 import com.realcheck.report.dto.ReportDto;
 import com.realcheck.report.repository.ReportRepository;
 import com.realcheck.request.dto.RequestDto;
@@ -36,6 +39,7 @@ public class UserAdminService {
     private final StatusLogRepository statusLogRepository;
     private final RequestRepository requestRepository;
     private final ReportRepository reportRepository;
+    private final AdminActionLogService adminActionLogService;
 
     // ────────────────────────────────────────
     // [1] 차단 사용자 관련 기능
@@ -69,9 +73,15 @@ public class UserAdminService {
         }
 
         user.setActive(false); // 차단 처리
+        userRepository.save(user);
 
-        // 추후 확장: 로그 기록
-        // adminActionLogRepository.save(AdminActionLog.block(adminId, userId));
+        // 관리자 로그 기록
+        adminActionLogService.saveLog(
+                adminId,
+                userId,
+                ActionType.BLOCK,
+                TargetType.USER,
+                "관리자가 사용자 차단");
     }
 
     /**
@@ -80,11 +90,23 @@ public class UserAdminService {
      * - isActive = true 로 변경하여 활성화
      */
     @Transactional
-    public void unblockUser(Long userId) {
+    public void unblockUser(Long userId, Long adminId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("사용자를 찾을수 없습니다."));
+
+        if (user.isActive()) {
+            throw new IllegalStateException("이미 차단되지 않은 사용자입니다.");
+        }
 
         user.setActive(true);
         userRepository.save(user);
+
+        // 관리자 로그 기록 (관리자 ID가 필요하다면 매개변수 추가해야 함)
+        adminActionLogService.saveLog(
+                adminId,
+                userId,
+                ActionType.UNBLOCK,
+                TargetType.USER,
+                "관리자가 사용자 차단 해제");
     }
 
     // ────────────────────────────────────────

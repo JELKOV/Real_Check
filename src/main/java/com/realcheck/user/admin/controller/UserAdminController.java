@@ -20,6 +20,7 @@ import com.realcheck.status.dto.StatusLogDto;
 import com.realcheck.status.service.StatusLogService;
 import com.realcheck.user.admin.service.UserAdminService;
 import com.realcheck.user.dto.UserDto;
+import com.realcheck.user.service.UserService;
 
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,7 @@ public class UserAdminController {
 
     private final UserAdminService userAdminService;
     private final StatusLogService statusLogService;
+    private final UserService userService;
 
     // ─────────────────────────────────────────────
     // [1] 사용자 검색 기능 (이메일 / 닉네임 기반)
@@ -188,8 +190,14 @@ public class UserAdminController {
      * - 특정 사용자 ID의 계정을 다시 활성화함 (isActive = true)
      */
     @PatchMapping("/{userId}/unblock")
-    public ResponseEntity<String> unblockUser(@PathVariable Long userId) {
-        userAdminService.unblockUser(userId);
+    public ResponseEntity<String> unblockUser(@PathVariable Long userId, HttpSession session) {
+        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
+
+        if (loginUser == null || !"ADMIN".equals(loginUser.getRole())) {
+            return ResponseEntity.status(403).body("관리자 권한이 필요합니다.");
+        }
+
+        userAdminService.unblockUser(userId, loginUser.getId());
         return ResponseEntity.ok("차단 해제 완료");
     }
 
@@ -202,4 +210,19 @@ public class UserAdminController {
         return ResponseEntity.ok(userAdminService.getReportedUsers());
     }
 
+    // ─────────────────────────────────────────────
+    // [3] 관리자 아이디 검색
+    // ─────────────────────────────────────────────
+
+    /**
+     * [3-1] 관리자 아이디 목록 조회 API
+     * page: admin/logs.jsp
+     * - ADMIN 역할을 가진 사용자만 조회
+     * - 관리자 화면에서 관리자 목록을 확인할 때 사용
+     */
+    @GetMapping("/list")
+    public ResponseEntity<?> getAdminList() {
+        List<UserDto> admins = userService.findAllAdmins(); // ADMIN 역할 유저만 조회
+        return ResponseEntity.ok(admins);
+    }
 }

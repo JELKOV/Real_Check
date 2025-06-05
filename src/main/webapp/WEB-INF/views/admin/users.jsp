@@ -15,7 +15,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
     />
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   </head>
   <body>
     <%@ include file="../common/header.jsp" %>

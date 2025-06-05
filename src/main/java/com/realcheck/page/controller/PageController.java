@@ -343,6 +343,15 @@ public class PageController {
         return isAdmin(session) ? "admin/reports" : "redirect:/login?error=unauthorized";
     }
 
+    /**
+     * [5-5] 관리자 로그 관리 페이지
+     * page: admin/admin.jsp
+     */
+    @GetMapping("/admin/logs")
+    public String adminLogPage(HttpSession session) {
+        return isAdmin(session) ? "admin/logs" : "redirect:/login?error=unauthorized";
+    }
+
     // ────────────────────────────────────────
     // [*] 내부 공통 메서드
     // ────────────────────────────────────────

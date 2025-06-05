@@ -324,7 +324,7 @@ public class UserService {
     // ─────────────────────────────────────────────
 
     /**
-     * [4-1] 관리자 계정 자동 생성 (초기화)
+     * [4-1] 기본 관리자 계정 자동 생성 (초기화)
      * 서버 시작 시 admin@example.com 계정이 없으면 자동 생성
      */
     @PostConstruct
@@ -335,16 +335,31 @@ public class UserService {
             User admin = new User();
             admin.setEmail("admin@example.com");
             admin.setNickname("관리자");
+            admin.setPassword(passwordEncoder.encode("admin1234"));
             admin.setRole(UserRole.ADMIN);
             admin.setActive(true);
             admin.setPoints(0);
-            admin.setPassword(passwordEncoder.encode("admin1234"));
+            admin.setReportCount(0); // 추가
+            admin.setVersion(0); // 추가
+            admin.setPendingDeletion(false); // 추가
+            admin.setCreatedAt(LocalDateTime.now()); // 명시적으로 넣어도 무방
 
             userRepository.save(admin);
             System.out.println("관리자 계정 생성 완료");
         } else {
             System.out.println("이미 admin@example.com 계정이 존재합니다.");
         }
+    }
+
+    /**
+     * [4-2] 모든 관리자 계정 조회
+     * UserAdminController: getAdmins
+     */
+    public List<UserDto> findAllAdmins() {
+        return userRepository.findByRole(UserRole.ADMIN)
+                .stream()
+                .map(UserDto::fromEntity)
+                .toList();
     }
 
     // ────────────────────────────────────────
