@@ -9,5 +9,5 @@ public enum TargetType {
     USER,       // 사용자 (회원)
     PLACE,      // 장소 (공식 장소 신청 등)
     REPORT,     // 신고 (신고 처리 관련)
-    STATUS_LOG  // 상태 로그 (자발 공유, 답변 등)
+    STATUS_LOG  // 상태 로그 (자발 공유, 공지 등 / 답변은 자동처리됨)
 }

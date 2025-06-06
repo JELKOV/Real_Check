@@ -1,4 +1,4 @@
-package com.realcheck.user.admin.controller;
+package com.realcheck.admin.controller;
 
 import java.util.HashMap;
 import java.util.List;
@@ -13,12 +13,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.realcheck.admin.service.UserAdminService;
 import com.realcheck.common.dto.PageResult;
 import com.realcheck.report.dto.ReportDto;
 import com.realcheck.request.dto.RequestDto;
 import com.realcheck.status.dto.StatusLogDto;
 import com.realcheck.status.service.StatusLogService;
-import com.realcheck.user.admin.service.UserAdminService;
 import com.realcheck.user.dto.UserDto;
 import com.realcheck.user.service.UserService;
 

@@ -1,4 +1,4 @@
-package com.realcheck.user.admin.service;
+package com.realcheck.admin.service;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -12,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.realcheck.admin.entity.ActionType;
 import com.realcheck.admin.entity.TargetType;
-import com.realcheck.admin.service.AdminActionLogService;
 import com.realcheck.report.dto.ReportDto;
 import com.realcheck.report.repository.ReportRepository;
 import com.realcheck.request.dto.RequestDto;
