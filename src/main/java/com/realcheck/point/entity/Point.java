@@ -22,31 +22,24 @@ public class Point {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 지급/차감 포인트 (양수: 지급, 음수: 차감)
+    // (1) 지급/차감 금액 (양수: 적립, 음수: 차감)
     @Column(nullable = false)
     private int amount;
-    // 지급/차감 사유
+
+    // (2) 지급/차감 이유
     @Column(nullable = false)
     private String reason;
-    // 지급/차감 시점
+
+    // (3) 지급/차감 시점
     @Column(nullable = false, updatable = false)
     private LocalDateTime earnedAt;
 
-    // TODO: 포인트 지급일과 소비일의 날짜처리를 어떻게 해야할지 ?
-    // TODO: 테이블을 더 만들어야 되는지  타입에 따라서 나눴으니 된건지 
-    @PrePersist
-    protected void onCreate() {
-        if (this.earnedAt == null) {
-            this.earnedAt = LocalDateTime.now();
-        }
-    }
-    
     /**
      * 포인트 타입 (Enum)
      * EARN: 적립, DEDUCT: 차감, REWARD: 보상 등
      */
+    @Column(nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private PointType type;
 
     // ─────────────────────────────────────────────
@@ -61,4 +54,11 @@ public class Point {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @PrePersist
+    protected void onCreate() {
+        if (this.earnedAt == null) {
+            this.earnedAt = LocalDateTime.now();
+        }
+    }
 }

@@ -1,8 +1,13 @@
 package com.realcheck.report.repository;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import com.realcheck.admin.dto.TopReportedUserDto;
 import com.realcheck.report.entity.Report;
 
 /**
@@ -51,4 +56,23 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
      * - 페이징 처리 지원
      */
     Page<Report> findByStatusLogId(Long statusLogId, Pageable pageable);
+
+    /**
+     * [6] 신고가 가장 많이 된 사용자 조회
+     * AdminStatsService: getTopReportedUsers
+     * - 관리자 화면에서 신고를 가장 많이 된 사용자 목록을 조회
+     * - 페이징 처리 지원
+     */
+    @Query("""
+                SELECT new com.realcheck.admin.dto.TopReportedUserDto(
+                         sl.reporter.id,
+                         sl.reporter.nickname,
+                         COUNT(r)
+                       )
+                FROM Report r
+                JOIN r.statusLog sl
+                GROUP BY sl.reporter.id, sl.reporter.nickname
+                ORDER BY COUNT(r) DESC
+            """)
+    List<TopReportedUserDto> findTopReportedUsers(Pageable pageable);
 }

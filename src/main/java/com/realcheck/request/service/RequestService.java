@@ -3,6 +3,8 @@ package com.realcheck.request.service;
 import com.realcheck.place.entity.Place;
 import com.realcheck.place.repository.AllowedRequestTypeRepository;
 import com.realcheck.place.repository.PlaceRepository;
+import com.realcheck.point.entity.PointType;
+import com.realcheck.point.service.PointService;
 import com.realcheck.request.dto.RequestDto;
 import com.realcheck.request.entity.Request;
 import com.realcheck.request.entity.RequestCategory;
@@ -36,6 +38,7 @@ public class RequestService {
     private final PlaceRepository placeRepository;
     private final StatusLogRepository statusLogRepository;
     private final AllowedRequestTypeRepository allowedRequestTypeRepository;
+    private final PointService pointService;
 
     // ─────────────────────────────────────────────
     // [1] 요청 등록 (Request 등록 로직)
@@ -58,16 +61,26 @@ public class RequestService {
             place = placeRepository.findById(dto.getPlaceId())
                     .orElseThrow(() -> new IllegalArgumentException("공식 장소를 찾을 수 없습니다."));
         }
+        // (3) 포인트 유효성 검사
+        if (dto.getPoint() < 10) {
+            throw new IllegalArgumentException("요청은 최소 10포인트 이상이어야 합니다.");
+        }
+        if (user.getPoints() < dto.getPoint()) {
+            throw new IllegalArgumentException("포인트가 부족합니다.");
+        }
 
-        // (3) Request 엔티티로 변환
+        // (4) Request 엔티티로 변환
         Request request = dto.toEntity(user, place);
 
-        // (4) 공식 장소일 경우 타입 검증
+        // (5) 공식 장소일 경우 타입 검증
         if (place != null && !isValidForPlace(place, request.getCategory())) {
             throw new IllegalArgumentException("해당 장소에서는 선택한 요청 카테고리를 사용할 수 없습니다.");
         }
 
-        // (5) 저장
+        // (6) 포인트 예치
+        pointService.givePoint(user, -dto.getPoint(), "요청 등록 포인트 예치", PointType.RESERVE);
+
+        // (7) 저장
         return requestRepository.save(request);
     }
 
@@ -96,6 +109,17 @@ public class RequestService {
 
         // 요청 마감 처리
         request.setClosed(true);
+
+        // 답변이 없고, 포인트도 아직 처리되지 않은 경우 → 환불
+        int visibleAnswerCount = countVisibleStatusLogsByRequestId(requestId);
+        if (visibleAnswerCount == 0 && !request.isPointHandled()) {
+            pointService.givePoint(
+                    request.getUser(),
+                    request.getPoint(),
+                    "답변 없음 - 포인트 환불",
+                    PointType.REFUND);
+            request.setPointHandled(true);
+        }
 
         // 동시성 문제 고려
         try {
@@ -260,6 +284,7 @@ public class RequestService {
      * RequestService: findNearbyValidRequests
      * RequestService: findOpenRequests
      * RequestSerivce: getRequestsByPlaceId
+     * RequestService: closeRequest
      * RequestController: findRequestById
      * RequestController: findMyRequests
      */

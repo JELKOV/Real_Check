@@ -75,7 +75,9 @@ function generateRequestRow(req) {
     ? `<div class='text-info small'>⚠️ 채택 필요</div>`
     : "";
   const formattedDate = new Date(req.createdAt).toLocaleString();
-  const pointDisplay = `🪙 ${req.point} 포인트`;
+  const pointDisplay = req.closed
+    ? `🪙 ${req.point} 포인트`
+    : `🪙 ${req.point} 포인트 <div class="text-secondary small">(예치 중)</div>`;
 
   return `
     <tr>

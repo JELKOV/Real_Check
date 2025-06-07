@@ -1,10 +1,18 @@
 package com.realcheck.admin.service;
 
+import com.realcheck.admin.dto.CategoryLogCountDto;
 import com.realcheck.admin.dto.MonthlyStatDto;
+import com.realcheck.admin.dto.MonthlyUserStatDto;
+import com.realcheck.admin.dto.TopContributingUserDto;
+import com.realcheck.admin.dto.TopReportedUserDto;
 import com.realcheck.point.repository.PointRepository;
 import com.realcheck.report.repository.ReportRepository;
 import com.realcheck.status.repository.StatusLogRepository;
+import com.realcheck.user.repository.UserRepository;
+
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,6 +29,7 @@ public class AdminStatsService {
     private final ReportRepository reportRepository;
     private final PointRepository pointRepository;
     private final StatusLogRepository statusLogRepository;
+    private final UserRepository userRepository;
 
     // ─────────────────────────────────────────────
     // [1] 통계 메서드 (신고, 포인트, 월별 로그)
@@ -37,14 +46,14 @@ public class AdminStatsService {
     }
 
     /**
-     * [1-2] 전체 포인트 합계 반환
-     * AdminStatsController: getTotalPointSum
-     * - 지급된 포인트 총합을 반환
-     * - null이 반환될 경우 0으로 처리 (SUM 함수는 결과가 없으면 null 반환 가능성 있음)
+     * [1-2] 전체 발행된 포인트 총량 조회
+     * - CHARGE, REWARD 타입은 플러스(+)
+     * - CASH 타입은 마이너스(–)
+     * - 그 외 타입(EARN, DEDUCT, RESERVE, REFUND 등)은 계산에서 제외
      */
     public int getTotalPointSum() {
-        Integer result = pointRepository.sumAllPoints();
-        return result != null ? result : 0;
+        Long netIssued = pointRepository.sumNetIssuedPoints();
+        return (netIssued != null) ? netIssued.intValue() : 0;
     }
 
     /**
@@ -55,5 +64,51 @@ public class AdminStatsService {
      */
     public List<MonthlyStatDto> getMonthlyStatusLogCount() {
         return statusLogRepository.getMonthlyStatusLogCount();
+    }
+
+    /**
+     * [1-4] 카테고리별 상태로그 수 (REGISTER, ANSWER, FREE_SHARE)
+     * AdminStatsController: getCategoryLogStats
+     * - 카테고리별로 상태 로그의 개수를 집계하여 반환
+     * - 각 카테고리의 로그 수를 시각화하여 운영 대시보드에 표시
+     */
+    public List<CategoryLogCountDto> getLogCountByCategory() {
+        return statusLogRepository.countLogsGroupByType();
+    }
+
+    /**
+     * [1-5] 월별 사용자 가입 통계
+     * AdminStatsController: getMonthlyUserStats
+     * - 사용자 가입 시점(createdAt)을 기준으로 연/월별 가입 수를 집계
+     * - 프론트 대시보드에서 사용자 성장 추세를 파악하는 데 사용
+     */
+    public List<MonthlyUserStatDto> getMonthlyUserSignUpStats() {
+        return userRepository.countMonthlySignUps();
+    }
+
+    /**
+     * [1-6] 신고 Top 10 유저 (가장 많이 신고당한 사용자)
+     * - ReportRepository.findTopReportedUsers(PageRequest.of(0, 10)) 호출
+     * - 관리자 대시보드에서 가장 많이 신고당한 사용자를 조회
+     * - 신고가 많은 사용자를 파악하여 운영 정책 수립에 활용
+     * - 반환 타입: List<TopReportedUserDto>
+     * - 예시: 신고가 가장 많이 된 사용자 10명을 반환
+     * - 반환되는 DTO는 사용자 ID, 닉네임, 신고 횟수를 포함
+     */
+    public List<TopReportedUserDto> getTopReportedUsers() {
+        return reportRepository.findTopReportedUsers(PageRequest.of(0, 10));
+    }
+
+    /**
+     * [1-7] 기여 Top 10 유저 (가장 많은 StatusLog 작성 사용자)
+     * - StatusLogRepository.findTopContributors(PageRequest.of(0, 10)) 호출
+     * - 관리자 대시보드에서 가장 많은 상태 로그를 작성한 사용자를 조회
+     * - 기여가 많은 사용자를 파악하여 운영 정책 수립에 활용
+     * - 반환 타입: List<TopContributingUserDto>
+     * - 예시: 상태 로그를 가장 많이 작성한 사용자 10명을 반환
+     * - 반환되는 DTO는 사용자 ID, 닉네임, 작성 횟수를 포함
+     */
+    public List<TopContributingUserDto> getTopContributingUsers() {
+        return statusLogRepository.findTopContributors(PageRequest.of(0, 10));
     }
 }

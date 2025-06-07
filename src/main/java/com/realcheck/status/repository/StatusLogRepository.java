@@ -1,6 +1,8 @@
 package com.realcheck.status.repository;
 
+import com.realcheck.admin.dto.CategoryLogCountDto;
 import com.realcheck.admin.dto.MonthlyStatDto;
+import com.realcheck.admin.dto.TopContributingUserDto;
 import com.realcheck.status.entity.StatusLog;
 import com.realcheck.status.entity.StatusType;
 
@@ -88,8 +90,10 @@ public interface StatusLogRepository extends JpaRepository<StatusLog, Long> {
         Page<StatusLog> findByReporterIdAndStatusType(Long userId, StatusType statusType, Pageable pageable);
 
         /**
-         * [1-10] 숨김 처리된 상태 로그 조회 - 관리자용 [미사용]
+         * [1-10] 숨김 처리된 상태 로그 조회 - 관리자용
          * ReportAdminService: getHiddenLogs
+         * - 관리자 페이지에서 숨김 처리된 상태 로그를 조회할 때 사용
+         * - 숨김 처리된 로그만 반환
          */
         List<StatusLog> findByIsHiddenTrue();
 
@@ -171,6 +175,39 @@ public interface StatusLogRepository extends JpaRepository<StatusLog, Long> {
         @Query("SELECT new com.realcheck.admin.dto.MonthlyStatDto(YEAR(s.createdAt), MONTH(s.createdAt), COUNT(s)) " +
                         "FROM StatusLog s GROUP BY YEAR(s.createdAt), MONTH(s.createdAt)")
         List<MonthlyStatDto> getMonthlyStatusLogCount();
+
+        /**
+         * [4-2] 카테고리별 상태로그 수 집계
+         * AdminStatsService: getLogCountByCategory
+         * - 각 카테고리(REGISTER, ANSWER, FREE_SHARE 등)별로 상태 로그의 개수를 집계하여 반환
+         */
+        @Query("""
+                                SELECT new com.realcheck.admin.dto.CategoryLogCountDto(
+                                        sl.statusType,
+                                        COUNT(sl)
+                                        )
+                                FROM StatusLog sl
+                                GROUP BY sl.statusType
+                        """)
+        List<CategoryLogCountDto> countLogsGroupByType();
+
+        /**
+         * [4-3] 공헌 많은 사용자 조회 Top 10
+         * AdminStatsService: getTopContributingUsers
+         * - 관리자 대시보드에서 가장 많은 상태 로그를 등록한 사용자를 조회
+         * - 사용자 ID, 닉네임, 등록한 상태 로그 개수를 포함하는 DTO 반환
+         */
+        @Query("""
+                                SELECT new com.realcheck.admin.dto.TopContributingUserDto(
+                                        sl.reporter.id,
+                                        sl.reporter.nickname,
+                                        COUNT(sl)
+                                        )
+                                FROM StatusLog sl
+                                GROUP BY sl.reporter.id, sl.reporter.nickname
+                                ORDER BY COUNT(sl) DESC
+                        """)
+        List<TopContributingUserDto> findTopContributors(Pageable pageable);
 
         // ─────────────────────────────────────────────
         // [5] 반경 필터링 조회 (사용자 위치 기반)

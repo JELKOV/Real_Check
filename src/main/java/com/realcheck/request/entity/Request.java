@@ -62,6 +62,11 @@ public class Request {
     @Column(nullable = false)
     private RequestCategory category;
 
+    // 포인트 처리 여부 (환불 or 분배 여부)
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean pointHandled = false;
+
     // ─────────────────────────────────────────────
     // [2] 연관 관계 설정 (사용자, 장소, 상태 로그)
     // ─────────────────────────────────────────────

@@ -501,6 +501,12 @@ function submitRequest(e) {
     customPlaceName: isCustomPlace ? $("#selectedPlaceName").val() : null,
   };
 
+  // 요청 포인트 검사
+  if (!requestData.point || requestData.point < 10) {
+    alert("요청은 최소 10포인트 이상이어야 합니다.");
+    return;
+  }
+
   // 공통 필수 항목 검사
   if (!requestData.title || !requestData.content || !requestData.category) {
     alert("필수 입력 항목을 확인해주세요.");

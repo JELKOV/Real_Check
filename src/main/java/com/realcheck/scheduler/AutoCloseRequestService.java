@@ -10,6 +10,7 @@ import com.realcheck.point.service.PointService;
 import com.realcheck.request.entity.Request;
 import com.realcheck.request.service.RequestService;
 import com.realcheck.status.entity.StatusLog;
+import com.realcheck.user.entity.User;
 
 import lombok.RequiredArgsConstructor;
 
@@ -42,13 +43,23 @@ public class AutoCloseRequestService {
 
             request.setClosed(true); // 마감 처리
             try {
+                // 요청 상태를 마감으로 변경
+                if (!request.isPointHandled()) {
+                    // 자동 마감 처리 직후, 요청자에게 포인트 차감
+                    User requester = request.getUser();
+                    int totalPoints = request.getPoint();
+
+                    pointService.givePoint(requester, -totalPoints, "자동 마감으로 포인트 차감", PointType.DEDUCT);
+                    // 답변자에게 포인트 분배
+                    distributePointsToAnswerers(request);
+
+                    request.setPointHandled(true); // 분배 완료 플래그
+                }
                 requestService.save(request);
 
                 // [디버깅용 로그]
                 System.out.println("[AutoClose] 요청 ID " + request.getId() + " 마감 성공");
 
-                // 답변자에게 포인트 분배
-                distributePointsToAnswerers(request);
             } catch (ObjectOptimisticLockingFailureException e) {
                 System.out.println("[AutoClose] 요청 ID " + request.getId() +
                         " 마감 중 충돌 발생 - 다른 프로세스에서 처리했을 수 있음");
@@ -73,13 +84,6 @@ public class AutoCloseRequestService {
 
         int totalPoints = request.getPoint();
         int pointPerUser = totalPoints / answerCount; // 소수점 제외
-
-        // 최소 1점 이상일 때만 분배
-        if (pointPerUser < 1) {
-            request.setClosed(true);
-            requestService.save(request);
-            return;
-        }
 
         for (StatusLog answer : visibleAnswers) {
             pointService.givePoint(answer.getReporter(), pointPerUser, "자동 마감 포인트 분배", PointType.EARN);
