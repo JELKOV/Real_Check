@@ -291,7 +291,7 @@ function getUserLocation() {
 
 // [8] 주변 장소 API 호출 및 마커 렌더링
 function loadNearbyPlaces(lat, lng) {
-  $.get("/api/place/nearby", { lat, lng, radiusMeters: 1000 }).done(
+  $.get("/api/place/nearby", { lat, lng, radiusMeters: 10000 }).done(
     (places) => {
       clearMarkers();
 

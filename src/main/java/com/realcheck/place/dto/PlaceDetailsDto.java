@@ -32,8 +32,14 @@ public class PlaceDetailsDto {
     private double lat;
     // 경도
     private double lng;
-    // 승인 여부 (공식 장소)
+    /** 승인 상태 */
     private boolean isApproved;
+    /** 반려 상태 */
+    private boolean isRejected;
+    /** 대기 상태 (편의용) */
+    public boolean isPending() {
+        return !isApproved && !isRejected;
+    }
     // ID 소유자
     private Long ownerId;
 

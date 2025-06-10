@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.realcheck.place.dto.FavoritePlaceDto;
 import com.realcheck.place.dto.PlaceDetailsDto;
 import com.realcheck.place.dto.PlaceDto;
+import com.realcheck.place.dto.PlaceRegisterRequestDto;
 import com.realcheck.place.entity.AllowedRequestType;
 import com.realcheck.place.entity.FavoritePlace;
 import com.realcheck.place.entity.Place;
@@ -45,20 +46,40 @@ public class PlaceService {
         // ─────────────────────────────────────────────
         // [1] 장소 등록 관련
         // ─────────────────────────────────────────────
-
         /**
-         * [1-1] 장소 등록 메서드 [미사용]
+         * [1-1] 사용자 장소 등록 메서드
+         * PlaceController: register
          * - 사용자 ID(ownerId)를 통해 User 조회
-         * - PlaceDto → Place Entity 변환 후 저장
+         * - PlaceRegisterRequestDto → Place Entity 변환 후 저장
+         * - 허용 카테고리 → AllowedRequestType으로 변환해 함께 저장
          */
-        public void registerPlace(PlaceDto dto) {
-                // 1. 등록자(ownerId)를 통해 User 객체 조회
-                User owner = userRepository.findById(dto.getOwnerId())
-                                .orElseThrow(() -> new RuntimeException(
-                                                "등록자(User ID: " + dto.getOwnerId() + ")를 찾을 수 없습니다."));
-                // 2. DTO → Entity 변환
-                Place place = dto.toEntity(owner);
-                // 3. DB에 장소 저장
+        @Transactional
+        public void registerPlace(PlaceRegisterRequestDto dto, Long ownerId) {
+                // 1. 등록자 조회
+                User owner = userRepository.findById(ownerId)
+                                .orElseThrow(() -> new RuntimeException("등록자(User ID: " + ownerId + ")를 찾을 수 없습니다."));
+
+                // 2. 엔티티 생성
+                Place place = Place.builder()
+                                .name(dto.getName())
+                                .address(dto.getAddress())
+                                .lat(dto.getLat())
+                                .lng(dto.getLng())
+                                .owner(owner)
+                                .build();
+
+                // 3. 카테고리 → AllowedRequestType 생성 및 연결 (양방향 연결 필수)
+                Set<AllowedRequestType> allowedTypes = dto.getCategories().stream()
+                                .map(typeStr -> {
+                                        RequestCategory category = RequestCategory.valueOf(typeStr);
+                                        return new AllowedRequestType(place, category); // place를 설정한 상태
+                                })
+                                .collect(Collectors.toSet());
+
+                // 4. 양방향 연관관계 연결
+                place.getAllowedRequestTypes().addAll(allowedTypes);
+
+                // 5. place 저장 시 AllowedRequestType도 함께 저장됨 (Cascade.ALL)
                 placeRepository.save(place);
         }
 
@@ -67,28 +88,8 @@ public class PlaceService {
         // ─────────────────────────────────────────────
 
         /**
-         * [2-1] 전체 장소 목록 조회 [미사용]
-         * - DB에서 모든 Place 엔티티를 조회하고, PlaceDto로 변환하여 반환 (관리자 전용)
-         */
-        public List<PlaceDto> findAll() {
-                return placeRepository.findAll().stream()
-                                .map(PlaceDto::fromEntity) // 엔티티 → DTO 변환
-                                .toList();
-        }
-
-        /**
-         * [2-2] 특정 사용자가 등록한 장소 조회 [미사용]
-         * - 로그인 사용자 본인이 등록한 장소 목록 반환
-         */
-        public List<PlaceDto> findByOwner(Long ownerId) {
-                return placeRepository.findByOwnerId(ownerId).stream()
-                                .map(PlaceDto::fromEntity) // 엔티티 → DTO 변환
-                                .toList();
-        }
-
-        /**
-         * [2-3] 현재 위치 기준 반경 내 장소 조회 [미사용]
-         * pageController: getNearbyPlaces
+         * [2-1] 현재 위치 기준 반경 내 장소 조회
+         * PlaceController: getNearbyPlaces
          * - 사용자의 위도(lat), 경도(lng)를 기반으로 주변 장소 조회
          */
         public List<PlaceDto> findNearbyPlaces(double lat, double lng, double radiusMeters) {
@@ -98,18 +99,7 @@ public class PlaceService {
         }
 
         /**
-         * [2-4] 승인된 장소만 필터링 (사용자 노출용) [미사용] - 장소 검색 페이지
-         * - 사용자에게 보여줄 장소를 제한함
-         */
-        public List<PlaceDto> findApprovedNearby(double lat, double lng, double radiusMeters) {
-                return placeRepository.findApprovedNearby(lat, lng, radiusMeters)
-                                .stream()
-                                .map(PlaceDto::fromEntity)
-                                .toList();
-        }
-
-        /**
-         * [2-5] 검색어 기반 장소 조회 - 승인된 장소만
+         * [2-2] 검색어 기반 장소 조회 - 승인된 장소만
          * PlaceController: searchApprovedPlaces
          * - 승인된 장소 & 검색어 기반 조회
          */
@@ -120,7 +110,7 @@ public class PlaceService {
         }
 
         /**
-         * [2-6] 장소 상세 정보 조회 (공식 장소)
+         * [2-3] 장소 상세 정보 조회 (공식 장소)
          * PageController: getPlaceForRegister
          * PageController: showCommunityPage
          * pageController: showRegisterNoticePage
@@ -155,10 +145,22 @@ public class PlaceService {
                                 place.getLat(),
                                 place.getLng(),
                                 place.isApproved(),
+                                place.isRejected(),
                                 ownerId,
                                 recentInfo,
                                 communityLink,
                                 allowedRequestTypes);
+        }
+
+        /**
+         * [2-4] 특정 사용자가 등록한 장소 조회 [미사용]
+         * - 로그인 사용자 본인이 등록한 장소 목록 반환
+         * - 추후에 장소 등록페이지구현때 적용
+         */
+        public List<PlaceDto> findByOwner(Long ownerId) {
+                return placeRepository.findByOwnerId(ownerId).stream()
+                                .map(PlaceDto::fromEntity) // 엔티티 → DTO 변환
+                                .toList();
         }
 
         // ─────────────────────────────────────────────

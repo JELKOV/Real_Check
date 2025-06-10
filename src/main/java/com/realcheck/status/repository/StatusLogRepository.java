@@ -209,6 +209,12 @@ public interface StatusLogRepository extends JpaRepository<StatusLog, Long> {
                         """)
         List<TopContributingUserDto> findTopContributors(Pageable pageable);
 
+        /**
+         * [4-4] 특정 장소에 등록된 상태 로그(ANSWER/REGISTER 등) 총수 조회
+         * AdminPlaceService: getPlaceDetails
+         */
+        long countByPlaceId(Long placeId);
+
         // ─────────────────────────────────────────────
         // [5] 반경 필터링 조회 (사용자 위치 기반)
         // ─────────────────────────────────────────────

@@ -4,6 +4,7 @@ import com.realcheck.common.dto.PageResult;
 import com.realcheck.place.dto.PlaceDetailsDto;
 import com.realcheck.place.service.PlaceService;
 import com.realcheck.request.dto.RequestDto;
+import com.realcheck.request.entity.RequestCategory;
 import com.realcheck.request.service.RequestService;
 import com.realcheck.status.dto.StatusLogDto;
 import com.realcheck.status.service.StatusLogService;
@@ -303,6 +304,18 @@ public class PageController {
         return "place/place-search"; // JSP 파일명
     }
 
+    /**
+     * [4-3] 장소 등록 페이지
+     * - 공식 장소 등록 페이지로 이동
+     * page: place/place-register.jsp
+     */
+    @GetMapping("/place/register")
+    public String showPlaceRegisterPage(Model model) {
+        model.addAttribute("naverMapClientId", naverMapClientId);
+        model.addAttribute("requestCategories", RequestCategory.values());
+        return "place/place-register"; // JSP 경로
+    }
+
     // ─────────────────────────────────────────────
     // [5] 관리자 페이지
     // ─────────────────────────────────────────────
@@ -352,6 +365,15 @@ public class PageController {
         return isAdmin(session) ? "admin/logs" : "redirect:/login?error=unauthorized";
     }
 
+    /**
+     * [5-6] 관리자 장소 관리 페이지
+     * page: admin/places.jsp
+     */
+    @GetMapping("/admin/places")
+    public String adminPlacesPage(HttpSession session) {
+        return isAdmin(session) ? "admin/places" : "redirect:/login?error=unauthorized";
+    }
+
     // ────────────────────────────────────────
     // [*] 내부 공통 메서드
     // ────────────────────────────────────────
@@ -362,6 +384,8 @@ public class PageController {
      * PageController: adminStatsPage
      * PageController: adminUsersPage
      * PageController: adminReportsPage
+     * PageController: adminLogPage
+     * pageController: adminPlacesPage
      */
     private boolean isAdmin(HttpSession session) {
         UserDto loginUser = (UserDto) session.getAttribute("loginUser");

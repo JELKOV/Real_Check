@@ -38,4 +38,10 @@ public interface FavoritePlaceRepository extends JpaRepository<FavoritePlace, Lo
      * - 사용자가 특정 장소를 즐겨찾기 해제할 때 호출됨
      */
     void deleteByUserIdAndPlaceId(Long userId, Long placeId);
+
+    /**
+     * [5] 특정 장소를 즐겨찾기한 총 건수 조회
+     * AdminPlaceService: getPlaceDetails
+     */
+    long countByPlaceId(Long placeId);
 }

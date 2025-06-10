@@ -128,6 +128,23 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
             </div>
           </div>
         </div>
+
+        <!-- 6. 장소 등록하기 -->
+        <div class="col-md-3">
+          <div class="card shadow-sm h-100">
+            <div class="card-body d-flex flex-column">
+              <h5 class="card-title">장소 등록하기</h5>
+              <p class="card-text flex-grow-1">
+                인증을 원하는 장소를 등록하고, 요청/답변 기능을 활성화하세요.<br />
+                관리자 승인 후 공식 장소로 운영할 수 있습니다.
+              </p>
+              <a href="/place/register" class="btn btn-outline-dark mt-auto">
+                장소 등록하기
+              </a>
+            </div>
+          </div>
+        </div>
+        
       </div>
     </div>
 

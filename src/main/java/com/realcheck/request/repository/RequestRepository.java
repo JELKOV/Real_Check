@@ -56,6 +56,12 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
    */
   Page<Request> findByUserId(Long userId, Pageable pageable);
 
+  /**
+   * [1-6] 특정 장소에 등록된 요청 총수 조회
+   * AdminPlaceService: getPlaceDetails
+   */
+  long countByPlaceId(Long placeId);
+
   // ─────────────────────────────────────────────
   // [2] 위치 기반 필터링 관련 메소드
   // ─────────────────────────────────────────────
@@ -112,7 +118,6 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
       @Param("lng") double lng,
       @Param("radius") double radius,
       @Param("timeLimit") LocalDateTime timeLimit);
-
 
   // ─────────────────────────────────────────────
   // [3] 자동 마감 관련 메소드

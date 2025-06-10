@@ -93,6 +93,24 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
             </div>
           </div>
         </div>
+
+        <!-- 장소 관리 -->
+        <div class="col-md-4">
+          <div class="card h-100 shadow-sm admin-card">
+            <div class="card-body d-flex align-items-center">
+              <div>
+                <h5 class="card-title mb-1">장소 관리</h5>
+                <p class="card-text text-muted small">
+                  공식 장소 승인·검색·수정
+                </p>
+                <a href="/admin/places" class="btn btn-sm btn-outline-info mt-2"
+                  >바로가기</a
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      
       </div>
     </div>
 

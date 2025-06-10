@@ -36,6 +36,7 @@ public interface AllowedRequestTypeRepository extends JpaRepository<AllowedReque
         /**
          * [1-2] 특정 장소에서 특정 요청 타입 존재 여부 확인
          * RequestService: isValidForPlace
+         * PlaceService: addAllowedRequestType
          * - 성능 최적화를 위해 DB에서 직접 확인
          * - true/false 반환
          */

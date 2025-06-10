@@ -14,11 +14,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.realcheck.place.dto.FavoritePlaceDto;
 import com.realcheck.place.dto.PlaceDetailsDto;
 import com.realcheck.place.dto.PlaceDto;
+import com.realcheck.place.dto.PlaceRegisterRequestDto;
 import com.realcheck.place.service.PlaceService;
 import com.realcheck.user.dto.UserDto;
 
 import jakarta.servlet.http.HttpSession;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -39,13 +39,25 @@ public class PlaceController {
     // ─────────────────────────────────────────────
 
     /**
-     * [1-1] 장소 등록 API (POST /api/place) [미사용]
+     * [1-1] 장소 등록 API (POST /api/place)
+     * page: place/place-register.jsp
      * - 프론트엔드에서 장소 정보를 JSON으로 보내면 등록됨
      * - 관리자 또는 인증된 사용자만 가능 (프론트에서 추가 검증 필요)
      */
     @PostMapping
-    public ResponseEntity<String> register(@Valid @RequestBody PlaceDto dto) {
-        placeService.registerPlace(dto);
+    public ResponseEntity<String> register(
+            @RequestBody PlaceRegisterRequestDto dto,
+            HttpSession session) {
+        // 1. 로그인 사용자 조회
+        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            return ResponseEntity.status(401).body("로그인이 필요합니다.");
+        }
+
+        // 2. 등록 서비스 호출
+        placeService.registerPlace(dto, loginUser.getId());
+
+        // 3. 성공 메시지 반환
         return ResponseEntity.ok("장소 등록 완료");
     }
 
@@ -54,17 +66,7 @@ public class PlaceController {
     // ─────────────────────────────────────────────
 
     /**
-     * [2-1] 전체 장소 목록 조회 API (GET /api/place) [미사용]
-     * - 모든 등록된 장소 조회 (관리자 전용)
-     * - 예: 관리자 페이지에서 모든 장소 관리
-     */
-    @GetMapping
-    public ResponseEntity<List<PlaceDto>> getAll() {
-        return ResponseEntity.ok(placeService.findAll()); // 모든 장소를 서비스에서 조회
-    }
-
-    /**
-     * [2-2] 내 장소 목록 조회 API (GET /api/place/my) [미사용]
+     * [2-1] 내 장소 목록 조회 API (GET /api/place/my) [미사용]
      * - 로그인된 사용자가 등록한 장소만 조회
      */
     @GetMapping("/my")
@@ -80,7 +82,7 @@ public class PlaceController {
     }
 
     /**
-     * [2-3] 현재 위치 기반 주변 장소 조회 API
+     * [2-2] 현재 위치 기반 주변 장소 조회 API
      * page: place/place-search.jsp
      * - 위도(lat), 경도(lng), 반경(radiusMeters)을 기반으로 인근 장소 조회
      * - 지도에서 사용자 위치를 기준으로 인근 장소 표시
@@ -94,7 +96,7 @@ public class PlaceController {
     }
 
     /**
-     * [2-4] 장소 검색 API (검색어 기반)
+     * [2-3] 장소 검색 API (검색어 기반)
      * page: request/register.jsp
      * page: place/page-search.jsp
      * - 검색어를 기반으로 승인된 장소 조회
@@ -107,7 +109,7 @@ public class PlaceController {
     }
 
     /**
-     * [2-5] 공식 장소 상세 정보 조회 API
+     * [2-4] 공식 장소 상세 정보 조회 API
      * page: request/register.jsp
      * - 특정 장소의 상세 정보 조회
      */

@@ -82,9 +82,25 @@ public class Place {
     // [2] 승인 상태 및 등록자 정보
     // ─────────────────────────────────────────────
 
-    // 장소가 관리자에게 승인되었는지 여부 (기본은 false)
+    // 승인/반려 상태
+    // 관리자가 승인 처리했는지
     @Builder.Default
+    @Column(nullable = false)
     private boolean isApproved = false;
+
+    // 관리자가 반려 처리했는지
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean isRejected = false;
+
+    // Pending 여부 편의 메서드
+    public boolean isPending() {
+        return !isApproved && !isRejected;
+    }
+
+    // 반려 사유
+    @Column(length = 500)
+    private String rejectReason;
 
     // 장소 등록자 (User 엔티티와 N:1 관계)
     @ManyToOne(fetch = FetchType.LAZY)
