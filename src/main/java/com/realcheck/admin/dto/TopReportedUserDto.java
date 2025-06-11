@@ -4,8 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 /**
- * [3] 신고 Top 10 유저 DTO
- * - “가장 많이 신고당한” 사용자 순위 정보를 담는다.
+ * 신고 Top 10 유저 DTO
+ * - 가장 많이 신고당한 사용자 순위 정보를 담는다.
  * - Report 엔티티를 조회할 때, Report → StatusLog → StatusLog.reporter(User)로 연결되어
  *   최종적으로 User.id와 User.nickname을 꺼내야 한다.
  */

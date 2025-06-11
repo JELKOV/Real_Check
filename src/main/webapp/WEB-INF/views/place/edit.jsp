@@ -35,7 +35,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
             maxlength="300"
             required
           >
-${statusLog.content}</textarea
+            ${statusLog.content}</textarea
           >
           <div class="d-flex justify-content-end mt-1">
             <small id="contentCount" class="text-muted">0 / 300자</small>

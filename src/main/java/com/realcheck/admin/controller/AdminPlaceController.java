@@ -88,6 +88,7 @@ public class AdminPlaceController {
     /**
      * [5] 장소 삭제
      * page: admin/place.jsp
+     * page: place/my.jsp
      */
     @DeleteMapping("/{placeId}")
     public ResponseEntity<Void> deletePlace(

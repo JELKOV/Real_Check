@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
- * LoginController
+ * LoginController (ALL DONE)
  * - 전통적인 Form 기반 로그인/로그아웃 처리 전담 컨트롤러
  * - 로그인 실패 시 쿼리 파라미터로 에러 메시지 전달
  */

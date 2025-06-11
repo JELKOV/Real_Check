@@ -42,6 +42,8 @@ public class UserDto {
     private int points;
     // 신고횟수 추가
     private int reportCount;
+    // 사용자 장소 등록 여부
+    private boolean hasPlace;
 
     // 탈퇴 예약 여부
     private boolean isPendingDeletion;

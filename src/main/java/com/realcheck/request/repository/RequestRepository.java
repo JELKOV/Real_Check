@@ -1,5 +1,8 @@
 package com.realcheck.request.repository;
 
+import com.realcheck.admin.dto.CategoryStatDto;
+import com.realcheck.admin.dto.MonthlyStatDto;
+import com.realcheck.admin.dto.UserRequestStatDto;
 import com.realcheck.request.entity.Request;
 import com.realcheck.request.entity.RequestCategory;
 
@@ -143,4 +146,65 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
             )
       """)
   List<Request> findAllVisibleStatusLogsAfterThreshold(@Param("threshold") LocalDateTime threshold);
+
+  // ─────────────────────────────────────────────
+  // [4] 관리자 통계 관련 메소드
+  // ─────────────────────────────────────────────
+  
+  /**
+   * [4-1] 월별 요청 등록 수 통계
+   * AdminStatsService: getMonthlyRequestRegistrations
+   * - 요청 등록 시점(createdAt)을 기준으로 연/월별 등록 수 집계
+   */
+  @Query("""
+          SELECT new com.realcheck.admin.dto.MonthlyStatDto(
+              YEAR(r.createdAt), MONTH(r.createdAt), COUNT(r)
+          )
+          FROM Request r
+          GROUP BY YEAR(r.createdAt), MONTH(r.createdAt)
+          ORDER BY YEAR(r.createdAt) DESC, MONTH(r.createdAt) DESC
+      """)
+  List<MonthlyStatDto> countMonthlyRequests();
+
+  /**
+   * [4-2] 카테고리별 요청 수 통계
+   * AdminStatsService: getRequestCategoryStats
+   * - 각 카테고리별 요청 수를 집계하여 반환
+   * - RequestCategory 기준으로 그룹화
+   */
+  @Query("""
+          SELECT new com.realcheck.admin.dto.CategoryStatDto(
+              r.category, COUNT(r)
+          )
+          FROM Request r
+          GROUP BY r.category
+          ORDER BY COUNT(r) DESC
+      """)
+  List<CategoryStatDto> countByCategory();
+
+  /**
+   * [4-3] 요청 상태 통계
+   * AdminStatsService: getRequestStatusStats
+   * - 요청의 상태(열림/닫힘)에 따른 개수를 집계하여 반환
+   * - isClosed 필드 기반으로 요청 수 카운트
+   */
+  long countByIsClosed(boolean isClosed);
+
+  /**
+   * [4-4] 요청 Top 10 유저
+   * AdminStatsService: getTopRequestUsers
+   * - 요청을 가장 많이 등록한 사용자 10명을 조회
+   * - 사용자 ID, 닉네임, 요청 수를 포함한 DTO 반환
+   */
+  @Query("""
+          SELECT new com.realcheck.admin.dto.UserRequestStatDto(
+              r.user.id,
+              r.user.nickname,
+              COUNT(r)
+          )
+          FROM Request r
+          GROUP BY r.user.id, r.user.nickname
+          ORDER BY COUNT(r) DESC
+      """)
+  List<UserRequestStatDto> findTopUsersByRequestCount(Pageable pageable);
 }

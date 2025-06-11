@@ -178,6 +178,7 @@ public class AdminPlaceService {
 
     /**
      * [5] 장소 삭제
+     * AdminPlaceController: deletePlace
      */
     @Transactional
     public void deletePlace(Long placeId) {

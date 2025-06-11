@@ -46,7 +46,35 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
             aria-controls="log-stats"
             aria-selected="false"
           >
-            로그 통계
+            답변 통계
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link"
+            id="place-stats-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#place-stats"
+            type="button"
+            role="tab"
+            aria-controls="place-stats"
+            aria-selected="false"
+          >
+            장소 통계
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link"
+            id="request-stats-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#request-stats"
+            type="button"
+            role="tab"
+            aria-controls="request-stats"
+            aria-selected="false"
+          >
+            요청 통계
           </button>
         </li>
         <li class="nav-item" role="presentation">
@@ -122,7 +150,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
             <div class="col-md-4">
               <div class="card text-center shadow-sm h-100">
                 <div class="card-body">
-                  <h6 class="card-title">카테고리별 상태로그 수</h6>
+                  <h6 class="card-title">총 답변 수</h6>
                   <p class="display-6" id="totalLogsByCategory">-</p>
                 </div>
               </div>
@@ -141,7 +169,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
             <div class="col-md-6">
               <div class="card shadow-sm h-100">
                 <div class="card-header text-center">
-                  <h6 class="mb-0">📈 월별 상태로그 등록 수</h6>
+                  <h6 class="mb-0">📈 월별 답변 등록 수</h6>
                 </div>
                 <div class="card-body">
                   <canvas id="logChart" style="height: 200px"></canvas>
@@ -151,7 +179,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
             <div class="col-md-6">
               <div class="card shadow-sm h-100">
                 <div class="card-header text-center">
-                  <h6 class="mb-0">📊 카테고리별 상태로그 수</h6>
+                  <h6 class="mb-0">📊 답변 종류별 수</h6>
                 </div>
                 <div class="card-body d-flex justify-content-center">
                   <canvas
@@ -164,7 +192,125 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
           </div>
         </div>
 
-        <!-- 3) 사용자 통계 탭 -->
+        <!-- 3) 장소 통계 탭 -->
+        <div
+          class="tab-pane fade"
+          id="place-stats"
+          role="tabpanel"
+          aria-labelledby="place-stats-tab"
+        >
+          <div class="row g-4">
+            <!-- 등록 상태 분포 -->
+            <div class="col-md-6">
+              <div class="card shadow-sm h-100">
+                <div class="card-header text-center">
+                  <h6 class="mb-0">📊 장소 등록 상태 분포</h6>
+                </div>
+                <div class="card-body d-flex justify-content-center">
+                  <canvas id="placeStatusChart" style="height: 200px"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <!-- 월별 등록 -->
+            <div class="col-md-6">
+              <div class="card shadow-sm h-100">
+                <div class="card-header text-center">
+                  <h6 class="mb-0">📈 월별 장소 등록 수</h6>
+                </div>
+                <div class="card-body">
+                  <canvas id="placeMonthlyChart" style="height: 200px"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4) 요청 통계 탭 -->
+        <div
+          class="tab-pane fade"
+          id="request-stats"
+          role="tabpanel"
+          aria-labelledby="request-stats-tab"
+        >
+          <div class="row g-4">
+            <!-- 월별 요청 등록 수 -->
+            <div class="col-md-6">
+              <div class="card shadow-sm h-100">
+                <div class="card-header text-center">
+                  <h6 class="mb-0">📈 월별 요청 등록 수</h6>
+                </div>
+                <div class="card-body">
+                  <canvas
+                    id="requestMonthlyChart"
+                    style="height: 200px"
+                  ></canvas>
+                </div>
+              </div>
+            </div>
+
+            <!-- 요청 카테고리 분포 -->
+            <div class="col-md-6">
+              <div class="card shadow-sm h-100">
+                <div class="card-header text-center">
+                  <h6 class="mb-0">📊 요청 카테고리 분포</h6>
+                </div>
+                <div class="card-body d-flex justify-content-center">
+                  <canvas
+                    id="requestCategoryChart"
+                    style="height: 200px"
+                  ></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-4 mt-3">
+            <!-- 요청 상태 통계 -->
+            <div class="col-md-6">
+              <div class="card shadow-sm h-100">
+                <div class="card-header text-center">
+                  <h6 class="mb-0">📋 요청 상태 분포</h6>
+                </div>
+                <div class="card-body d-flex justify-content-center">
+                  <canvas
+                    id="requestStatusChart"
+                    style="height: 200px"
+                  ></canvas>
+                </div>
+              </div>
+            </div>
+
+            <!-- Top 10 요청 유저 -->
+            <div class="col-md-6">
+              <div class="card shadow-sm h-100">
+                <div class="card-header text-center">
+                  <h6 class="mb-0">🥇 요청 Top 10 유저</h6>
+                </div>
+                <div class="card-body p-2">
+                  <div
+                    class="table-responsive"
+                    style="max-height: 300px; overflow: auto"
+                  >
+                    <table class="table table-sm mb-0">
+                      <thead class="table-light">
+                        <tr>
+                          <th>#</th>
+                          <th>유저 ID</th>
+                          <th>닉네임</th>
+                          <th>요청 수</th>
+                        </tr>
+                      </thead>
+                      <tbody id="topRequestUsers"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5) 사용자 통계 탭 -->
         <div
           class="tab-pane fade"
           id="user-stats"
@@ -172,7 +318,8 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
           aria-labelledby="user-stats-tab"
         >
           <div class="row g-4">
-            <div class="col-12">
+            <!-- 1. 월별 사용자 가입 통계 -->
+            <div class="col-md-6">
               <div class="card shadow-sm">
                 <div class="card-header text-center">
                   <h6 class="mb-0">👥 월별 사용자 가입 통계</h6>
@@ -182,10 +329,36 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
                 </div>
               </div>
             </div>
+
+            <!-- 2. 월별 사용자 탈퇴 통계 -->
+            <div class="col-md-6">
+              <div class="card shadow-sm">
+                <div class="card-header text-center">
+                  <h6 class="mb-0">🚪 월별 사용자 탈퇴 통계</h6>
+                </div>
+                <div class="card-body">
+                  <canvas id="userDeletionChart" style="height: 200px"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-4 mt-3">
+            <!-- 3. 누적 활성/비활성 사용자 수 -->
+            <div class="col-md-12">
+              <div class="card shadow-sm text-center">
+                <div class="card-header">
+                  <h6 class="mb-0">✅ 활성 / 비활성 사용자 비율</h6>
+                </div>
+                <div class="card-body">
+                  <canvas id="userActiveChart" style="height: 200px"></canvas>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- 4) 포인트 통계 탭 -->
+        <!-- 6) 포인트 통계 탭 -->
         <div
           class="tab-pane fade"
           id="point-stats"
@@ -280,7 +453,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
           </div>
         </div>
 
-        <!-- 5) Top 사용자 탭 -->
+        <!-- 7) Top 사용자 탭 -->
         <div
           class="tab-pane fade"
           id="top-users"
@@ -342,7 +515,6 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
           </div>
         </div>
       </div>
-      
     </div>
 
     <%@ include file="../common/footer.jsp" %>

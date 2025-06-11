@@ -2,6 +2,7 @@ package com.realcheck.page.controller;
 
 import com.realcheck.common.dto.PageResult;
 import com.realcheck.place.dto.PlaceDetailsDto;
+import com.realcheck.place.dto.PlaceDto;
 import com.realcheck.place.service.PlaceService;
 import com.realcheck.request.dto.RequestDto;
 import com.realcheck.request.entity.RequestCategory;
@@ -314,6 +315,50 @@ public class PageController {
         model.addAttribute("naverMapClientId", naverMapClientId);
         model.addAttribute("requestCategories", RequestCategory.values());
         return "place/place-register"; // JSP 경로
+    }
+
+    /**
+     * [4-4] 내 장소 페이지
+     * page: common/header.jsp
+     * page: user/mypage.jsp
+     * - 로그인한 사용자의 등록 장소 목록을 보여주는 페이지
+     * - 로그인하지 않은 경우 로그인 페이지로 리다이렉트
+     */
+    @GetMapping("/place/my")
+    public String myPlacePage(HttpSession session, Model model) {
+        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
+        if (loginUser == null)
+            return "redirect:/login";
+
+        List<PlaceDto> myPlaces = placeService.findByOwner(loginUser.getId());
+        model.addAttribute("myPlaces", myPlaces);
+
+        return "place/my";
+    }
+
+    /**
+     * [4-5] 장소 수정 페이지
+     * page:place/my.jsp
+     * - 장소 수정 페이지로 이동
+     * - 로그인한 사용자의 장소만 수정 가능
+     */
+    @GetMapping("/place/place-edit/{placeId}")
+    public String showEditPage(@PathVariable Long placeId, HttpSession session, Model model) {
+        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
+        if (loginUser == null)
+            return "redirect:/login";
+
+        PlaceDetailsDto place = placeService.getPlaceDetails(placeId);
+
+        // 본인 소유 확인
+        if (!loginUser.getId().equals(place.getOwnerId())) {
+            throw new IllegalStateException("수정 권한이 없습니다.");
+        }
+
+        model.addAttribute("place", place);
+        model.addAttribute("requestCategories", RequestCategory.values());
+        model.addAttribute("naverMapClientId", naverMapClientId);
+        return "place/place-edit";
     }
 
     // ─────────────────────────────────────────────

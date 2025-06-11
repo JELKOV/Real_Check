@@ -10,7 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * UserController 클래스
+ * UserController 클래스 (ALL DONE)
  * - 사용자 관련 HTTP 요청을 처리하는 컨트롤러
  * - 클라이언트(프론트엔드)로부터 요청을 받아 서비스(Service) 계층으로 전달
  */

@@ -16,13 +16,13 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
   <body>
     <%@ include file="../common/header.jsp" %>
 
-    <div class="container mt-5" style="max-width: 1000px">
-      <div class="card shadow-sm p-4">
+    <div class="container mt-5 px-4">
+      <div class="card shadow-sm p-4" style="max-width: 1200px; margin: 0 auto">
         <div class="row">
-          <!-- [1] 내 정보 카드 -->
-          <div class="col-md-6 mb-3">
-            <h4 class="mb-3">내 정보</h4>
-            <div class="card mb-3 p-3 shadow-sm">
+          <!-- [1] 내 정보 -->
+          <div class="col-md-6 mb-4">
+            <h4 class="mb-3">🙋‍♂️ 내 정보</h4>
+            <div class="card p-3 shadow-sm">
               <div class="info-item mb-2">
                 <strong>이메일:</strong>
                 <p class="text-muted mb-1">${loginUser.email}</p>
@@ -49,70 +49,90 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
                 <strong>최근 로그인:</strong>
                 <p class="text-muted mb-1">${loginUser.lastLoginFormatted}</p>
               </div>
+
               <div class="d-flex gap-2 mt-3">
                 <a
                   href="/edit-profile"
-                  class="btn btn-primary btn-sm flex-grow-1"
+                  class="btn btn-outline-primary btn-sm flex-grow-1"
+                  >닉네임 변경</a
                 >
-                  <i class="bi bi-pencil"></i> 닉네임 변경
-                </a>
                 <a
                   href="/change-password"
-                  class="btn btn-primary btn-sm flex-grow-1"
+                  class="btn btn-outline-secondary btn-sm flex-grow-1"
+                  >비밀번호 변경</a
                 >
-                  <i class="bi bi-key"></i> 비밀번호 변경
-                </a>
-
                 <button
                   class="btn btn-danger btn-sm flex-grow-1"
                   data-bs-toggle="modal"
                   data-bs-target="#deleteModal"
                 >
-                  <i class="bi bi-trash"></i> 회원 탈퇴
+                  회원 탈퇴
                 </button>
               </div>
             </div>
           </div>
 
-          <!-- [2] 포인트 및 활동 내역 -->
-          <div class="col-md-6">
-            <h4 class="mb-3">내 포인트</h4>
-            <div class="points-box mb-3 text-center">
-              <h2 class="text-primary">${loginUser.points} 포인트</h2>
-              <p class="text-muted">리얼체크 활동으로 포인트를 획득하세요!</p>
+          <!-- [2] 장소 관리 -->
+          <div class="col-md-6 mb-4">
+            <h4 class="mb-3">📍 장소 관리</h4>
+            <div class="card p-3 shadow-sm">
+              <p class="mb-2 text-muted small">
+                내가 등록한 장소와 즐겨찾는 장소를 관리할 수 있습니다.
+              </p>
+              <div class="d-flex gap-2">
+                <a
+                  href="/place/my"
+                  class="btn btn-outline-primary btn-sm flex-grow-1"
+                  >내 소유 장소</a
+                >
+                <a
+                  href="/place/favorites"
+                  class="btn btn-outline-secondary btn-sm flex-grow-1"
+                  >즐겨찾기 장소</a
+                >
+              </div>
             </div>
+          </div>
+          <div class="row mt-4">
+            <!-- [3] 포인트 및 활동 내역 -->
+            <div class="col-12">
+              <h4 class="mb-3">📌 최근 활동</h4>
+              <div class="text-center mb-3">
+                <h5 class="text-primary">${loginUser.points} 포인트</h5>
+                <p class="text-muted">리얼체크 활동으로 포인트를 획득하세요!</p>
+              </div>
 
-            <h4 class="mb-3">최근 활동</h4>
-            <ul class="list-group mb-4">
-              <c:forEach var="activity" items="${recentActivities}">
-                <li class="list-group-item">
-                  <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                      <span
-                        class="badge ${activity.type == '요청' ? 'bg-info' : 'bg-primary'}"
-                      >
-                        ${activity.type}
-                      </span>
-                      <span class="fw-bold"
-                        >${activity.title != null ? activity.title :
-                        activity.requestTitle}</span
-                      >
-                      <br />
-                      <small class="text-muted"
-                        >장소: ${activity.placeName}</small
-                      >
+              <ul class="list-group mb-3">
+                <c:forEach var="activity" items="${recentActivities}">
+                  <li class="list-group-item">
+                    <div
+                      class="d-flex justify-content-between align-items-start"
+                    >
+                      <div>
+                        <span
+                          class="badge ${activity.type == '요청' ? 'bg-info' : 'bg-primary'}"
+                          >${activity.type}</span
+                        >
+                        <span class="fw-bold"
+                          >${activity.title != null ? activity.title :
+                          activity.requestTitle}</span
+                        ><br />
+                        <small class="text-muted"
+                          >장소: ${activity.placeName}</small
+                        >
+                      </div>
+                      <small class="text-muted">${activity.createdAt}</small>
                     </div>
-                    <small class="text-muted">${activity.createdAt}</small>
-                  </div>
-                </li>
-              </c:forEach>
+                  </li>
+                </c:forEach>
 
-              <c:if test="${empty recentActivities}">
-                <li class="list-group-item text-center text-muted">
-                  최근 활동 내역이 없습니다.
-                </li>
-              </c:if>
-            </ul>
+                <c:if test="${empty recentActivities}">
+                  <li class="list-group-item text-center text-muted">
+                    최근 활동 내역이 없습니다.
+                  </li>
+                </c:if>
+              </ul>
+            </div>
           </div>
         </div>
       </div>

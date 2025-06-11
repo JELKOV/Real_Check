@@ -4,9 +4,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -114,6 +111,7 @@ public class PlaceService {
          * PageController: getPlaceForRegister
          * PageController: showCommunityPage
          * pageController: showRegisterNoticePage
+         * PageController: editPlacePage
          * PlaceController: getPlaceDetails
          * - 장소 상세 정보 + 허용된 요청 타입 목록 반환
          */
@@ -153,7 +151,8 @@ public class PlaceService {
         }
 
         /**
-         * [2-4] 특정 사용자가 등록한 장소 조회 [미사용]
+         * [2-4] 특정 사용자가 등록한 장소 조회
+         * PageController: myPlacePage
          * - 로그인 사용자 본인이 등록한 장소 목록 반환
          * - 추후에 장소 등록페이지구현때 적용
          */
@@ -164,36 +163,50 @@ public class PlaceService {
         }
 
         // ─────────────────────────────────────────────
-        // [3] 요청 카테고리 등록 및 삭제 (AllowedRequestType)
+        // [3] 장소 수정
         // ─────────────────────────────────────────────
 
         /**
-         * [3-1] 특정 장소에 허용된 요청 타입 추가 [미사용]
-         * - 지정된 장소에 특정 요청 타입을 추가 (관리자 전용)
+         * [3-1] 장소 수정 메서드
+         * PlaceController: updatePlace
+         * - 장소 정보를 수정하는 메서드
+         * - 장소 ID와 수정할 DTO를 받아 해당 장소를 찾아 업데이트
+         * - 본인 소유 확인 후 수정
+         * - 반려 상태였으면 초기화 (재등록 개념)
+         * - 기존 허용 타입 삭제 후 새로 등록
          */
-        @Retryable(value = ObjectOptimisticLockingFailureException.class, maxAttempts = 3, backoff = @Backoff(delay = 100))
         @Transactional
-        public void addAllowedRequestType(Long placeId, String requestType) {
+        public void updatePlace(Long placeId, PlaceRegisterRequestDto dto, Long userId) {
                 Place place = placeRepository.findById(placeId)
-                                .orElseThrow(() -> new IllegalArgumentException("해당 장소를 찾을 수 없습니다. ID: " + placeId));
+                                .orElseThrow(() -> new IllegalArgumentException("장소를 찾을 수 없습니다: " + placeId));
 
-                boolean alreadyExists = allowedRequestTypeRepository.existsByPlaceIdAndRequestType(placeId,
-                                RequestCategory.valueOf(requestType));
-
-                if (!alreadyExists) {
-                        AllowedRequestType allowedType = new AllowedRequestType(place,
-                                        RequestCategory.valueOf(requestType));
-                        allowedRequestTypeRepository.save(allowedType);
+                // 본인 소유 확인
+                if (!place.getOwner().getId().equals(userId)) {
+                        throw new IllegalStateException("해당 장소를 수정할 권한이 없습니다.");
                 }
-        }
 
-        /**
-         * [3-2] 특정 장소에 허용된 요청 타입 제거 [미사용]
-         * - 지정된 장소에서 특정 요청 타입 제거
-         */
-        public void removeAllowedRequestType(Long placeId, String requestType) {
-                allowedRequestTypeRepository.deleteByPlaceIdAndRequestType(placeId,
-                                RequestCategory.valueOf(requestType));
+                // 기존 필드 업데이트
+                place.setName(dto.getName());
+                place.setAddress(dto.getAddress());
+                place.setLat(dto.getLat());
+                place.setLng(dto.getLng());
+
+                // 반려 상태였으면 초기화 (재등록 개념)
+                if (place.isRejected()) {
+                        place.setRejected(false);
+                        place.setApproved(false);
+                        place.setRejectReason(null);
+                }
+
+                // 기존 허용 타입 삭제 후 새로 등록
+                allowedRequestTypeRepository.deleteByPlaceId(placeId);
+                Set<AllowedRequestType> newAllowedTypes = dto.getCategories().stream()
+                                .map(typeStr -> {
+                                        RequestCategory category = RequestCategory.valueOf(typeStr);
+                                        return new AllowedRequestType(place, category);
+                                }).collect(Collectors.toSet());
+                place.getAllowedRequestTypes().clear();
+                place.getAllowedRequestTypes().addAll(newAllowedTypes);
         }
 
         // ─────────────────────────────────────────────

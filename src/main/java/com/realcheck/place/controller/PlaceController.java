@@ -2,8 +2,10 @@ package com.realcheck.place.controller;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,6 +21,7 @@ import com.realcheck.place.service.PlaceService;
 import com.realcheck.user.dto.UserDto;
 
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -66,23 +69,7 @@ public class PlaceController {
     // ─────────────────────────────────────────────
 
     /**
-     * [2-1] 내 장소 목록 조회 API (GET /api/place/my) [미사용]
-     * - 로그인된 사용자가 등록한 장소만 조회
-     */
-    @GetMapping("/my")
-    public ResponseEntity<List<PlaceDto>> getMyPlaces(HttpSession session) {
-        // 세션에서 로그인된 사용자 정보 꺼내기
-        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
-
-        // 로그인 상태가 아니면 401 Unauthorized 반환
-        if (loginUser == null)
-            return ResponseEntity.status(401).build();
-        // 로그인된 사용자의 ID로 등록된 장소만 조회하여 반환
-        return ResponseEntity.ok(placeService.findByOwner(loginUser.getId()));
-    }
-
-    /**
-     * [2-2] 현재 위치 기반 주변 장소 조회 API
+     * [2-1] 현재 위치 기반 주변 장소 조회 API
      * page: place/place-search.jsp
      * - 위도(lat), 경도(lng), 반경(radiusMeters)을 기반으로 인근 장소 조회
      * - 지도에서 사용자 위치를 기준으로 인근 장소 표시
@@ -96,7 +83,7 @@ public class PlaceController {
     }
 
     /**
-     * [2-3] 장소 검색 API (검색어 기반)
+     * [2-2] 장소 검색 API (검색어 기반)
      * page: request/register.jsp
      * page: place/page-search.jsp
      * - 검색어를 기반으로 승인된 장소 조회
@@ -109,7 +96,7 @@ public class PlaceController {
     }
 
     /**
-     * [2-4] 공식 장소 상세 정보 조회 API
+     * [2-3] 공식 장소 상세 정보 조회 API
      * page: request/register.jsp
      * - 특정 장소의 상세 정보 조회
      */
@@ -120,11 +107,38 @@ public class PlaceController {
     }
 
     // ─────────────────────────────────────────────
-    // [3] 즐겨 찾기
+    // [3] 장소 수정
     // ─────────────────────────────────────────────
 
     /**
-     * [3-1] 즐겨찾기 토글 API (POST /api/place/{placeId}/favorite)
+     * [3-1] 장소 수정 API (PATCH /api/place/{placeId})
+     * page: place/place-edit.jsp
+     * - 장소 정보를 수정하는 API
+     * - 로그인한 사용자만 가능 (소유자 검증 필요)
+     */
+    @PatchMapping("/{placeId}")
+    public ResponseEntity<Void> updatePlace(
+            @PathVariable Long placeId,
+            @RequestBody @Valid PlaceRegisterRequestDto dto,
+            HttpSession session) {
+        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        // 소유자 검증
+        placeService.updatePlace(placeId, dto, loginUser.getId());
+
+        return ResponseEntity.ok().build();
+    }
+
+
+    // ─────────────────────────────────────────────
+    // [4] 즐겨 찾기
+    // ─────────────────────────────────────────────
+
+    /**
+     * [4-1] 즐겨찾기 토글 API (POST /api/place/{placeId}/favorite)
      * page: place/place-search.jsp
      * - 로그인한 사용자가 해당 장소를 즐겨찾기 등록 또는 해제
      * - 이미 등록된 상태면 삭제, 아니면 추가
@@ -143,7 +157,7 @@ public class PlaceController {
     }
 
     /**
-     * [3-2] 즐겨찾기 여부 확인 API (GET /api/place/{placeId}/is-favorite)
+     * [4-2] 즐겨찾기 여부 확인 API (GET /api/place/{placeId}/is-favorite)
      * page: place/place-search.jsp
      * - 현재 로그인한 사용자가 해당 장소를 즐겨찾기 중인지 여부 확인
      * - 즐겨찾기 상태에 따라 버튼 UI를 초기화하기 위해 사용
@@ -163,7 +177,7 @@ public class PlaceController {
     }
 
     /**
-     * [3-3] 즐겨찾기 목록 조회 API (GET /api/place/favorites) [미사용]
+     * [4-3] 즐겨찾기 목록 조회 API (GET /api/place/favorites) [미사용]
      * page: 즐겨찾기 페이지(추후 구현 예정)
      * - 현재 로그인한 사용자가 등록한 즐겨찾기 장소 목록을 조회
      * - FavoritePlace 엔티티 기반으로 FavoritePlaceDto 리스트 반환

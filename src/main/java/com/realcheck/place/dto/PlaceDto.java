@@ -43,6 +43,14 @@ public class PlaceDto {
     @NotBlank(message = "주소는 필수입니다.")
     private String address;
 
+    // 승인 여부 (관리자 승인 상태)
+    // - true: 승인됨, false: 승인 대기 중
+    private boolean approved;
+    private boolean rejected;
+
+    // 반려 이유
+    private String rejectionReason;
+
     // 등록 및 수정 시간 - 조회 전용 (Entity → DTO 변환 시 사용)
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -99,11 +107,14 @@ public class PlaceDto {
                 .address(place.getAddress())
                 .lat(place.getLat())
                 .lng(place.getLng())
+                .approved(place.isApproved())
+                .rejected(place.isRejected())
+                .rejectionReason(place.getRejectReason())
                 .ownerId(place.getOwner() != null ? place.getOwner().getId() : null)
                 .createdAt(place.getCreatedAt())
                 .updatedAt(place.getUpdatedAt())
                 .version(place.getVersion())
-                
+
                 .build();
     }
 }

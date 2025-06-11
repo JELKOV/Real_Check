@@ -4,8 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 /**
- * [4] 기여 Top 10 유저 DTO
- * - “가장 많은 StatusLog를 작성한” 사용자 순위 정보를 담는다.
+ * 기여 Top 10 유저 DTO
+ * - 가장 많은 StatusLog를 작성한 사용자 순위 정보를 담는다.
  * - StatusLog 엔티티의 reporter(User)를 기준으로 그룹핑하여 작성 건수를 센다.
  */
 @Data

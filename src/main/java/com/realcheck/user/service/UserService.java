@@ -1,5 +1,8 @@
 package com.realcheck.user.service;
 
+import com.realcheck.deletionlog.entity.DeletedUserLog;
+import com.realcheck.deletionlog.repository.DeletedUserLogRepository;
+import com.realcheck.place.service.PlaceService;
 import com.realcheck.request.repository.RequestRepository;
 import com.realcheck.status.repository.StatusLogRepository;
 import com.realcheck.user.dto.PasswordUpdateRequestDto;
@@ -26,7 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * UserService 클래스
+ * UserService 클래스 (ALL DONE)
  * - 사용자 관련 비즈니스 로직 (회원가입, 로그인, 비밀번호 변경 등)을 처리
  */
 @Service
@@ -37,6 +40,8 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final RequestRepository requestRepository;
     private final StatusLogRepository statusLogRepository;
+    private final PlaceService placeService;
+    private final DeletedUserLogRepository deletedUserLogRepository;
 
     // ─────────────────────────────────────────────
     // [1] 사용자 생성 및 인증 관련 기능
@@ -99,7 +104,13 @@ public class UserService {
         }
 
         // (4) 로그인 성공 → User 엔티티를 DTO로 변환하여 반환 (비밀번호 제외)
-        return UserDto.fromEntity(user);
+        UserDto dto = UserDto.fromEntity(user);
+
+        // (5) hasPlace 세팅
+        boolean hasPlace = !placeService.findByOwner(user.getId()).isEmpty();
+        dto.setHasPlace(hasPlace);
+
+        return dto;
     }
 
     /**
@@ -310,6 +321,12 @@ public class UserService {
     public void deleteUserAndRelatedData(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        // 삭제 기록 남기기
+        deletedUserLogRepository.save(new DeletedUserLog(
+                user.getId(),
+                user.getEmail(),
+                LocalDateTime.now()));
 
         // 사용자 삭제 (연관된 데이터는 CascadeType.ALL에 의해 자동 삭제)
         try {

@@ -10,7 +10,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * RegisterController
+ * RegisterController (ALL DONE)
  * - GET /register : 회원가입 폼
  * - POST /register : 실제 가입 처리 (폼 기반)
  */
