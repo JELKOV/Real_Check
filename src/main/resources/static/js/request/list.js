@@ -11,6 +11,26 @@ let activeInfoWindow = null;
 $(document).ready(function () {
   initMap();
   initEventHandlers();
+
+  $("#myLocationButton").on("click", function () {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function (pos) {
+        const latlng = new naver.maps.LatLng(
+          pos.coords.latitude,
+          pos.coords.longitude
+        );
+        map.setCenter(latlng);
+        drawRadiusCircle(latlng, parseInt($("#radiusFilter").val()));
+        resetAndLoad();
+      });
+    } else {
+      alert("위치 정보를 지원하지 않는 브라우저입니다.");
+    }
+  });
+
+  $("#refreshNearbyButton").on("click", function () {
+    resetAndLoad();
+  });
 });
 
 // 카테고리 라벨 매핑

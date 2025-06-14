@@ -127,7 +127,29 @@ public interface StatusLogRepository extends JpaRepository<StatusLog, Long> {
         Page<StatusLog> findByPlaceIdAndStatusType(Long placeId, StatusType statusType, Pageable pageable);
 
         /**
-         * [2-4] 특정 장소의 가장 최신 상태 로그 1건 조회 (특정 타입에 대해)
+         * [2-4] 특정 장소의 자발적 공유 상태 로그(FREE_SHARE) 조회
+         * StatusLogService: findNearbyFreeShareLogs
+         * - 장소 주변의 자발적 공유 상태 로그를 조회
+         * - 사용자의 위치(lat, lng)와 반경(radius)을 기준으로 조회
+         * - 숨김 처리되지 않은 로그만 반환
+         */
+        @Query("""
+                            SELECT s FROM StatusLog s
+                            WHERE s.statusType = 'FREE_SHARE'
+                              AND s.lat IS NOT NULL AND s.lng IS NOT NULL
+                              AND s.isHidden = false
+                              AND s.createdAt >= :cutoff
+                              AND function('ST_Distance_Sphere', point(:lng, :lat), point(s.lng, s.lat)) <= :radius
+                        """)
+        Page<StatusLog> findNearbyFreeShareLogs(
+                        @Param("lat") double lat,
+                        @Param("lng") double lng,
+                        @Param("radius") double radius,
+                        @Param("cutoff") LocalDateTime cutoff,
+                        Pageable pageable);
+
+        /**
+         * [2-5] 특정 장소의 가장 최신 상태 로그 1건 조회 (특정 타입에 대해)
          * PlaceService: getPlaceDetails
          * - 사용 예시: 장소 상세 정보 recentInfo에 최신 REGISTER 로그 내용 표시 시 활용
          * - StatusType.REGISTER에 제한하지 않고 다양한 타입 사용 가능

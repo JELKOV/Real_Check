@@ -5,17 +5,20 @@ import com.realcheck.status.entity.StatusLog;
 import com.realcheck.status.entity.StatusType;
 import com.realcheck.status.repository.StatusLogRepository;
 import com.realcheck.common.dto.PageResult;
+import com.realcheck.common.service.ViewTrackingService;
 import com.realcheck.place.entity.Place;
 import com.realcheck.place.repository.PlaceRepository;
 import com.realcheck.point.entity.PointType;
 import com.realcheck.point.service.PointService;
 import com.realcheck.request.entity.Request;
 import com.realcheck.request.entity.RequestCategory;
+import com.realcheck.request.repository.RequestRepository;
 import com.realcheck.user.entity.User;
 import com.realcheck.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -40,7 +43,8 @@ public class StatusLogService {
     private final UserRepository userRepository;
     private final PlaceRepository placeRepository;
     private final PointService pointService;
-    private final com.realcheck.request.repository.RequestRepository requestRepository;
+    private final RequestRepository requestRepository;
+    private final ViewTrackingService viewTrackingService;
 
     // ─────────────────────────────────────────────
     // [1] 상태 로그 등록 (내부 로직) - CREATE
@@ -50,6 +54,7 @@ public class StatusLogService {
      * [1-1] 상태 로그 등록 내부 메서드 (공통 처리)
      * StatusLogService: register
      * StatusLogService: registerAnswer
+     * StatusLogService: registerFreeShare
      * - 사용자 유효성 검사 (userId 존재 여부, 정지 여부 등)
      * - 장소 ID가 있는 경우 → 해당 장소 엔티티 조회
      * - 상태 로그 생성 (StatusLog.toEntity(user, place))
@@ -146,7 +151,7 @@ public class StatusLogService {
     }
 
     /**
-     * [2-3] 자발적 정보 공유 등록 (FREE_SHARE) [미사용]
+     * [2-3] 자발적 정보 공유 등록 (FREE_SHARE)
      * StatusLogController: registerFreeShare
      * - 요청 없이 사용자가 직접 공유
      * - 조회수 기반 보상 구조로 활용 가능
@@ -157,30 +162,102 @@ public class StatusLogService {
     }
 
     /**
-     * [2-4] 자발적 공유(FREE_SHARE): 조회수 증가 및 포인트 지급 [미사용]
-     * 조회수 1 증가 + 포인트 누적 조건 기반 처리 가능
+     * [2-4] 자발적 공유(FREE_SHARE): 조회수 증가 및 포인트 지급 [테스트용]
+     * StatusLogController: viewFreeShare
+     *
+     * - 자발적 정보 공유 상태 로그를 조회할 때 호출됨
+     * - 기본적으로 조회수는 항상 증가함 (Redis 연결 실패 시에도 예외 없이 처리)
+     * - Redis 연결이 정상적일 경우에만 중복 조회 방지 로직(viewTrackingService)을 적용함
+     * - 조회수 10 이상이 되면 최초 1회 포인트 보상 지급
+     * - Redis가 없는 로컬 개발 환경에서도 테스트 가능하도록 유연하게 처리
      */
-    public StatusLogDto viewFreeShare(Long logId) {
+    public StatusLogDto viewFreeShare(Long logId, Long userId) {
+        // [1] 상태 로그 조회
         StatusLog log = statusLogRepository.findById(logId)
                 .orElseThrow(() -> new RuntimeException("해당 로그가 존재하지 않습니다."));
 
+        // [2] FREE_SHARE 타입인지 확인
         if (log.getStatusType() != StatusType.FREE_SHARE) {
             throw new RuntimeException("자발적 공유가 아닙니다.");
         }
+        // [3] Redis 조회 제한 체크 - 기본 조회수 증가 허용
+        boolean allowIncrease = true;
 
-        // 조회수 증가
-        log.setViewCount(log.getViewCount() + 1);
-        statusLogRepository.save(log);
+        // Redis 연결 가능할 경우만 어뷰징 방지 로직 적용
+        try {
+            System.out.println("[DEBUG] Redis 조회 제한 체크 시작 - userId: " + userId + ", logId: " + logId);
+            // Redis에서 중복 조회 여부 확인 (false면 최근 조회했음 → 조회수 증가 불가)
+            allowIncrease = viewTrackingService.canIncreaseView(userId, logId); // Redis에서 조회 제한 체크
+            System.out.println("[DEBUG] Redis 조회 제한 결과: " + allowIncrease);
+        } catch (RedisConnectionFailureException e) {
+            // Redis 연결 실패 시 예외 발생 → 조회수 증가 허용
+            // allowIncrease = true;
+            System.out.println("[⚠️ Redis 실패] 조회 제한 없이 조회수 증가 허용 (logId=" + logId + ", userId=" + userId + " allowIncrease=" + allowIncrease + ")");
+        }
 
-        // 조회수 기반 포인트 지급 (10회 이상)
-        if (log.getViewCount() >= 10 && !log.isRewarded()) {
-            giveUserPoint(log.getReporter(), 10, "자발적 정보 조회수 보상");
-            log.setRewarded(true); // 중복 지급 방지
+        if (allowIncrease) {
+            log.setViewCount(log.getViewCount() + 1);
+
+            if (log.getViewCount() >= 10 && !log.isRewarded()) {
+                giveUserPoint(log.getReporter(), 10, "자발적 정보 조회수 보상");
+                log.setRewarded(true);
+            }
+
             statusLogRepository.save(log);
         }
 
         return StatusLogDto.fromEntity(log);
     }
+
+    /**
+     * [2-4] 자발적 공유(FREE_SHARE): 조회수 증가 및 포인트 지급 [배포용]
+     * StatusLogController: viewFreeShare
+     *
+     * - 자발적 정보 공유 상태 로그의 상세 조회 시 호출됨
+     * - Redis 연결이 필수이며, Redis 장애 발생 시 조회 자체를 차단 (예외 발생)
+     * - Redis를 통해 중복 조회 여부를 확인하며, 제한 시간 내 중복 조회는 무시
+     * - 중복이 아닐 경우에만 조회수 1 증가 및 포인트 지급 조건 확인
+     * - 조회수 10 이상이고 보상이 아직 지급되지 않은 경우 포인트 10 지급
+     * - 어뷰징 방지를 위해 조회 제한 로직은 반드시 Redis 기반으로 적용되어야 함
+     */
+    // public StatusLogDto viewFreeShare(Long logId, Long userId) {
+    //     // [1] 상태 로그 조회
+    //     StatusLog log = statusLogRepository.findById(logId)
+    //             .orElseThrow(() -> new RuntimeException("해당 로그가 존재하지 않습니다."));
+
+    //     // [2] FREE_SHARE 타입인지 확인
+    //     if (log.getStatusType() != StatusType.FREE_SHARE) {
+    //         throw new RuntimeException("자발적 공유가 아닙니다.");
+    //     }
+
+    //     // [3] Redis 조회 제한 체크 (필수: 실패 시 조회수 증가 불가)
+    //     boolean allowIncrease;
+
+    //     try {
+    //         allowIncrease = viewTrackingService.canIncreaseView(userId, logId);
+    //         System.out.println(
+    //                 "[PROD_LOG] Redis 조회 제한 여부: " + allowIncrease + " (userId=" + userId + ", logId=" + logId + ")");
+    //     } catch (RedisConnectionFailureException e) {
+    //         // Redis 필수 → 실패 시 조회 차단
+    //         throw new IllegalStateException("Redis 서버 연결 실패: 조회수 증가 불가능", e);
+    //     }
+
+    //     // [4] 조회수 증가 및 포인트 처리
+    //     if (allowIncrease) {
+    //         log.setViewCount(log.getViewCount() + 1);
+
+    //         if (log.getViewCount() >= 10 && !log.isRewarded()) {
+    //             giveUserPoint(log.getReporter(), 10, "자발적 정보 조회수 보상");
+    //             log.setRewarded(true);
+    //         }
+
+    //         statusLogRepository.save(log);
+    //     } else {
+    //         System.out.println("[PROD_LOG] Redis에 의해 조회수 증가 차단됨 (userId=" + userId + ", logId=" + logId + ")");
+    //     }
+
+    //     return StatusLogDto.fromEntity(log);
+    // }
 
     // ─────────────────────────────────────────────
     // [3] 사용자 기능 (상태 로그 조회) READ
@@ -307,6 +384,29 @@ public class StatusLogService {
                 .toList();
 
         return new PageResult<>(dtoList, pageResult.getTotalPages(), page);
+    }
+
+    /**
+     * [3-8] 자발적 정보 공유(FREE_SHARE) 로그 조회
+     * StatusLogController: getNearbyFreeShareLogs
+     * - 현재 위치를 기준으로 반경 내 자발적 공유 상태 로그 조회
+     * - 위도(lat), 경도(lng), 반경(radiusMeters) 파라미터 사용
+     */
+    public PageResult<StatusLogDto> findNearbyFreeShareLogs(
+            double lat,
+            double lng,
+            double radiusMeters,
+            LocalDateTime cutoff,
+            int page,
+            int size) {
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<StatusLog> logs = statusLogRepository.findNearbyFreeShareLogs(lat, lng, radiusMeters, cutoff, pageable);
+
+        List<StatusLogDto> dtos = logs.getContent().stream()
+                .map(StatusLogDto::fromEntity)
+                .toList();
+
+        return new PageResult<>(dtos, logs.getTotalPages(), page);
     }
 
     // ─────────────────────────────────────────────
@@ -486,7 +586,7 @@ public class StatusLogService {
     }
 
     /**
-     * [6-2] 사용자의 답변 등록 로그 반환 (관리자용) 
+     * [6-2] 사용자의 답변 등록 로그 반환 (관리자용)
      * UserAdminController: getUserDetails
      * - 특정 사용자가 작성한 상태 로그의 총 개수 조회
      */
@@ -593,7 +693,7 @@ public class StatusLogService {
     }
 
     /**
-     * [8] 포인트 지급 처리 (FREE_SHARE에만 사용) [미사용]
+     * [8] 포인트 지급 처리 (FREE_SHARE에만 사용)
      * StatusLogService: viewFreeShare
      */
     private void giveUserPoint(User user, int points, String reason) {

@@ -110,7 +110,7 @@ public class PlaceService {
          * [2-3] 장소 상세 정보 조회 (공식 장소)
          * PageController: getPlaceForRegister
          * PageController: showCommunityPage
-         * pageController: showRegisterNoticePage
+         * PageController: showRegisterNoticePage
          * PageController: editPlacePage
          * PlaceController: getPlaceDetails
          * - 장소 상세 정보 + 허용된 요청 타입 목록 반환

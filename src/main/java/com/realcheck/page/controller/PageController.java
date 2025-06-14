@@ -264,6 +264,18 @@ public class PageController {
         return "map/request-list";
     }
 
+    /**
+     * [3-3] 자발적 공유 페이지
+     * page: index.jsp
+     * - 자발적 공유를 위한 지도 페이지로 이동
+     * - 자발적 공유는 로그인한 사용자만 가능
+     */
+    @GetMapping("/map/free-share")
+    public String showFreeShareMapPage(Model model, HttpSession session) {
+        model.addAttribute("naverMapClientId", naverMapClientId);
+        return "map/free-share";
+    }
+
     // ─────────────────────────────────────────────
     // [4] 장소 관련 페이지
     // ─────────────────────────────────────────────

@@ -11,6 +11,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/css/request/list.css" />
+    <link href="/css/map.css" rel="stylesheet" />
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script
       type="text/javascript"
@@ -24,8 +25,19 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
       <h3 class="text-center mb-4">오픈된 요청 목록</h3>
       <!-- 지도 및 필터 고정 영역 -->
       <div class="sticky-container">
-        <!-- 지도 표시 -->
-        <div id="map" class="map-area mb-3"></div>
+        <!-- 지도 표시 영역 안에 버튼도 포함 -->
+        <div id="map" class="map-area mb-3 position-relative">
+          <div id="myLocationButton" class="map-control-button" title="내 위치">
+            📍
+          </div>
+          <div
+            id="refreshNearbyButton"
+            class="map-control-button"
+            title="다시 불러오기"
+          >
+            🔄
+          </div>
+        </div>
 
         <!-- 필터 영역 -->
         <div class="mb-3 text-center filter-area">

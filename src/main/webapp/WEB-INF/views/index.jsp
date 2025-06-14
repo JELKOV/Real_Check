@@ -144,7 +144,22 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
             </div>
           </div>
         </div>
-        
+
+        <!-- 7. 자발적 공유하기 -->
+        <div class="col-md-3">
+          <div class="card shadow-sm h-100">
+            <div class="card-body d-flex flex-column">
+              <h5 class="card-title">자발적 공유하기</h5>
+              <p class="card-text flex-grow-1">
+                여러분의 실시간 정보를 자발적으로 공유해보세요.<br />
+                다른 사람에게 도움이 될 수 있어요.
+              </p>
+              <a href="/map/free-share" class="btn btn-outline-warning mt-auto">
+                공유 지도 열기
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 

@@ -84,6 +84,9 @@ public class StatusLogDto {
     // 요청 카테고리 (12가지 중 하나, String)
     private String category;
 
+    // 조회수
+    private int viewCount;
+
     // ─────────────────────────────────────────────
     // [3] 유연 필드 (카테고리별 동적 사용)
     // 각 카테고리에 따라 동적으로 사용됨
@@ -127,7 +130,7 @@ public class StatusLogDto {
     public StatusLog toEntity(User user, Place place, Request request) {
 
         StatusLog log = new StatusLog();
-        
+
         // (1) 요청 카테고리 정보가 있으면 해당 카테고리에 맞게 유연 필드 필터링
         if (this.category != null) {
             RequestCategory categoryEnum = convertToCategory(); // String → Enum
@@ -233,9 +236,9 @@ public class StatusLogDto {
                 .seatCount(log.getSeatCount())
                 .crowdLevel(log.getCrowdLevel())
                 .extra(log.getExtra())
-
                 .version(log.getVersion())
-
+                .viewCount(log.getViewCount())
+                
                 .build();
     }
 

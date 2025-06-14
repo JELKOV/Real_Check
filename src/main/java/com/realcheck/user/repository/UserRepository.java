@@ -114,7 +114,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
   long countByIsActiveFalse();
 
   /**
-   * [3-5] 잔액 양수/0/ 사용자 개수를 각각 계산해서 배열로 반환
+   * [3-6] 잔액 양수/0/ 사용자 개수를 각각 계산해서 배열로 반환
    * AdminPointService: getPointBalanceDistribution
    * 사용자 잔액(포인트) 상태를 집계하여
    * - 양수인 사용자 수
@@ -129,7 +129,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
   List<Object[]> countUserByPointBalance();
 
   /**
-   * [3-6] 잔액(=points) 높은 사용자 Top 10
+   * [3-7] 잔액(=points) 높은 사용자 Top 10
    * AdminPointService: getTopUsersByPoints
    * - 사용자 잔액(포인트) 기준으로 내림차순 정렬하여 상위 10명 조회
    * - 관리자 대시보드에서 포인트가 높은 사용자 목록을 조회할 때 사용
@@ -138,7 +138,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
   List<User> findTop10ByOrderByPointsDesc();
 
   /**
-   * [3-7] 0원인 사용자 수
+   * [3-8] 0원인 사용자 수
    * AdimnPointService: getZeroBalanceRatio
    * - 잔액이 0인 사용자의 비율을 계산하여 반환
    * - 전체 사용자 대비 잔액이 0인 사용자의 비율을 계산

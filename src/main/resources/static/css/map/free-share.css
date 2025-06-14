@@ -1,0 +1,67 @@
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+}
+
+/* 버튼 */
+.map-control-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1000;
+  background: white;
+  border: 1px solid #ccc;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 5px;
+}
+
+#refreshNearbyButton {
+  top: 50px;
+}
+
+#registerToggleButton {
+  top: 90px;
+}
+
+/* 반응형 메인 레이아웃 */
+#freeSharePage {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 64px - 72px); /* header + footer 높이 제외 */
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  #freeSharePage {
+    flex-direction: row;
+  }
+
+  #freeShareListContainer {
+    width: 400px;
+    max-width: 100%;
+    overflow-y: auto;
+    height: 100%;
+  }
+
+  #freeShareMap {
+    flex-grow: 1;
+    height: 100%;
+    position: relative;
+  }
+}
+
+@media (max-width: 767.98px) {
+  #freeShareListContainer {
+    height: 45%;
+    overflow-y: auto;
+  }
+
+  #freeShareMap {
+    height: 55%;
+  }
+}

@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -50,7 +51,8 @@ public class StatusLogController {
     }
 
     /**
-     * [1-2] 자발적 공유 등록 API (FREE_SHARE) [미완성]
+     * [1-2] 자발적 공유 등록 API (FREE_SHARE)
+     * page: place/free-share.jsp
      * - 로그인한 사용자가 장소 상태를 자유롭게 공유
      * - StatusLog 타입: FREE_SHARE
      */
@@ -66,6 +68,17 @@ public class StatusLogController {
 
         statusLogService.registerFreeShare(loginUser.getId(), dto);
         return ResponseEntity.ok("자발적 공유 등록 완료");
+    }
+
+    /**
+     * [1-3] 자발적 공유 상태 로그 상세 조회 API
+     * page: place/free-share-view.jsp
+     * - 자발적 공유 상태 로그의 상세 정보 조회
+     * - 요청 ID로 조회하며, 해당 ID는 자발적 공유 상태 로그의 ID
+     */
+    @GetMapping("/free-share/view/{id}")
+    public StatusLogDto viewFreeShare(@PathVariable Long id, @SessionAttribute("loginUser") UserDto user) {
+        return statusLogService.viewFreeShare(id, user.getId());
     }
 
     // ─────────────────────────────────────────────
@@ -118,6 +131,25 @@ public class StatusLogController {
 
         List<StatusLogDto> logs = statusLogService.findNearbyStatusLogs(lat, lng, radiusMeters);
         return ResponseEntity.ok(logs);
+    }
+
+    /**
+     * [2-4] 자발적 공유 상태 로그 조회 API
+     * page: map/free-share.jsp
+     * - 현재 위치를 기준으로 반경 내 자발적 공유 상태 로그 조회
+     * - 위도(lat), 경도(lng), 반경(radiusMeters) 파라미터 사용
+     * - 기본 반경: 3000m, 기본 조회 기간: 7일
+     */
+    @GetMapping("/free-share")
+    public PageResult<StatusLogDto> getNearbyFreeShareLogs(
+            @RequestParam double lat,
+            @RequestParam double lng,
+            @RequestParam(defaultValue = "3000") double radiusMeters,
+            @RequestParam(defaultValue = "7") int days,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        LocalDateTime cutoff = LocalDateTime.now().minusDays(days);
+        return statusLogService.findNearbyFreeShareLogs(lat, lng, radiusMeters, cutoff, page, size);
     }
 
     // ─────────────────────────────────────────────
