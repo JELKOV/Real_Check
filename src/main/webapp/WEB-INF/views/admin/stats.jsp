@@ -348,7 +348,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
             <div class="col-md-12">
               <div class="card shadow-sm text-center">
                 <div class="card-header">
-                  <h6 class="mb-0">✅ 활성 / 비활성 사용자 비율</h6>
+                  <h6 class="mb-0">활성 / 비활성 사용자 비율</h6>
                 </div>
                 <div class="card-body">
                   <canvas id="userActiveChart" style="height: 200px"></canvas>
@@ -372,8 +372,13 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
                 <div class="card-header text-center">
                   <h6 class="mb-0">💰 일별 포인트 흐름</h6>
                 </div>
-                <div class="card-body">
-                  <canvas id="pointFlowChart" style="height: 200px"></canvas>
+                <div class="card-body p-0">
+                  <div style="height: 300px">
+                    <canvas
+                      id="pointFlowChart"
+                      style="height: 100% !important; width: 100% !important"
+                    ></canvas>
+                  </div>
                 </div>
               </div>
             </div>
@@ -387,12 +392,12 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
                 <div class="card-body d-flex flex-column align-items-center">
                   <canvas
                     id="pointDistributionChart"
-                    style="width: 150px; height: 150px"
+                    style="height: 100% !important; width: 100% !important"
                   ></canvas>
-                  <p class="mt-3 mb-0">
-                    0원 사용자: <span id="zeroBalanceRatio">-</span>
-                  </p>
                 </div>
+                <p class="mt-3 mb-0">
+                  0원 사용자: <span id="zeroBalanceRatio">-</span>
+                </p>
               </div>
             </div>
           </div>

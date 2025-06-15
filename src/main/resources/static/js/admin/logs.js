@@ -1,14 +1,23 @@
 let currentPage = 0;
 const pageSize = 10;
 
+// TargetType별 허용 ActionType 목록
+const actionTypeOptions = {
+  USER: ["BLOCK", "UNBLOCK"],
+  PLACE: ["APPROVE", "REJECT"],
+  REPORT: ["REJECT"],
+  STATUS_LOG: ["BLOCK", "UNBLOCK"],
+};
+
+// 초기 실행
 $(document).ready(function () {
-  // 초기 실행
   init();
 });
 
 // 초기화 함수
 function init() {
   bindSearchEvent();
+  bindTargetTypeChangeEvent();
   loadAdminList();
   loadLogs();
 }
@@ -17,11 +26,29 @@ function init() {
 function bindSearchEvent() {
   $("#searchBtn").on("click", function () {
     currentPage = 0;
-    loadLogs(); // 검색 조건 반영하여 로그 다시 불러오기
+    loadLogs();
   });
 }
 
-// 관리자 목록 비동기 로딩 
+// 대상 유형(targetType) 변경 시 작업 유형(actionType) 필터링
+function bindTargetTypeChangeEvent() {
+  $("#targetType").on("change", function () {
+    const selectedTarget = $(this).val();
+    const $actionType = $("#actionType");
+    $actionType.empty();
+    $actionType.append('<option value="">전체</option>');
+
+    const types = actionTypeOptions[selectedTarget];
+    const allTypes = ["BLOCK", "UNBLOCK", "APPROVE", "REJECT"];
+
+    const listToUse = types || allTypes;
+    listToUse.forEach((type) => {
+      $actionType.append(`<option value="${type}">${type}</option>`);
+    });
+  });
+}
+
+// 관리자 목록 비동기 로딩
 function loadAdminList() {
   $.get("/api/admin/users/list", function (admins) {
     const select = $("#adminId");
@@ -33,7 +60,7 @@ function loadAdminList() {
   });
 }
 
-// 로그 데이터 로드 함수
+// 로그 데이터 로드
 function loadLogs() {
   const adminId = $("#adminId").val();
   const actionType = $("#actionType").val();

@@ -68,34 +68,18 @@ public interface StatusLogRepository extends JpaRepository<StatusLog, Long> {
         List<StatusLog> findTop5ByReporterIdOrderByCreatedAtDesc(Long userId);
 
         /**
-         * [1-7] 특정 사용자가 작성한 상태 로그의 총 개수 조회 - 관리자용
-         * StatusLogService: countLogsByUserId
-         * - 관리자 페이지에서 사용자별 상태 로그 개수 통계용
-         * - 숨김 여부와 관계없이 전체 로그 개수 반환
-         */
-        long countByReporter_Id(Long userId);
-
-        /**
-         * [1-8] 특정 사용자가 작성한 모든 상태 로그 조회
+         * [1-7] 특정 사용자가 작성한 모든 상태 로그 조회
          * UserAdminService: getUserStatusLogs
          * - 관리자 페이지에서 특정 사용자의 모든 상태 로그를 조회할 때 사용
          */
         Page<StatusLog> findByReporterId(Long userId, Pageable pageable);
 
         /**
-         * [1-9] 특정 사용자가 작성한 상태 로그 중 지정된 타입(StatusType)만 필터링 조회
+         * [1-8] 특정 사용자가 작성한 상태 로그 중 지정된 타입(StatusType)만 필터링 조회
          * UserAdminService: getUserStatusLogs
          * - 관리자 페이지에서 상태 로그를 유형별로 필터링할 때 사용 (예: ANSWER, FREE_SHARE 등)
          */
         Page<StatusLog> findByReporterIdAndStatusType(Long userId, StatusType statusType, Pageable pageable);
-
-        /**
-         * [1-10] 숨김 처리된 상태 로그 조회 - 관리자용
-         * ReportAdminService: getHiddenLogs
-         * - 관리자 페이지에서 숨김 처리된 상태 로그를 조회할 때 사용
-         * - 숨김 처리된 로그만 반환
-         */
-        List<StatusLog> findByIsHiddenTrue();
 
         // ─────────────────────────────────────────────
         // [2] 장소 기반 조건 조회
@@ -236,6 +220,28 @@ public interface StatusLogRepository extends JpaRepository<StatusLog, Long> {
          * AdminPlaceService: getPlaceDetails
          */
         long countByPlaceId(Long placeId);
+
+        /**
+         * [4-5] 특정 사용자가 작성한 상태 로그의 총 개수 조회 - 관리자용
+         * StatusLogService: countLogsByUserId
+         * - 관리자 페이지에서 사용자별 상태 로그 개수 통계용
+         * - 숨김 여부와 관계없이 전체 로그 개수 반환
+         */
+        long countByReporter_Id(Long userId);
+
+        /**
+         * [4-6] 숨김 처리된 상태 로그 조회 - 관리자용
+         * ReportAdminService: getHiddenLogs
+         * - 관리자 페이지에서 숨김 처리된 상태 로그를 조회할 때 사용
+         * - 숨김 처리된 로그만 반환
+         */
+        List<StatusLog> findByIsHiddenTrue();
+
+        /**
+         * [4-7] FREE_SHARE 로그만 필터링 - 관리자용
+         * StatusLogAdminService: getFreeShareLogs
+         */
+        Page<StatusLog> findByStatusType(StatusType type, Pageable pageable);
 
         // ─────────────────────────────────────────────
         // [5] 반경 필터링 조회 (사용자 위치 기반)

@@ -695,9 +695,11 @@ public class StatusLogService {
     /**
      * [8] 포인트 지급 처리 (FREE_SHARE에만 사용)
      * StatusLogService: viewFreeShare
+     * - 자발적 정보 공유 상태 로그 조회 시 포인트 지급
+     * - 조회수 10 이상이 되면 최초 1회 포인트 지급
      */
     private void giveUserPoint(User user, int points, String reason) {
-        pointService.givePoint(user, points, reason, PointType.EARN);
+        pointService.givePoint(user, points, reason, PointType.REWARD);
     }
 
 }

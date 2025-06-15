@@ -87,6 +87,9 @@ public class StatusLogDto {
     // 조회수
     private int viewCount;
 
+    // 보상횟수
+    private boolean rewarded;
+
     // ─────────────────────────────────────────────
     // [3] 유연 필드 (카테고리별 동적 사용)
     // 각 카테고리에 따라 동적으로 사용됨
@@ -238,7 +241,8 @@ public class StatusLogDto {
                 .extra(log.getExtra())
                 .version(log.getVersion())
                 .viewCount(log.getViewCount())
-                
+                .rewarded(log.isRewarded())
+
                 .build();
     }
 

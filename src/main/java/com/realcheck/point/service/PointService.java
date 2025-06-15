@@ -13,6 +13,7 @@ import com.realcheck.point.dto.PointDto;
 import com.realcheck.point.entity.Point;
 import com.realcheck.point.entity.PointType;
 import com.realcheck.point.repository.PointRepository;
+import com.realcheck.status.entity.StatusLog;
 import com.realcheck.user.entity.User;
 import com.realcheck.user.repository.UserRepository;
 
@@ -52,6 +53,34 @@ public class PointService {
         // (3) 사용자 포인트 누적 반영
         user.setPoints(user.getPoints() + amount);
         userRepository.save(user);
+    }
+
+    /**
+     * [1-2] FREE_SHARE 보상 회수 처리
+     * StatusLogAdminService: blockLog
+     * - 상태 로그가 이미 보상(rewarded = true)된 경우,
+     * - 사용자에게 지급된 포인트를 회수(-10)하고 보상 여부를 false로 업데이트함
+     */
+    @Transactional
+    public void refundIfRewarded(StatusLog log) {
+        if (log.isRewarded()) {
+            givePoint(log.getReporter(), -10, "자발적 공유 보상 회수", PointType.REWARD);
+            log.setRewarded(false);
+        }
+    }
+
+    /**
+     * [1-3] FREE_SHARE 보상 재지급 처리
+     * StatusLogAdminService: unblockLog
+     * - 로그가 보상되지 않았고(viewedCount >= 10), 재지급 조건이 충족되면
+     * - 사용자에게 포인트 10점을 다시 지급하고 보상 여부를 true로 설정함
+     */
+    @Transactional
+    public void reissueRewardIfEligible(StatusLog log) {
+        if (!log.isRewarded() && log.getViewCount() >= 10) {
+            givePoint(log.getReporter(), 10, "자발적 공유 보상 재지급", PointType.REWARD);
+            log.setRewarded(true);
+        }
     }
 
     // ─────────────────────────────────────────────

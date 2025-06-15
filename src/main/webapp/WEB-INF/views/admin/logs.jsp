@@ -1,6 +1,5 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %> <%@ taglib
-prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
 <html lang="ko">
   <head>
@@ -29,19 +28,10 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
           <label for="adminId" class="form-label">관리자</label>
           <select id="adminId" class="form-select">
             <option value="">전체</option>
-            <!-- 여기에 관리자 목록이 동적으로 추가됨 -->
+            <!-- 관리자 목록이 동적으로 추가됨 -->
           </select>
         </div>
-        <div class="col-md-3">
-          <label for="actionType" class="form-label">작업 유형</label>
-          <select id="actionType" class="form-select">
-            <option value="">전체</option>
-            <option value="BLOCK">BLOCK</option>
-            <option value="UNBLOCK">UNBLOCK</option>
-            <option value="APPROVE">APPROVE</option>
-            <option value="REJECT">REJECT</option>
-          </select>
-        </div>
+
         <div class="col-md-3">
           <label for="targetType" class="form-label">대상 유형</label>
           <select id="targetType" class="form-select">
@@ -52,6 +42,18 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
             <option value="STATUS_LOG">STATUS_LOG</option>
           </select>
         </div>
+
+        <div class="col-md-3">
+          <label for="actionType" class="form-label">작업 유형</label>
+          <select id="actionType" class="form-select">
+            <option value="">전체</option>
+            <option value="BLOCK">BLOCK</option>
+            <option value="UNBLOCK">UNBLOCK</option>
+            <option value="APPROVE">APPROVE</option>
+            <option value="REJECT">REJECT</option>
+          </select>
+        </div>
+
         <div class="col-md-3 d-grid">
           <button id="searchBtn" class="btn btn-primary">
             <i class="bi bi-search"></i> 검색
@@ -71,7 +73,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
           </tr>
         </thead>
         <tbody id="logTableBody">
-          <!-- jQuery로 채워짐 -->
+          <!-- JS로 채워짐 -->
         </tbody>
       </table>
 

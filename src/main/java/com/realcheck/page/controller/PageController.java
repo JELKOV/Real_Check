@@ -424,11 +424,20 @@ public class PageController {
 
     /**
      * [5-6] 관리자 장소 관리 페이지
-     * page: admin/places.jsp
+     * page: admin/admin.jsp
      */
     @GetMapping("/admin/places")
     public String adminPlacesPage(HttpSession session) {
         return isAdmin(session) ? "admin/places" : "redirect:/login?error=unauthorized";
+    }
+
+    /**
+     * [5-7] 관리자 자발적 공유 관리 페이지
+     * page: admin/admin.jsp
+     */
+    @GetMapping("/admin/status-logs")
+    public String adminStatusPage(HttpSession session) {
+        return isAdmin(session) ? "admin/status-logs" : "redirect:/login?error=unauthorized";
     }
 
     // ────────────────────────────────────────

@@ -1,4 +1,6 @@
 // stats.js - 관리자 통계 페이지 JS 리팩토링 (함수화 & lazy-loading)
+const chartInstanceMap = {};
+
 document.addEventListener("DOMContentLoaded", () => {
   fetchOverviewStats();
   fetchLogStats();
@@ -15,17 +17,34 @@ document.addEventListener("DOMContentLoaded", () => {
 // [ 공통 유틸 함수 ]
 // ─────────────────────────────────────────────────────────────────
 function createChart(canvasId, type, labels, data, label = "", options = {}) {
-  new Chart(document.getElementById(canvasId), {
+  const ctx = document.getElementById(canvasId);
+
+  // 이미 생성된 차트가 있다면 제거
+  if (chartInstanceMap[canvasId]) {
+    chartInstanceMap[canvasId].destroy();
+  }
+
+  // 새 차트 생성
+  const newChart = new Chart(ctx, {
     type,
     data: {
       labels,
       datasets: [{ label, data, borderWidth: 1 }],
     },
     options: Object.assign(
-      { responsive: true, scales: { y: { beginAtZero: true } } },
+      {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: { y: { beginAtZero: true } },
+      },
       options
     ),
   });
+
+  // 새 차트를 저장
+  chartInstanceMap[canvasId] = newChart;
+
+  return newChart;
 }
 
 function fillTable(tbodyId, items, rowFn) {

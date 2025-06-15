@@ -110,6 +110,26 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
             </div>
           </div>
         </div>
+
+        <!-- 자발적 공유 관리 -->
+        <div class="col-md-4">
+          <div class="card h-100 shadow-sm admin-card">
+            <div class="card-body d-flex align-items-center">
+              <div>
+                <h5 class="card-title mb-1">자발적 공유 관리</h5>
+                <p class="card-text text-muted small">
+                  FREE_SHARE 로그 차단 및 포인트 회수
+                </p>
+                <a
+                  href="/admin/status-logs"
+                  class="btn btn-sm btn-outline-secondary mt-2"
+                >
+                  바로가기
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
       
       </div>
     </div>
