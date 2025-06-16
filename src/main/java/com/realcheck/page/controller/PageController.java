@@ -242,7 +242,6 @@ public class PageController {
     // ─────────────────────────────────────────────
 
     /**
-     * [Check]
      * [3-1] 주변 졍보 확인 (답변 달린 내용)
      * page: index.jsp
      */

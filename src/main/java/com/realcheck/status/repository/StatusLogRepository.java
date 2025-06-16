@@ -249,12 +249,36 @@ public interface StatusLogRepository extends JpaRepository<StatusLog, Long> {
 
         /**
          * [5-1] 현재 위치 기준 반경 - 상태 로그 조회
-         * StatusLogService: findNearbyStatusLogs
-         * - 사용자의 위도(lat), 경도(lng)를 기반으로 일정 반경 내에 존재하는 상태 로그를 조회
-         * - 숨김 여부와 관계없이 최근 생성된 로그를 대상으로 함
+         * StatusLogService: findNearbyGroupedPlaceLogs
          */
-        @Query("SELECT s FROM StatusLog s WHERE FUNCTION('ST_Distance_Sphere', POINT(s.place.lng, s.place.lat), POINT(:lng, :lat)) <= :radius AND s.createdAt >= :cutoff")
-        List<StatusLog> findNearbyLogs(
+        @Query("""
+                            SELECT s
+                            FROM StatusLog s
+                            WHERE s.statusType IN (com.realcheck.status.entity.StatusType.ANSWER, com.realcheck.status.entity.StatusType.REGISTER)
+                              AND FUNCTION('ST_Distance_Sphere', POINT(s.lng, s.lat), POINT(:lng, :lat)) <= :radius
+                              AND s.createdAt >= :cutoff
+                              AND s.isHidden = false
+                        """)
+        List<StatusLog> findNearbyAnswerAndRegisterLogs(
+                        @Param("lat") double lat,
+                        @Param("lng") double lng,
+                        @Param("radius") double radius,
+                        @Param("cutoff") LocalDateTime cutoff);
+
+        /**
+         * [5-2] 사용자 지정 위치의 ANSWER 로그만 필터링
+         * StatusLogService: findNearbyUserLocationLogs
+         */
+        @Query("""
+                            SELECT s
+                            FROM StatusLog s
+                            WHERE s.statusType = com.realcheck.status.entity.StatusType.ANSWER
+                              AND s.place IS NULL
+                              AND FUNCTION('ST_Distance_Sphere', POINT(s.lng, s.lat), POINT(:lng, :lat)) <= :radius
+                              AND s.createdAt >= :cutoff
+                              AND s.isHidden = false
+                        """)
+        List<StatusLog> findNearbyUserAnswerLogs(
                         @Param("lat") double lat,
                         @Param("lng") double lng,
                         @Param("radius") double radius,

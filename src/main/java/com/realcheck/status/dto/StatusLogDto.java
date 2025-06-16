@@ -156,9 +156,11 @@ public class StatusLogDto {
 
         // (4) 좌표 정보 설정 (공식 장소가 있으면 place로부터, 없으면 수동 입력)
         if (place != null) {
+            // 공식 장소 응답 → place 기준
             log.setLat(place.getLat());
             log.setLng(place.getLng());
         } else {
+            // 사용자지정 응답 → 프론트에서 전달받은 lat/lng 사용
             log.setLat(this.lat);
             log.setLng(this.lng);
         }

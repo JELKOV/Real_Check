@@ -6,6 +6,9 @@
 let loginUserIdNum = null;
 let requestId = null;
 let uploadedImageUrls = [];
+let requestLat = null;
+let requestLng = null;
+let placeId = null;
 
 // 카테고리 코드 → 라벨 매핑 (배지 및 필터용)
 const categoryLabelMap = {
@@ -132,6 +135,15 @@ function loadRequestDetail(requestId) {
     // 지도 표시
     renderMap(request.lat, request.lng);
     renderAnswerFields(request.category);
+
+    // 사용자지정 요청인 경우에만 위경도 저장
+    if (!request.placeId && request.lat && request.lng) {
+      requestLat = request.lat;
+      requestLng = request.lng;
+    }
+
+    // placeId도 전역 변수에 저장 (공식 장소 여부 판별용)
+    placeId = request.placeId;
   });
 }
 
@@ -599,7 +611,7 @@ function activateEditMode() {
   const answerTextElement = answerRow.find(`#answer-text-${answerId}`);
   const originalText = answerTextElement.text().trim();
   const answer = JSON.parse(answerRow.attr("data-answer-data"));
-  
+
   // 1. 본문 텍스트 수정 영역
   answerTextElement.html(`
     <textarea class="form-control edit-answer-input" data-id="${answerId}">${originalText}</textarea>
@@ -939,6 +951,12 @@ function submitAnswer(e) {
     requestId,
     imageUrls: uploadedImageUrls,
   };
+
+  // 사용자지정 요청이라면 위도/경도 포함
+  if (!placeId && requestLat && requestLng) {
+    dto.lat = requestLat;
+    dto.lng = requestLng;
+  }
 
   // 유연 필드 동적 추가 (카테고리별 필드)
   $("#dynamicAnswerFields")

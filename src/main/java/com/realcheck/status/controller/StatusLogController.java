@@ -1,7 +1,9 @@
 package com.realcheck.status.controller;
 
 import com.realcheck.common.dto.PageResult;
+import com.realcheck.status.dto.PlaceLogGroupDto;
 import com.realcheck.status.dto.StatusLogDto;
+import com.realcheck.status.entity.StatusLog;
 import com.realcheck.status.service.StatusLogService;
 import com.realcheck.user.dto.UserDto;
 import com.realcheck.user.entity.User;
@@ -119,18 +121,39 @@ public class StatusLogController {
     }
 
     /**
-     * [2-3] 현재 위치 기반 근처 상태 로그 조회 API [CHECK]
+     * [2-3] 현재 위치 기반 grouped 상태 로그 조회 API
      * page: map/nearby.jsp
-     * - 위도, 경도, 반경(m)을 기준으로 3시간 이내 상태 로그 조회
+     * - REGISTER(공지): 장소당 1개
+     * - ANSWER: 요청 응답 전부 포함
+     * - placeId 기준으로 묶어서 반환
      */
-    @GetMapping("/nearby")
-    public ResponseEntity<List<StatusLogDto>> getNearbyStatusLogs(
+    @GetMapping("/nearby/grouped")
+    public ResponseEntity<List<PlaceLogGroupDto>> getGroupedLogs(
             @RequestParam double lat,
             @RequestParam double lng,
-            @RequestParam(defaultValue = "500") double radiusMeters) {
+            @RequestParam(defaultValue = "3000") double radiusMeters) {
 
-        List<StatusLogDto> logs = statusLogService.findNearbyStatusLogs(lat, lng, radiusMeters);
-        return ResponseEntity.ok(logs);
+        List<PlaceLogGroupDto> result = statusLogService.findNearbyGroupedPlaceLogs(lat, lng, radiusMeters);
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * [2-4] 사용자 지정 위치 응답 로그 조회 API
+     * page: map/nearby.jsp
+     * - 사용자 요청 응답 중 Place가 없는 것만 조회
+     */
+    @GetMapping("/nearby/user-locations")
+    public ResponseEntity<List<StatusLogDto>> getNearbyUserLocationLogs(
+            @RequestParam double lat,
+            @RequestParam double lng,
+            @RequestParam(defaultValue = "3000") double radiusMeters) {
+
+        List<StatusLog> logs = statusLogService.findNearbyUserLocationLogs(lat, lng, radiusMeters);
+        List<StatusLogDto> result = logs.stream()
+                .map(StatusLogDto::fromEntity)
+                .toList();
+
+        return ResponseEntity.ok(result);
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.realcheck.status.service;
 
+import com.realcheck.status.dto.PlaceLogGroupDto;
 import com.realcheck.status.dto.StatusLogDto;
 import com.realcheck.status.entity.StatusLog;
 import com.realcheck.status.entity.StatusType;
@@ -29,7 +30,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * StatusLogService
@@ -192,7 +197,8 @@ public class StatusLogService {
         } catch (RedisConnectionFailureException e) {
             // Redis 연결 실패 시 예외 발생 → 조회수 증가 허용
             // allowIncrease = true;
-            System.out.println("[⚠️ Redis 실패] 조회 제한 없이 조회수 증가 허용 (logId=" + logId + ", userId=" + userId + " allowIncrease=" + allowIncrease + ")");
+            System.out.println("[⚠️ Redis 실패] 조회 제한 없이 조회수 증가 허용 (logId=" + logId + ", userId=" + userId
+                    + " allowIncrease=" + allowIncrease + ")");
         }
 
         if (allowIncrease) {
@@ -221,42 +227,44 @@ public class StatusLogService {
      * - 어뷰징 방지를 위해 조회 제한 로직은 반드시 Redis 기반으로 적용되어야 함
      */
     // public StatusLogDto viewFreeShare(Long logId, Long userId) {
-    //     // [1] 상태 로그 조회
-    //     StatusLog log = statusLogRepository.findById(logId)
-    //             .orElseThrow(() -> new RuntimeException("해당 로그가 존재하지 않습니다."));
+    // // [1] 상태 로그 조회
+    // StatusLog log = statusLogRepository.findById(logId)
+    // .orElseThrow(() -> new RuntimeException("해당 로그가 존재하지 않습니다."));
 
-    //     // [2] FREE_SHARE 타입인지 확인
-    //     if (log.getStatusType() != StatusType.FREE_SHARE) {
-    //         throw new RuntimeException("자발적 공유가 아닙니다.");
-    //     }
+    // // [2] FREE_SHARE 타입인지 확인
+    // if (log.getStatusType() != StatusType.FREE_SHARE) {
+    // throw new RuntimeException("자발적 공유가 아닙니다.");
+    // }
 
-    //     // [3] Redis 조회 제한 체크 (필수: 실패 시 조회수 증가 불가)
-    //     boolean allowIncrease;
+    // // [3] Redis 조회 제한 체크 (필수: 실패 시 조회수 증가 불가)
+    // boolean allowIncrease;
 
-    //     try {
-    //         allowIncrease = viewTrackingService.canIncreaseView(userId, logId);
-    //         System.out.println(
-    //                 "[PROD_LOG] Redis 조회 제한 여부: " + allowIncrease + " (userId=" + userId + ", logId=" + logId + ")");
-    //     } catch (RedisConnectionFailureException e) {
-    //         // Redis 필수 → 실패 시 조회 차단
-    //         throw new IllegalStateException("Redis 서버 연결 실패: 조회수 증가 불가능", e);
-    //     }
+    // try {
+    // allowIncrease = viewTrackingService.canIncreaseView(userId, logId);
+    // System.out.println(
+    // "[PROD_LOG] Redis 조회 제한 여부: " + allowIncrease + " (userId=" + userId + ",
+    // logId=" + logId + ")");
+    // } catch (RedisConnectionFailureException e) {
+    // // Redis 필수 → 실패 시 조회 차단
+    // throw new IllegalStateException("Redis 서버 연결 실패: 조회수 증가 불가능", e);
+    // }
 
-    //     // [4] 조회수 증가 및 포인트 처리
-    //     if (allowIncrease) {
-    //         log.setViewCount(log.getViewCount() + 1);
+    // // [4] 조회수 증가 및 포인트 처리
+    // if (allowIncrease) {
+    // log.setViewCount(log.getViewCount() + 1);
 
-    //         if (log.getViewCount() >= 10 && !log.isRewarded()) {
-    //             giveUserPoint(log.getReporter(), 10, "자발적 정보 조회수 보상");
-    //             log.setRewarded(true);
-    //         }
+    // if (log.getViewCount() >= 10 && !log.isRewarded()) {
+    // giveUserPoint(log.getReporter(), 10, "자발적 정보 조회수 보상");
+    // log.setRewarded(true);
+    // }
 
-    //         statusLogRepository.save(log);
-    //     } else {
-    //         System.out.println("[PROD_LOG] Redis에 의해 조회수 증가 차단됨 (userId=" + userId + ", logId=" + logId + ")");
-    //     }
+    // statusLogRepository.save(log);
+    // } else {
+    // System.out.println("[PROD_LOG] Redis에 의해 조회수 증가 차단됨 (userId=" + userId + ",
+    // logId=" + logId + ")");
+    // }
 
-    //     return StatusLogDto.fromEntity(log);
+    // return StatusLogDto.fromEntity(log);
     // }
 
     // ─────────────────────────────────────────────
@@ -264,21 +272,68 @@ public class StatusLogService {
     // ─────────────────────────────────────────────
 
     /**
-     * [3-1] 현재 위치 기반 근처 상태 로그 조회 [CHECK]
-     * StatusLogController: getNearbyStatusLogs
-     * - 사용자의 위도/경도를 기준으로 일정 반경 내에 있는 상태 로그를 조회
-     * - 최근 3시간 이내에 등록된 로그만 반환
+     * [3-1] 현재 위치 기반 grouped 상태 로그 조회
+     * StatusLogController: getGroupedLogs
+     * - 사용자 위치(lat, lng)와 반경(radiusMeters)을 기준으로 3시간 이내 등록된 상태 로그 중
+     * - 공식 장소(Place가 있는 경우)에 한하여 REGISTER + ANSWER 로그를 그룹핑하여 반환
+     * - 장소(placeId) 기준으로 REGISTER는 가장 최신 1개만 포함, ANSWER는 전부 포함
      */
-    public List<StatusLogDto> findNearbyStatusLogs(double lat, double lng, double radiusMeters) {
+    @Transactional(readOnly = true)
+    public List<PlaceLogGroupDto> findNearbyGroupedPlaceLogs(double lat, double lng, double radiusMeters) {
+        // 현재 시각 기준 3시간 이내 로그만 조회
         LocalDateTime cutoff = LocalDateTime.now().minusHours(3);
-        return statusLogRepository.findNearbyLogs(lat, lng, radiusMeters, cutoff)
-                .stream()
-                .map(StatusLogDto::fromEntity)
+
+        // 1. 3시간 이내, 반경 내 REGISTER + ANSWER 로그 전부 가져오기
+        List<StatusLog> allLogs = statusLogRepository.findNearbyAnswerAndRegisterLogs(lat, lng, radiusMeters, cutoff);
+
+        // 2. Place가 존재하는 로그만 필터링 → 공식 장소에 등록된 로그만 대상
+        Map<Long, List<StatusLog>> grouped = allLogs.stream()
+                .filter(log -> log.getPlace() != null)
+                .collect(Collectors.groupingBy(log -> log.getPlace().getId())); // placeId 기준 그룹핑
+
+        // 3. 그룹핑된 로그들에서 PlaceLogGroupDto로 변환 (REGISTER 1개 + ANSWER n개)
+        return grouped.entrySet().stream()
+                .map((Map.Entry<Long, List<StatusLog>> entry) -> {
+                    List<StatusLog> logs = entry.getValue();
+
+                    // 최신 REGISTER 로그 1개 추출
+                    StatusLog latestRegister = logs.stream()
+                            .filter(l -> l.getStatusType() == StatusType.REGISTER)
+                            .max(Comparator.comparing(StatusLog::getCreatedAt))
+                            .orElse(null);
+
+                    // ANSWER 로그 전체 추출
+                    List<StatusLog> answers = logs.stream()
+                            .filter(l -> l.getStatusType() == StatusType.ANSWER)
+                            .toList();
+
+                    // 등록된 로그가 없는 경우는 skip (안전장치)
+                    if (logs.isEmpty())
+                        return null;
+
+                    // Place 정보는 REGISTER가 있으면 거기서, 없으면 아무 로그에서 추출
+                    Place place = (latestRegister != null) ? latestRegister.getPlace() : logs.get(0).getPlace();
+
+                    // DTO로 변환 후 반환
+                    return PlaceLogGroupDto.from(place, latestRegister, answers);
+                })
+                .filter(Objects::nonNull) // null 제거 (logs.isEmpty() 방어용)
                 .toList();
     }
 
     /**
-     * [3-2] 특정 요청에 대한 답변 리스트(상세 조회)
+     * [3-2] 사용자 지정 요청 응답 로그 조회
+     * StatusLogController: getNearbyUserLocationLogs
+     * - 공식 장소(Place)와 연결되지 않은 ANSWER 로그만 필터링
+     */
+    @Transactional(readOnly = true)
+    public List<StatusLog> findNearbyUserLocationLogs(double lat, double lng, double radiusMeters) {
+        LocalDateTime cutoff = LocalDateTime.now().minusHours(3);
+        return statusLogRepository.findNearbyUserAnswerLogs(lat, lng, radiusMeters, cutoff);
+    }
+
+    /**
+     * [3-3] 특정 요청에 대한 답변 리스트(상세 조회)
      * - StatusLogController: getAnswersByRequest
      */
     @Transactional(readOnly = true)
@@ -289,7 +344,7 @@ public class StatusLogService {
     }
 
     /**
-     * [3-3] 사용자별 전체 상태 로그 목록 조회 (마이페이지용)
+     * [3-4] 사용자별 전체 상태 로그 목록 조회 (마이페이지용)
      * StatusLogController: getMyStatusLogs
      * 
      * -주요 기능:
@@ -345,7 +400,7 @@ public class StatusLogService {
     }
 
     /**
-     * [3-4] 장소별 최근 로그 상태 조회
+     * [3-5] 장소별 최근 로그 상태 조회
      * PageController: showCommunityPage
      * - ANSWER/REGISTER 둘다 조회
      * - 최근 3시간 이내의 로그만 조회
@@ -359,7 +414,7 @@ public class StatusLogService {
     }
 
     /**
-     * [3-5] 특정 장소의 가장 최근 공개된 공지로그 1건 조회
+     * [3-6] 특정 장소의 가장 최근 공개된 공지로그 1건 조회
      * PageController: showCommunityPage
      * - REGISTER 공지로그
      */
