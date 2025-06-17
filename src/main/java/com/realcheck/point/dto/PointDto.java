@@ -39,6 +39,7 @@ public class PointDto {
                 point.getAmount(),
                 point.getReason(),
                 point.getEarnedAt(),
-                point.getType().name());
+                point.getType() != null ? point.getType().name() : "UNKNOWN" // null-safe 처리
+        );
     }
 }

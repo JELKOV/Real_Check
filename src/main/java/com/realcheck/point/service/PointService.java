@@ -1,8 +1,10 @@
 package com.realcheck.point.service;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
@@ -88,14 +90,17 @@ public class PointService {
     // ─────────────────────────────────────────────
 
     /**
-     * [2-1] 포인트 내역 조회 메서드 [미사용]
+     * [2-1] 포인트 내역 조회 메서드
+     * PointController: getMyPointsPaged
      * - 특정 사용자의 포인트 지급 이력을 모두 조회
+     * - 정렬 기준은 최신순 (earnedAt DESC)
+     * - 응답 형태는 Page<PointDto>로 프론트에서 .content, .totalPages 등 사용 가능
      */
     @Transactional(readOnly = true)
-    public List<PointDto> getPointsByUserId(Long userId) {
-        return pointRepository.findByUserId(userId).stream()
-                .map(PointDto::fromEntity)
-                .toList();
+    public Page<PointDto> getPagedPointsByUserId(Long userId, int page, int size) {
+        PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "earnedAt"));
+        return pointRepository.findByUserId(userId, pageable)
+                .map(PointDto::fromEntity); // Page.map() 사용
     }
 
     // ────────────────────────────────────────

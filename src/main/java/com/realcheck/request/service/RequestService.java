@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,7 +27,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * RequestService
+ * RequestService (ALL DONE)
  * - 요청(Request) 관련 비즈니스 로직 처리
  * - 요청 등록, 조회, 마감 처리 담당
  */
@@ -119,6 +120,8 @@ public class RequestService {
                     "답변 없음 - 포인트 환불",
                     PointType.REFUND);
             request.setPointHandled(true);
+            // 환불 여부 체크
+            request.setRefundProcessed(true);
         }
 
         // 동시성 문제 고려
@@ -223,12 +226,22 @@ public class RequestService {
     }
 
     /**
-     * [3-4] 특정 사용자(userId)의 요청 목록 조회
-     * RequestController: findMyRequests
-     * - 내 요청리스트를 조회
+     * [3-4] 특정 사용자(userId)의 요청 목록 조회 (페이지네이션 + 필터 포함)
+     * RequestController.findMyRequests
+     * - 카테고리, 키워드, 페이지 정보에 따라 사용자 요청 목록을 조회하고 DTO로 변환하여 반환
      */
-    public List<Request> findByUserId(Long userId) {
-        return requestRepository.findByUserIdOrderByCreatedAtDesc(userId);
+    public Page<RequestDto> findMyRequests(Long userId, RequestCategory category, String keyword, int page, int size) {
+        // [1] 페이지 정보 설정 (최신순 정렬)
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        // [2] repository에 동적 필터 메서드 호출 (카테고리/키워드 필터링 포함)
+        Page<Request> entities = requestRepository.findMyRequestsWithFilters(userId, category, keyword, pageable);
+
+        // [3] Entity → DTO 변환 + visibleAnswerCount 계산 포함
+        return entities.map(r -> {
+            int visibleCount = countVisibleStatusLogsByRequestId(r.getId()); // 비공개 제외한 답변 수
+            return RequestDto.fromEntity(r, visibleCount);
+        });
     }
 
     /**

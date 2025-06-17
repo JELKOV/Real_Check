@@ -24,18 +24,18 @@ public interface PointRepository extends JpaRepository<Point, Long> {
      * - 나머지 타입은 계산에서 제외
      */
     @Query("""
-        SELECT COALESCE(SUM(
-            CASE
-                WHEN p.type IN (
-                    com.realcheck.point.entity.PointType.CHARGE,
-                    com.realcheck.point.entity.PointType.REWARD
-                ) THEN p.amount
-                WHEN p.type = com.realcheck.point.entity.PointType.CASH THEN -p.amount
-                ELSE 0
-            END
-        ), 0)
-        FROM Point p
-    """)
+                SELECT COALESCE(SUM(
+                    CASE
+                        WHEN p.type IN (
+                            com.realcheck.point.entity.PointType.CHARGE,
+                            com.realcheck.point.entity.PointType.REWARD
+                        ) THEN p.amount
+                        WHEN p.type = com.realcheck.point.entity.PointType.CASH THEN -p.amount
+                        ELSE 0
+                    END
+                ), 0)
+                FROM Point p
+            """)
     Long sumNetIssuedPoints();
 
     /**
@@ -63,8 +63,9 @@ public interface PointRepository extends JpaRepository<Point, Long> {
     // ─────────────────────────────────────────────
 
     /**
-     * [2-1] 특정 사용자의 포인트 내역 조회 [미사용]
-     * 마이페이지 또는 활동 내역 페이지에서 사용
+     * [2-1] 특정 사용자의 포인트 내역 조회
+     * PointService: getPagedPointsByUserId
+     * - 마이페이지 또는 활동 내역 페이지에서 사용
      */
-    List<Point> findByUserId(Long userId);
+    Page<Point> findByUserId(Long userId, Pageable pageable);
 }

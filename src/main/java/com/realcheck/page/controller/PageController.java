@@ -134,6 +134,21 @@ public class PageController {
         return "user/change-password";
     }
 
+    /**
+     * [1-7] 내 즐겨찾기 장소 페이지
+     * page: user/mypage.jsp
+     * page: common/header.jsp
+     */
+    @GetMapping("/my-favorites")
+    public String myFavoritePlacesPage(HttpSession session) {
+        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            return "redirect:/login";
+        }
+
+        return "user/myfavorite-place";
+    }
+
     // ─────────────────────────────────────────────
     // [2] 요청 /응답 관련 페이지
     // ─────────────────────────────────────────────

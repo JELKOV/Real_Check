@@ -22,13 +22,15 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
       <h3 class="text-center mb-4">내가 공유한 정보</h3>
 
       <!-- 필터 영역 -->
-      <div class="d-flex align-items-end justify-content-between mb-4">
-        <!-- 상태 타입 선택 -->
-        <div class="w-75">
-          <label for="statusTypeFilter" class="form-label fw-bold"
-            >상태 유형</label
+      <div class="row mb-4 align-items-end">
+        <div class="col-md-8 mb-2 mb-md-0">
+          <label for="statusTypeFilter" class="form-label fw-semibold"
+            >📂 상태 유형</label
           >
-          <select id="statusTypeFilter" class="form-select">
+          <select
+            id="statusTypeFilter"
+            class="form-select form-select-lg custom-select"
+          >
             <option value="">전체</option>
             <option value="ANSWER">📥 요청 → 답변</option>
             <option value="FREE_SHARE">📢 정보 공유</option>
@@ -36,15 +38,15 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
         </div>
 
         <!-- 신고 제외 체크 -->
-        <div class="form-check mt-4 ms-3">
+        <div class="col-md-4 d-flex align-items-center gap-2 mt-md-4 mt-2">
           <input
             class="form-check-input"
             type="checkbox"
             id="hideHiddenLogs"
             checked
           />
-          <label class="form-check-label fw-semibold" for="hideHiddenLogs">
-            🚫 신고처리 제외
+          <label class="form-check-label text-nowrap" for="hideHiddenLogs">
+            <span class="text-danger-emphasis">🚫 신고처리 제외</span>
           </label>
         </div>
       </div>

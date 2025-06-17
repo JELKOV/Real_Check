@@ -2,6 +2,7 @@ package com.realcheck.request.controller;
 
 import com.realcheck.request.dto.RequestDto;
 import com.realcheck.request.entity.Request;
+import com.realcheck.request.entity.RequestCategory;
 import com.realcheck.request.service.RequestService;
 import com.realcheck.user.dto.UserDto;
 import com.realcheck.user.entity.User;
@@ -10,6 +11,8 @@ import com.realcheck.user.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -111,24 +114,40 @@ public class RequestController {
 
     /**
      * [2-4] 특정 사용자(userId)의 요청 목록 조회 API
-     * page: request/my-requests.jsp
-     * - 내 요청리스트를 조회
+     * - page: request/my-requests.jsp
+     * - 로그인한 사용자의 요청 목록을 조회하며, 카테고리/검색어/페이지네이션 기능 제공
      */
     @GetMapping("/my")
-    public ResponseEntity<?> findMyRequests(HttpSession session) {
+    public ResponseEntity<?> findMyRequests(
+            @RequestParam(required = false) RequestCategory category,
+            @RequestParam(required = false) String keyword, // 키워드 필터 (nullable)
+            @RequestParam(defaultValue = "0") int page, // 현재 페이지 번호
+            @RequestParam(defaultValue = "10") int size, // 페이지 당 항목 수
+            HttpSession session // 로그인 사용자 세션
+    ) {
+        // [1] 세션에서 로그인 사용자 정보 가져오기
         UserDto loginUser = (UserDto) session.getAttribute("loginUser");
         if (loginUser == null) {
+            // 로그인 정보가 없으면 401 Unauthorized 응답
             return ResponseEntity.status(401).body("로그인이 필요합니다.");
         }
 
-        List<Request> myRequests = requestService.findByUserId(loginUser.getId());
-        List<RequestDto> dtoList = myRequests.stream()
-                .map(r -> {
-                    int visibleCount = requestService.countVisibleStatusLogsByRequestId(r.getId());
-                    return RequestDto.fromEntity(r, visibleCount);
-                })
-                .toList();
-        return ResponseEntity.ok(dtoList);
+        // [2] 요청 서비스 호출: 카테고리 + 키워드 + 페이지네이션 기반 요청 목록 조회
+        Page<RequestDto> result = requestService.findMyRequests(
+                loginUser.getId(), category, keyword, page, size);
+
+        // [3] 결과 반환
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * [2-5] 요청 카테고리 목록 조회 API
+     * page: request/my-requests.jsp (카테고리 필터용)
+     * - 클라이언트에서 <select> 옵션으로 사용
+     */
+    @GetMapping("/categories")
+    public ResponseEntity<List<RequestCategory>> getAllCategories() {
+        return ResponseEntity.ok(List.of(RequestCategory.values()));
     }
 
     // ────────────────────────────────────────

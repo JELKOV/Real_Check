@@ -70,6 +70,8 @@ public class RequestDto {
     private boolean isClosed;
     // 요청 선택 처리 여부
     private boolean hasSelectedAnswer;
+    // 포인트 환불 여부 추가
+    private boolean refundProcessed;
 
     // 요청 등록 시각
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -181,6 +183,7 @@ public class RequestDto {
                 .isClosed(r.isClosed())
                 .hasSelectedAnswer(
                         r.getStatusLogs().stream().anyMatch(StatusLog::isSelected))
+                .refundProcessed(r.isRefundProcessed())
                 .createdAt(r.getCreatedAt())
                 .updatedAt(r.getUpdatedAt())
                 .requesterId(r.getUser() != null ? r.getUser().getId() : null)

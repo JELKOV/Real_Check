@@ -1,0 +1,21 @@
+.hover-shadow:hover {
+  box-shadow: 0 0.8rem 1.2rem rgba(0, 0, 0, 0.15);
+  transform: translateY(-4px);
+  transition: all 0.3s ease;
+}
+
+.section-title {
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.emoji-title {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+@media (max-width: 767px) {
+  .emoji-title {
+    font-size: 2rem;
+  }
+}

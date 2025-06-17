@@ -244,7 +244,7 @@ public class PlaceService {
         }
 
         /**
-         * [4-3] 사용자 즐겨찾기 목록 조회 [미사용]
+         * [4-3] 사용자 즐겨찾기 목록 조회
          * PlaceController: getMyFavorites
          * - 특정 사용자가 등록한 즐겨찾기 장소를 조회
          * - FavoritePlace → FavoritePlaceDto 로 변환

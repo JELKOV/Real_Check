@@ -37,7 +37,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
- * StatusLogService
+ * StatusLogService (ALL DONE)
  * - 상태 등록, 수정, 조회 등 핵심 비즈니스 로직을 담당
  */
 @Service
@@ -631,17 +631,7 @@ public class StatusLogService {
     // ────────────────────────────────────────
 
     /**
-     * [6-1] 전체 상태 로그 조회 (관리자용) [미사용]
-     * - 모든 로그를 반환
-     */
-    public List<StatusLogDto> getAllLogs() {
-        return statusLogRepository.findAll().stream()
-                .map(StatusLogDto::fromEntity)
-                .toList();
-    }
-
-    /**
-     * [6-2] 사용자의 답변 등록 로그 반환 (관리자용)
+     * [6-1] 사용자의 답변 등록 로그 반환 (관리자용)
      * UserAdminController: getUserDetails
      * - 특정 사용자가 작성한 상태 로그의 총 개수 조회
      */

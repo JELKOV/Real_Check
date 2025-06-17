@@ -40,6 +40,12 @@
             >내 답변</a
           >
           <a
+            href="/my-favorites"
+            class="text-white mx-2 text-decoration-none fs-6 hover-glow"
+          >
+            즐겨찾기</a
+          >
+          <a
             href="/mypage"
             class="text-white mx-2 text-decoration-none fs-6 hover-glow"
             >마이페이지</a

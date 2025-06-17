@@ -113,105 +113,18 @@ function renderLog(log) {
     );
   }
 
-  // 이미지 HTML
-  let imageHtml = `<div class="text-muted small">이미지 없음</div>`;
-  if (Array.isArray(log.imageUrls) && log.imageUrls.length > 0) {
-    const carouselId = `carousel-${log.id}`;
-    const indicators =
-      log.imageUrls.length > 1
-        ? `<div class="carousel-indicators">
-          ${log.imageUrls
-            .map(
-              (_, i) =>
-                `<button type="button" data-bs-target="#${carouselId}" data-bs-slide-to="${i}" ${
-                  i === 0 ? 'class="active"' : ""
-                } aria-label="Slide ${i + 1}"></button>`
-            )
-            .join("")}
-        </div>`
-        : "";
-
-    const slides = log.imageUrls
-      .map(
-        (url, i) => `
-      <div class="carousel-item ${i === 0 ? "active" : ""}">
-        <img src="${url}" class="d-block w-100 rounded" style="max-height:200px; object-fit:contain;" />
-      </div>`
-      )
-      .join("");
-
-    const controls =
-      log.imageUrls.length > 1
-        ? `
-      <button class="carousel-control-prev" type="button" data-bs-target="#${carouselId}" data-bs-slide="prev">
-        <span class="carousel-control-prev-icon"></span>
-      </button>
-      <button class="carousel-control-next" type="button" data-bs-target="#${carouselId}" data-bs-slide="next">
-        <span class="carousel-control-next-icon"></span>
-      </button>`
-        : "";
-
-    imageHtml = `
-    <div id="${carouselId}" class="carousel slide" data-bs-ride="carousel">
-      ${indicators}
-      <div class="carousel-inner">${slides}</div>
-      ${controls}
-    </div>`;
-  }
-
   const relativeTime = getRelativeTime(log.createdAt);
-  const categorySummary = getCategorySummary(log);
 
   // 답변 블록 (내가 쓴 답변)
-  const mainContentHtml = `
-    <h5 class="fw-bold mt-2 mb-3">✍️ 내가 쓴 답변</h5>
-    <div class="bg-light border rounded p-3 mb-3 small">
-      <div class="mb-2"><strong>📝 답변 내용:</strong> ${log.content}</div>
-      ${
-        categorySummary
-          ? `<div class="mb-2"><strong>📂 상세 정보:</strong> ${categorySummary}</div>`
-          : ""
-      }
+  const mainContentHtml = getMainContentHtml(log);
 
-      <div class="d-flex justify-content-end text-muted small mt-3">
-        <div class="text-end">
-          <div><strong>장소:</strong> ${
-            log.placeName
-              ? `<span class="text-primary fw-bold">${log.placeName}</span>`
-              : log.customPlaceName
-              ? `<span class="text-muted">${log.customPlaceName}</span>`
-              : "사용자 지정 위치"
-          }</div>
-          <div><strong>작성자:</strong> ${log.nickname ?? "익명"}</div>
-          ${
-            log.type === "FREE_SHARE"
-              ? `<div><strong>조회수:</strong> ${log.viewCount ?? 0}</div>`
-              : ""
-          }
-        </div>
-      </div>
-    </div>
-    <div class="mb-3">${imageHtml}</div>
-  `;
+  // 이미지 HTML
+  const imageHtml = getImageCarouselHtml(log);
 
   // 요청 정보 블록
-  const requestInfoHtml =
-    log.type === "ANSWER" && log.requestTitle && log.requestContent
-      ? `
-      <h6 class="fw-bold mt-4 mb-2">📌 관련 요청 내용</h6>
-      <div class="bg-light border rounded p-3 mb-2 small">
-        <div class="mb-2"><strong>📍 요청 제목:</strong> ${log.requestTitle}</div>
-        <div><strong>📄 요청 내용:</strong> ${log.requestContent}</div>
-      </div>`
-      : "";
-
-  const actionButtons = log.selected
-    ? `<span class="text-muted small">✅ 채택된 답변은 수정/삭제 불가</span>`
-    : log.requestClosed
-    ? `<span class="text-muted small">🔒 마감된 요청에 대한 답변은 수정/삭제 불가</span>`
-    : `
-        <button class="btn btn-sm btn-outline-primary btn-edit me-2">수정</button>
-        <button class="btn btn-sm btn-outline-danger btn-delete">삭제</button>`;
+  const requestInfoHtml = getRequestInfoHtml(log);
+  // 수정 삭제 버튼
+  const actionButtons = getActionButtons(log);
 
   return `
     <div class="col-12 mb-3" data-id="${log.id}">
@@ -227,6 +140,9 @@ function renderLog(log) {
           <!-- 내가 쓴 답변 -->
           ${mainContentHtml}
 
+          <!-- 이미지 -->
+          <div class="mb-3">${imageHtml}</div>
+
           <!-- 관련 요청 내용 -->
           ${requestInfoHtml}
 
@@ -236,55 +152,6 @@ function renderLog(log) {
       </div>
     </div>
   `;
-}
-
-// 카테고리 값 가져오기
-function getCategorySummary(log) {
-  switch (log.category) {
-    case "WAITING_STATUS":
-      return `현재 대기 인원: ${log.waitCount ?? "-"}명`;
-    case "FOOD_MENU":
-      return `오늘의 메뉴: ${log.menuInfo ?? "정보 없음"}`;
-    case "BATHROOM":
-      return `화장실 있음 여부: ${log.hasBathroom ? "있음" : "없음"}`;
-    case "PARKING":
-      return `주차 가능 여부: ${log.isParkingAvailable ? "가능" : "불가능"}`;
-    case "NOISE_LEVEL":
-      return `소음 상태: ${log.noiseNote ?? "정보 없음"}`;
-    case "CROWD_LEVEL":
-      return `혼잡도: ${log.crowdLevel ?? "-"} / 10`;
-    case "WEATHER_LOCAL":
-      return `날씨 메모: ${log.weatherNote ?? "정보 없음"}`;
-    case "STREET_VENDOR":
-      return `노점 이름: ${log.vendorName ?? "정보 없음"}`;
-    case "PHOTO_REQUEST":
-      return `요청 메모: ${log.photoNote ?? "없음"}`;
-    case "BUSINESS_STATUS":
-      return `영업 여부: ${log.isOpen ? "영업 중" : "영업 안 함"}`;
-    case "OPEN_SEAT":
-      return `남은 좌석 수: ${log.seatCount ?? "-"}석`;
-    case "ETC":
-      return `기타 정보: ${log.extra ?? "없음"}`;
-    default:
-      return "";
-  }
-}
-
-// 상대 시간 포맷 함수
-function getRelativeTime(createdAt) {
-  const now = new Date();
-  const created = new Date(createdAt);
-  const diffMs = now - created;
-  const diffSec = Math.floor(diffMs / 1000);
-  const diffMin = Math.floor(diffSec / 60);
-  const diffHour = Math.floor(diffMin / 60);
-  const diffDay = Math.floor(diffHour / 24);
-
-  if (diffSec < 60) return "방금 전";
-  if (diffMin < 60) return `${diffMin}분 전`;
-  if (diffHour < 24) return `${diffHour}시간 전`;
-  if (diffDay < 7) return `${diffDay}일 전`;
-  return created.toLocaleDateString("ko-KR");
 }
 
 // 페이지 네이션 랜더링
@@ -326,23 +193,326 @@ function openEditModal() {
   // [2] 기존 이미지 배열 저장
   uploadedImageUrls = [...(log.imageUrls || [])];
   // [3] 기존 이미지 미리보기 렌더링
-  const previewHtml = uploadedImageUrls
-    .map(
-      (url) => `
-    <div class="position-relative d-inline-block">
-      <img src="${url}" data-url="${url}" class="me-2 mb-2 img-thumbnail" style="max-width:100px;" />
-      <button type="button" class="btn btn-sm btn-close position-absolute top-0 end-0 delete-image-btn"
-              style="background-color: rgba(0,0,0,0.6); color: white;" title="삭제"></button>
-    </div>`
-    )
-    .join("");
-  $("#uploadedPreview").html(previewHtml);
+  $("#uploadedPreview").html(renderUploadedImages(uploadedImageUrls));
 
   const modal = new bootstrap.Modal(document.getElementById("editModal"));
   modal.show();
 }
 
-// 카테고리별 필드 동적 삽입 HTML 반환
+// ─────────────────────────────────────
+// [5] 이미지 업로드 처리
+// ─────────────────────────────────────
+
+function handleFileUpload() {
+  const files = this.files;
+  if (!files.length) return;
+
+  const formData = new FormData();
+  for (const file of files) {
+    formData.append("files", file); // 복수 업로드 지원
+  }
+
+  $.ajax({
+    url: "/api/upload/multi", // 다중 업로드용 엔드포인트
+    method: "POST",
+    data: formData,
+    processData: false,
+    contentType: false,
+    success: function (urls) {
+      uploadedImageUrls.push(...urls);
+
+      $("#uploadedPreview").append(renderUploadedImages(urls));
+    },
+    error: function (xhr) {
+      alert("업로드 실패: " + xhr.responseText);
+    },
+  });
+}
+
+// ─────────────────────────────────────
+// [6] 수정 제출 처리
+// ─────────────────────────────────────
+
+// 수정 완료 시 서버에 PUT 요청
+function submitEdit(e) {
+  e.preventDefault();
+  const log = logsList.find((l) => l.id === editingId);
+  if (!log) return;
+
+  const updatedData = {
+    content: $("#editContent").val(),
+    imageUrls: uploadedImageUrls,
+    ...extractCategoryFields(log.category),
+  };
+
+  $.ajax({
+    url: `/api/status/${editingId}`,
+    method: "PUT",
+    contentType: "application/json",
+    data: JSON.stringify(updatedData),
+    success: function () {
+      alert("수정 완료");
+      location.reload();
+    },
+    error: function (xhr) {
+      alert("수정 실패: " + xhr.responseText);
+    },
+  });
+}
+
+// ─────────────────────────────────────
+// [7] 삭제 처리
+// ─────────────────────────────────────
+
+// 삭제 버튼 클릭 시 삭제 요청
+function deleteLog() {
+  const $cardWrapper = $(this).closest("[data-id]");
+  const id = $cardWrapper.data("id");
+
+  if (confirm("정말 삭제하시겠습니까?")) {
+    $.ajax({
+      url: `/api/status/${id}`,
+      method: "DELETE",
+      success: function () {
+        $cardWrapper.remove();
+      },
+      error: function (xhr) {
+        alert("삭제 실패: " + xhr.responseText);
+      },
+    });
+  }
+}
+
+// ─────────────────────────────────────
+// [8] 함수화
+// ─────────────────────────────────────
+
+/**
+ * 카테고리 필드 값 추출 (수정 제출 시)
+ * - submitEdit(e)
+ */
+function extractCategoryFields(category) {
+  const val = (id) => $(`#${id}`).val(); // 간단 유틸
+  switch (category) {
+    case "WAITING_STATUS":
+      return { waitCount: parseInt(val("editWaitCount")) };
+    case "BATHROOM":
+      return { hasBathroom: val("editHasBathroom") === "true" };
+    case "FOOD_MENU":
+      return { menuInfo: val("editMenuInfo") };
+    case "WEATHER_LOCAL":
+      return { weatherNote: val("editWeatherNote") };
+    case "STREET_VENDOR":
+      return { vendorName: val("editVendorName") };
+    case "PHOTO_REQUEST":
+      return { photoNote: val("editPhotoNote") };
+    case "BUSINESS_STATUS":
+      return { isOpen: val("editIsOpen") === "true" };
+    case "OPEN_SEAT":
+      return { seatCount: parseInt(val("editSeatCount")) };
+    case "NOISE_LEVEL":
+      return { noiseNote: val("editNoiseNote") };
+    case "PARKING":
+      return { isParkingAvailable: val("editIsParkingAvailable") === "true" };
+    case "CROWD_LEVEL":
+      return { crowdLevel: parseInt(val("editCrowdLevel")) };
+    case "ETC":
+      return { extra: val("editExtra") };
+    default:
+      return {};
+  }
+}
+
+/**
+ * 상대 시간 포맷 함수
+ * - renderLog()
+ */
+function getRelativeTime(createdAt) {
+  const now = new Date();
+  const created = new Date(createdAt);
+  const diffMs = now - created;
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHour = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHour / 24);
+
+  if (diffSec < 60) return "방금 전";
+  if (diffMin < 60) return `${diffMin}분 전`;
+  if (diffHour < 24) return `${diffHour}시간 전`;
+  if (diffDay < 7) return `${diffDay}일 전`;
+  return created.toLocaleDateString("ko-KR");
+}
+
+/**
+ * 수정 삭제 버튼 만들기
+ * - renderLog()
+ */
+function getActionButtons(log) {
+  if (log.selected)
+    return `<span class="text-muted small">✅ 채택된 답변은 수정/삭제 불가</span>`;
+  if (log.requestClosed)
+    return `<span class="text-muted small">🔒 마감된 요청에 대한 답변은 수정/삭제 불가</span>`;
+  return `
+    <button class="btn btn-sm btn-outline-primary btn-edit me-2">수정</button>
+    <button class="btn btn-sm btn-outline-danger btn-delete">삭제</button>`;
+}
+
+/**
+ * 요청 정보 불러오기
+ * - renderLog()
+ */
+function getRequestInfoHtml(log) {
+  if (log.type !== "ANSWER" || !log.requestTitle || !log.requestContent)
+    return "";
+  return `
+    <h6 class="fw-bold mt-4 mb-2">📌 관련 요청 내용</h6>
+    <div class="bg-light border rounded p-3 mb-2 small">
+      <div class="mb-2"><strong>📍 요청 제목:</strong> ${log.requestTitle}</div>
+      <div><strong>📄 요청 내용:</strong> ${log.requestContent}</div>
+    </div>`;
+}
+
+/**
+ * 이미지 캐러셀
+ * - renderLog()
+ */
+function getImageCarouselHtml(log) {
+  if (!Array.isArray(log.imageUrls) || log.imageUrls.length === 0)
+    return `<div class="text-muted small">이미지 없음</div>`;
+
+  const carouselId = `carousel-${log.id}`;
+  const indicators =
+    log.imageUrls.length > 1
+      ? `<div class="carousel-indicators">
+        ${log.imageUrls
+          .map(
+            (_, i) =>
+              `<button type="button" data-bs-target="#${carouselId}" data-bs-slide-to="${i}" ${
+                i === 0 ? 'class="active"' : ""
+              }></button>`
+          )
+          .join("")}
+      </div>`
+      : "";
+
+  const slides = log.imageUrls
+    .map(
+      (url, i) => `
+      <div class="carousel-item ${i === 0 ? "active" : ""}">
+        <img src="${url}" class="d-block w-100 rounded" style="max-height:200px; object-fit:contain;" />
+      </div>
+  `
+    )
+    .join("");
+
+  const controls =
+    log.imageUrls.length > 1
+      ? `<button class="carousel-control-prev" type="button" data-bs-target="#${carouselId}" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon"></span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#${carouselId}" data-bs-slide="next">
+        <span class="carousel-control-next-icon"></span>
+      </button>`
+      : "";
+
+  return `<div id="${carouselId}" class="carousel slide" data-bs-ride="carousel">
+    ${indicators}
+    <div class="carousel-inner">${slides}</div>
+    ${controls}
+  </div>`;
+}
+
+/**
+ * 메인 컨텐츠 가져오기
+ * - renderLog()
+ */
+function getMainContentHtml(log) {
+  const categorySummary = getCategorySummary(log);
+  const placeNameHtml = log.placeName
+    ? `<span class="text-primary fw-bold">${log.placeName}</span>`
+    : log.customPlaceName
+    ? `<span class="text-muted">${log.customPlaceName}</span>`
+    : "사용자 지정 위치";
+
+  return `
+    <h5 class="fw-bold mt-2 mb-3">✍️ 내가 쓴 답변</h5>
+    <div class="bg-light border rounded p-3 mb-3 small">
+      <div class="mb-2"><strong>📝 답변 내용:</strong> ${log.content}</div>
+      ${
+        categorySummary
+          ? `<div class="mb-2"><strong>📂 상세 정보:</strong> ${categorySummary}</div>`
+          : ""
+      }
+      <div class="d-flex justify-content-end text-muted small mt-3">
+        <div class="text-end">
+          <div><strong>장소:</strong> ${placeNameHtml}</div>
+          <div><strong>작성자:</strong> ${log.nickname ?? "익명"}</div>
+          ${
+            log.type === "FREE_SHARE"
+              ? `<div><strong>조회수:</strong> ${log.viewCount ?? 0}</div>`
+              : ""
+          }
+        </div>
+      </div>
+    </div>`;
+}
+
+/**
+ * 카테고리 값 가져오기
+ * - getMainContentHtml()
+ */
+function getCategorySummary(log) {
+  switch (log.category) {
+    case "WAITING_STATUS":
+      return `현재 대기 인원: ${log.waitCount ?? "-"}명`;
+    case "FOOD_MENU":
+      return `오늘의 메뉴: ${log.menuInfo ?? "정보 없음"}`;
+    case "BATHROOM":
+      return `화장실 있음 여부: ${log.hasBathroom ? "있음" : "없음"}`;
+    case "PARKING":
+      return `주차 가능 여부: ${log.isParkingAvailable ? "가능" : "불가능"}`;
+    case "NOISE_LEVEL":
+      return `소음 상태: ${log.noiseNote ?? "정보 없음"}`;
+    case "CROWD_LEVEL":
+      return `혼잡도: ${log.crowdLevel ?? "-"} / 10`;
+    case "WEATHER_LOCAL":
+      return `날씨 메모: ${log.weatherNote ?? "정보 없음"}`;
+    case "STREET_VENDOR":
+      return `노점 이름: ${log.vendorName ?? "정보 없음"}`;
+    case "PHOTO_REQUEST":
+      return `요청 메모: ${log.photoNote ?? "없음"}`;
+    case "BUSINESS_STATUS":
+      return `영업 여부: ${log.isOpen ? "영업 중" : "영업 안 함"}`;
+    case "OPEN_SEAT":
+      return `남은 좌석 수: ${log.seatCount ?? "-"}석`;
+    case "ETC":
+      return `기타 정보: ${log.extra ?? "없음"}`;
+    default:
+      return "";
+  }
+}
+
+/**
+ * 업로드 이미지 미리보기 블록 렌더링
+ * - openEditModal() / handleFileUpload()
+ */
+function renderUploadedImages(urls) {
+  return urls
+    .map(
+      (url) => `
+      <div class="position-relative d-inline-block">
+        <img src="${url}" data-url="${url}" class="me-2 mb-2 img-thumbnail" style="max-width:100px;" />
+        <button type="button" class="btn btn-sm btn-close position-absolute top-0 end-0 delete-image-btn"
+                style="background-color: rgba(0,0,0,0.6); color: white;" title="삭제"></button>
+      </div>`
+    )
+    .join("");
+}
+
+/**
+ * 카테고리별 필드 동적 삽입 HTML 반환
+ * - openEditModal()
+ */
 function getDynamicFieldsHTML(category, log) {
   switch (category) {
     case "WAITING_STATUS":
@@ -458,139 +628,5 @@ function getDynamicFieldsHTML(category, log) {
         </div>`;
     default:
       return "";
-  }
-}
-
-// ─────────────────────────────────────
-// [5] 이미지 업로드 처리
-// ─────────────────────────────────────
-
-function handleFileUpload() {
-  const files = this.files;
-  if (!files.length) return;
-
-  const formData = new FormData();
-  for (const file of files) {
-    formData.append("files", file); // 복수 업로드 지원
-  }
-
-  $.ajax({
-    url: "/api/upload/multi", // 다중 업로드용 엔드포인트
-    method: "POST",
-    data: formData,
-    processData: false,
-    contentType: false,
-    success: function (urls) {
-      uploadedImageUrls.push(...urls);
-
-      const previewHtml = urls
-        .map(
-          (url) => `
-      <div class="position-relative d-inline-block">
-        <img src="${url}" data-url="${url}" class="me-2 mb-2 img-thumbnail" style="max-width:100px;" />
-        <button type="button" class="btn btn-sm btn-close position-absolute top-0 end-0 delete-image-btn"
-                style="background-color: rgba(0,0,0,0.6); color: white;" title="삭제"></button>
-      </div>`
-        )
-        .join("");
-
-      $("#uploadedPreview").append(previewHtml);
-    },
-    error: function (xhr) {
-      alert("업로드 실패: " + xhr.responseText);
-    },
-  });
-}
-
-// ─────────────────────────────────────
-// [6] 수정 제출 처리
-// ─────────────────────────────────────
-
-// 수정 완료 시 서버에 PUT 요청
-function submitEdit(e) {
-  e.preventDefault();
-  const log = logsList.find((l) => l.id === editingId);
-  if (!log) return;
-
-  const updatedData = {
-    content: $("#editContent").val(),
-    imageUrls: uploadedImageUrls,
-  };
-
-  switch (log.category) {
-    case "WAITING_STATUS":
-      updatedData.waitCount = parseInt($("#editWaitCount").val());
-      break;
-    case "BATHROOM":
-      updatedData.hasBathroom = $("#editHasBathroom").val() === "true";
-      break;
-    case "FOOD_MENU":
-      updatedData.menuInfo = $("#editMenuInfo").val();
-      break;
-    case "WEATHER_LOCAL":
-      updatedData.weatherNote = $("#editWeatherNote").val();
-      break;
-    case "STREET_VENDOR":
-      updatedData.vendorName = $("#editVendorName").val();
-      break;
-    case "PHOTO_REQUEST":
-      updatedData.photoNote = $("#editPhotoNote").val();
-      break;
-    case "BUSINESS_STATUS":
-      updatedData.isOpen = $("#editIsOpen").val() === "true";
-      break;
-    case "OPEN_SEAT":
-      updatedData.seatCount = parseInt($("#editSeatCount").val());
-      break;
-    case "NOISE_LEVEL":
-      updatedData.noiseNote = $("#editNoiseNote").val();
-      break;
-    case "PARKING":
-      updatedData.isParkingAvailable =
-        $("#editIsParkingAvailable").val() === "true";
-      break;
-    case "CROWD_LEVEL":
-      updatedData.crowdLevel = parseInt($("#editCrowdLevel").val());
-      break;
-    case "ETC":
-      updatedData.extra = $("#editExtra").val();
-      break;
-  }
-
-  $.ajax({
-    url: `/api/status/${editingId}`,
-    method: "PUT",
-    contentType: "application/json",
-    data: JSON.stringify(updatedData),
-    success: function () {
-      alert("수정 완료");
-      location.reload();
-    },
-    error: function (xhr) {
-      alert("수정 실패: " + xhr.responseText);
-    },
-  });
-}
-
-// ─────────────────────────────────────
-// [7] 삭제 처리
-// ─────────────────────────────────────
-
-// 삭제 버튼 클릭 시 삭제 요청
-function deleteLog() {
-  const $cardWrapper = $(this).closest("[data-id]");
-  const id = $cardWrapper.data("id");
-
-  if (confirm("정말 삭제하시겠습니까?")) {
-    $.ajax({
-      url: `/api/status/${id}`,
-      method: "DELETE",
-      success: function () {
-        $cardWrapper.remove();
-      },
-      error: function (xhr) {
-        alert("삭제 실패: " + xhr.responseText);
-      },
-    });
   }
 }

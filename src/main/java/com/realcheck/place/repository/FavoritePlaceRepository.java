@@ -21,7 +21,8 @@ public interface FavoritePlaceRepository extends JpaRepository<FavoritePlace, Lo
     Optional<FavoritePlace> findByUserIdAndPlaceId(Long userId, Long placeId);
 
     /**
-     * [2] 특정 사용자가 즐겨찾기한 모든 장소 조회 [미사용]
+     * [2] 특정 사용자가 즐겨찾기한 모든 장소 조회
+     * PlaceService: getFavoritesByUser
      */
     List<FavoritePlace> findByUserId(Long userId);
 

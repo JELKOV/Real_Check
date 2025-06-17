@@ -12,6 +12,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/css/user/mypage.css" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   </head>
   <body>
     <%@ include file="../common/header.jsp" %>
@@ -86,52 +87,94 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
                   >내 소유 장소</a
                 >
                 <a
-                  href="/place/favorites"
+                  href="/my-favorites"
                   class="btn btn-outline-secondary btn-sm flex-grow-1"
                   >즐겨찾기 장소</a
                 >
               </div>
             </div>
           </div>
-          <div class="row mt-4">
-            <!-- [3] 포인트 및 활동 내역 -->
-            <div class="col-12">
-              <h4 class="mb-3">📌 최근 활동</h4>
-              <div class="text-center mb-3">
-                <h5 class="text-primary">${loginUser.points} 포인트</h5>
-                <p class="text-muted">리얼체크 활동으로 포인트를 획득하세요!</p>
-              </div>
 
-              <ul class="list-group mb-3">
-                <c:forEach var="activity" items="${recentActivities}">
-                  <li class="list-group-item">
-                    <div
-                      class="d-flex justify-content-between align-items-start"
-                    >
+          <div class="col-12">
+            <!-- [3] 활동/포인트 탭 버튼 -->
+            <ul class="nav nav-tabs mb-3" id="mypageTab" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button
+                  class="nav-link active"
+                  id="activity-tab"
+                  data-bs-toggle="tab"
+                  data-bs-target="#activitySection"
+                  type="button"
+                  role="tab"
+                >
+                  💬 최근 활동
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button
+                  class="nav-link"
+                  id="point-tab"
+                  data-bs-toggle="tab"
+                  data-bs-target="#pointSection"
+                  type="button"
+                  role="tab"
+                >
+                  📌 포인트 내역
+                </button>
+              </li>
+            </ul>
+
+            <!-- [3-1] 탭 콘텐츠 영역 -->
+            <div class="tab-content">
+              <!-- 최근 활동 -->
+              <div
+                class="tab-pane fade show active"
+                id="activitySection"
+                role="tabpanel"
+              >
+                <ul class="list-group mb-3">
+                  <c:forEach var="activity" items="${recentActivities}">
+                    <li class="list-group-item d-flex justify-content-between">
                       <div>
                         <span
                           class="badge ${activity.type == '요청' ? 'bg-info' : 'bg-primary'}"
-                          >${activity.type}</span
                         >
-                        <span class="fw-bold"
-                          >${activity.title != null ? activity.title :
-                          activity.requestTitle}</span
+                          ${activity.type}
+                        </span>
+                        <span class="fw-bold">
+                          ${activity.title != null ? activity.title :
+                          activity.requestTitle} </span
                         ><br />
                         <small class="text-muted"
                           >장소: ${activity.placeName}</small
                         >
                       </div>
                       <small class="text-muted">${activity.createdAt}</small>
-                    </div>
-                  </li>
-                </c:forEach>
+                    </li>
+                  </c:forEach>
+                  <c:if test="${empty recentActivities}">
+                    <li class="list-group-item text-center text-muted">
+                      최근 활동 내역이 없습니다.
+                    </li>
+                  </c:if>
+                </ul>
+              </div>
 
-                <c:if test="${empty recentActivities}">
-                  <li class="list-group-item text-center text-muted">
-                    최근 활동 내역이 없습니다.
-                  </li>
-                </c:if>
-              </ul>
+              <!-- 포인트 내역 -->
+              <div class="tab-pane fade" id="pointSection" role="tabpanel">
+                <div class="card p-3 shadow-sm">
+                  <h5 class="text-primary">${loginUser.points} 포인트</h5>
+                  <p class="text-muted small">
+                    리얼체크 활동을 통해 적립된 포인트입니다.
+                  </p>
+                  <div id="pointList">불러오는 중...</div>
+                  <!-- 페이징 버튼 출력 영역 -->
+                  <div
+                    id="pointPagination"
+                    class="mt-3 d-flex justify-content-center gap-1"
+                  ></div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -187,5 +230,6 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
     </div>
 
     <%@ include file="../common/footer.jsp" %>
+    <script src="/js/user/mypage.js"></script>
   </body>
 </html>

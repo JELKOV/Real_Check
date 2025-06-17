@@ -16,7 +16,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 /**
- * StatusLogRepository
+ * StatusLogRepository (ALL DONE)
  * - DB와 통신하는 계층 (JPA Repository)
  * - 기본 CRUD + 장소별/사용자별 조건 조회 기능 제공
  */

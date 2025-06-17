@@ -1,4 +1,66 @@
-/* my-logs 전용 캐러셀 화살표 스타일 */
+/* ─────────────────────────────────────
+ * 공통 레이아웃
+ * ───────────────────────────────────── */
+#logsBody .card {
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#logsBody .card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+#logsBody .card-body {
+  padding: 1.5rem;
+}
+
+/* 상태 필터 select 스타일 */
+.custom-select {
+  border-radius: 0.5rem;
+  padding: 0.6rem 1rem;
+  font-size: 1rem;
+  transition: all 0.2s ease-in-out;
+  box-shadow: none;
+}
+
+.custom-select:focus {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.1rem rgba(13, 110, 253, 0.25);
+}
+
+/* 체크박스 정렬 개선 */
+#hideHiddenLogs {
+  transform: scale(1.2);
+  margin-top: 0.2rem;
+}
+
+/* ─────────────────────────────────────
+ * 뱃지 스타일
+ * ───────────────────────────────────── */
+#logsBody .badge {
+  font-size: 0.8rem;
+  padding: 0.4em 0.6em;
+  border-radius: 1rem;
+  margin-right: 0.3rem;
+  margin-bottom: 0.3rem;
+}
+
+/* ─────────────────────────────────────
+ * 캐러셀 이미지 & 네비게이션
+ * ───────────────────────────────────── */
+#logsBody .carousel-inner img {
+  height: 200px;
+  object-fit: cover;
+  border-radius: 12px;
+  transition: transform 0.3s ease-in-out;
+}
+
+#logsBody .carousel-inner img:hover {
+  transform: scale(1.03);
+}
+
 #logsBody .carousel-control-prev-icon,
 #logsBody .carousel-control-next-icon {
   background-image: none !important;
@@ -26,4 +88,65 @@
 #logsBody .carousel-control-next::before {
   content: "▶";
   right: 10px;
+}
+
+/* ─────────────────────────────────────
+ * 정보 블록
+ * ───────────────────────────────────── */
+#logsBody .info-box {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  padding: 1rem;
+  border-radius: 12px;
+  font-size: 0.95rem;
+}
+
+#logsBody .info-box strong {
+  color: #495057;
+}
+
+/* ─────────────────────────────────────
+ * 버튼 스타일
+ * ───────────────────────────────────── */
+#logsBody .btn-edit,
+#logsBody .btn-delete {
+  font-size: 0.85rem;
+  padding: 0.35rem 0.8rem;
+  border-radius: 20px;
+}
+
+/* ─────────────────────────────────────
+ * 업로드 이미지 썸네일
+ * ───────────────────────────────────── */
+#uploadedPreview .img-thumbnail {
+  max-width: 100px;
+  border-radius: 10px;
+}
+
+/* ─────────────────────────────────────
+ * 반응형 대응
+ * ───────────────────────────────────── */
+@media (max-width: 576px) {
+  #logsBody .card-body {
+    padding: 1rem;
+  }
+
+  #logsBody h5 {
+    font-size: 1rem;
+  }
+
+  #logsBody .info-box {
+    font-size: 0.85rem;
+  }
+}
+
+/* 반응형 간격 */
+@media (max-width: 768px) {
+  .form-check-label {
+    font-size: 0.9rem;
+  }
+
+  .custom-select {
+    font-size: 0.95rem;
+  }
 }

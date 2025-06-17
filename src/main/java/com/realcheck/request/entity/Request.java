@@ -67,6 +67,11 @@ public class Request {
     @Column(nullable = false)
     private boolean pointHandled = false;
 
+    // 환불 처리가 된 요청만 이 값이 true
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean refundProcessed = false;
+
     // ─────────────────────────────────────────────
     // [2] 연관 관계 설정 (사용자, 장소, 상태 로그)
     // ─────────────────────────────────────────────

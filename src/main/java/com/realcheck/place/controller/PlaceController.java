@@ -177,8 +177,8 @@ public class PlaceController {
     }
 
     /**
-     * [4-3] 즐겨찾기 목록 조회 API (GET /api/place/favorites) [미사용]
-     * page: 즐겨찾기 페이지(추후 구현 예정)
+     * [4-3] 즐겨찾기 목록 조회 API (GET /api/place/favorites)
+     * page: user/myfavorite-place.jsp
      * - 현재 로그인한 사용자가 등록한 즐겨찾기 장소 목록을 조회
      * - FavoritePlace 엔티티 기반으로 FavoritePlaceDto 리스트 반환
      */
