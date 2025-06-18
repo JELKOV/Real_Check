@@ -7,32 +7,6 @@ let hasMore = true;
 let searchCenter = null;
 let activeInfoWindow = null;
 
-// 초기화
-$(document).ready(function () {
-  initMap();
-  initEventHandlers();
-
-  $("#myLocationButton").on("click", function () {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(function (pos) {
-        const latlng = new naver.maps.LatLng(
-          pos.coords.latitude,
-          pos.coords.longitude
-        );
-        map.setCenter(latlng);
-        drawRadiusCircle(latlng, parseInt($("#radiusFilter").val()));
-        resetAndLoad();
-      });
-    } else {
-      alert("위치 정보를 지원하지 않는 브라우저입니다.");
-    }
-  });
-
-  $("#refreshNearbyButton").on("click", function () {
-    resetAndLoad();
-  });
-});
-
 // 카테고리 라벨 매핑
 const categoryLabelMap = {
   PARKING: "🅿️ 주차",
@@ -48,6 +22,12 @@ const categoryLabelMap = {
   CROWD_LEVEL: "👥 혼잡",
   ETC: "❓ 기타",
 };
+
+// 초기화
+$(document).ready(function () {
+  initMap();
+  bindUIEvents();
+});
 
 // 네이버 지도 초기화
 function initMap() {
@@ -67,26 +47,70 @@ function initMap() {
   });
 }
 
-// 각종 이벤트 핸들러 초기화
-function initEventHandlers() {
-  // 카테고리 필터 및 지도 필터 변경 시 다시 로드
+// 이벤트 핸들러 바인딩 함수
+function bindUIEvents() {
+  // 현재 위치로 지도 이동 버튼
+  $("#myLocationButton").on("click", moveToCurrentLocation);
+
+  // "내 주변 요청 새로고침" 버튼
+  $("#refreshNearbyButton").on("click", resetAndLoad);
+
+  // 반경 필터 또는 카테고리 변경 시 목록 새로 로드
   $("#radiusFilter, #categoryFilter").on("change", resetAndLoad);
 
-  // 위치 검색 버튼
+  // 위치 검색 버튼 클릭 시 검색 실행
   $("#searchLocationBtn").on("click", searchLocation);
-  $("#locationInput").on("keydown", function (e) {
-    if (e.key === "Enter") searchLocation();
-  });
+
+  // 위치 검색 입력창에서 Enter 키 입력 시 검색 실행
+  $("#locationInput").on(
+    "keydown",
+    (e) => e.key === "Enter" && searchLocation()
+  );
 
   // 무한 스크롤 이벤트
+  // 스크롤이 페이지 하단에 근접하면 다음 페이지 요청 자동 로드
   $(window).on("scroll", function () {
-    if (
-      $(window).scrollTop() + $(window).height() >=
-      $(document).height() - 100
-    ) {
-      if (!isLoading && hasMore) loadRequests();
+    const nearBottom =
+      $(window).scrollTop() + $(window).height() >= $(document).height() - 100;
+
+    if (nearBottom && !isLoading && hasMore) {
+      loadRequests(); // 다음 페이지 요청
     }
   });
+}
+
+// 위치 정보 가져오기
+function moveToCurrentLocation() {
+  if (!navigator.geolocation)
+    return alert("위치 정보를 지원하지 않는 브라우저입니다.");
+
+  navigator.geolocation.getCurrentPosition((pos) => {
+    const latlng = new naver.maps.LatLng(
+      pos.coords.latitude,
+      pos.coords.longitude
+    );
+    map.setCenter(latlng);
+    drawRadiusCircle(latlng, parseInt($("#radiusFilter").val()));
+    resetAndLoad();
+  });
+}
+
+// 지도 드래그 / 검색 / 필터 변경 시 데이터 초기화 + 로드
+function resetAndLoad() {
+  searchCenter = map.getCenter(); // 항상 최신 좌표로 설정
+  console.log("resetAndLoad() - 현재 중심 좌표:", searchCenter);
+
+  currentPage = 1;
+  hasMore = true;
+  clearMarkers();
+  loadRequests();
+}
+
+// 마커 초기화
+function clearMarkers() {
+  markers.forEach((m) => m.marker.setMap(null));
+  markers = [];
+  if (activeInfoWindow) activeInfoWindow.close();
 }
 
 // 위치 검색
@@ -224,66 +248,14 @@ function renderRequests(data) {
   data.forEach(function (req) {
     if ($(`[data-request-id="${req.id}"]`).length > 0) return;
 
-    // 카테고리 벳지 렌더링
-    const badge = req.category
-      ? `<span class="badge bg-secondary mb-2"> ${
-          categoryLabelMap[req.category] || req.category
-        } </span>`
-      : "";
-
-    // 카드 렌더링
-    const cardHtml = `
-        <div class="col-md-6" data-request-id="${req.id}">
-          <div class="card h-100 shadow-sm request-card" data-request-id="${
-            req.id
-          }">
-            <div class="card-body">
-              ${badge}
-              <h5 class="card-title">${req.title}</h5>
-              <p class="card-text">${(req.content || "").substring(
-                0,
-                30
-              )}...</p>
-              <small>포인트: ${req.point}</small><br/>
-              <a href="/request/${
-                req.id
-              }" class="btn btn-outline-primary btn-sm mt-2 view-detail">상세보기</a>
-            </div>
-          </div>
-        </div>
-      `;
-
+    // 카드 HTML 생성 후 추가
+    const cardHtml = generateRequestCard(req);
     container.append(cardHtml);
 
-    // 지도 마커 생성
+    // 지도 마커 생성 및 저장
     if (req.lat && req.lng) {
-      const marker = new naver.maps.Marker({
-        map: map,
-        position: new naver.maps.LatLng(req.lat, req.lng),
-      });
-
-      // 마커 클릭 시 정보창
-      const infoWindow = new naver.maps.InfoWindow({
-        content: `
-            <div style="padding: 10px; max-width: 200px;">
-              <strong>${req.title}</strong><br/>
-              ${req.content}<br/>
-              <small>${categoryLabelMap[req.category] || req.category}</small>
-            </div>
-          `,
-        maxWidth: 200,
-      });
-
-      // 마커 클릭 핸들러
-      naver.maps.Event.addListener(marker, "click", function () {
-        if (activeInfoWindow) activeInfoWindow.close();
-        infoWindow.open(map, marker);
-        activeInfoWindow = infoWindow;
-        map.panTo(marker.getPosition());
-      });
-
-      // 마커 저장 (req.id 기준)
-      markers.push({ id: req.id, marker, infoWindow });
+      const markerInfo = createMarkerWithInfo(req);
+      markers.push(markerInfo);
     }
   });
 
@@ -301,22 +273,70 @@ function renderRequests(data) {
       }
     });
 }
-// 지도 드래그 / 검색 / 필터 변경 시 데이터 초기화 + 로드
-function resetAndLoad() {
-  searchCenter = map.getCenter(); // 항상 최신 좌표로 설정
-  console.log("resetAndLoad() - 현재 중심 좌표:", searchCenter);
 
-  currentPage = 1;
-  hasMore = true;
-  clearMarkers();
-  loadRequests();
+// 요청 카드 HTML 생성 함수
+function generateRequestCard(req) {
+  // 카테고리 뱃지 HTML
+  const badge = req.category
+    ? `<span class="badge bg-secondary mb-2">${
+        categoryLabelMap[req.category] || req.category
+      }</span>`
+    : "";
+
+  // 요청 정보 카드 템플릿
+  return `
+    <div class="col-md-6" data-request-id="${req.id}">
+      <div class="card h-100 shadow-sm request-card" data-request-id="${
+        req.id
+      }">
+        <div class="card-body">
+          ${badge}
+          <h5 class="card-title">${req.title}</h5>
+          <p class="card-text">${shortenText(req.content)}</p>
+          ${formatPointInfo(req.point)}<br/>
+          <a href="/request/${
+            req.id
+          }" class="btn btn-outline-primary btn-sm mt-2 view-detail">상세보기</a>
+        </div>
+      </div>
+    </div>`;
 }
 
-// 마커 초기화
-function clearMarkers() {
-  markers.forEach((m) => m.marker.setMap(null));
-  markers = [];
-  if (activeInfoWindow) activeInfoWindow.close();
+function shortenText(text, length = 30) {
+  return text && text.length > length
+    ? text.substring(0, length) + "..."
+    : text;
+}
+
+function formatPointInfo(point) {
+  return `<small>포인트: ${point}</small>`;
+}
+
+// 요청에 대한 마커 + 정보창 생성 함수
+function createMarkerWithInfo(req) {
+  const position = new naver.maps.LatLng(req.lat, req.lng);
+  // 마커 생성
+  const marker = new naver.maps.Marker({ map, position });
+  // 마커 클릭 시 정보창
+  const infoWindow = new naver.maps.InfoWindow({
+    content: `<div style="padding: 10px; max-width: 200px;"><strong>${
+      req.title
+    }</strong><br/>${req.content}<br/><small>${
+      categoryLabelMap[req.category] || req.category
+    }</small></div>`,
+    maxWidth: 200,
+  });
+
+  // 마커 클릭 핸들러
+  naver.maps.Event.addListener(marker, "click", () => {
+    if (activeInfoWindow) activeInfoWindow.close();
+    infoWindow.open(map, marker);
+    activeInfoWindow = infoWindow;
+    map.panTo(marker.getPosition());
+  });
+
+  // markers 배열에 저장할 객체 반환
+  return { id: req.id, marker, infoWindow };
 }
 
 // 거리 계산 함수

@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 /**
- * AllowedRequestTypeRepository
+ * AllowedRequestTypeRepository (ALL DONE)
  * - 허용된 요청 타입 관리 전용 Repository
  * - Place와의 관계는 유지하지만 독립적으로 관리
  */
@@ -47,17 +47,8 @@ public interface AllowedRequestTypeRepository extends JpaRepository<AllowedReque
         // ─────────────────────────────────────────────
 
         /**
-         * [2-1] 특정 장소의 특정 요청 타입 삭제 [미사용]
-         * - 사용자가 지정된 요청 타입을 제거할 경우
-         */
-        @Modifying
-        @Transactional
-        @Query("DELETE FROM AllowedRequestType art WHERE art.place.id = :placeId AND art.requestType = :requestType")
-        void deleteByPlaceIdAndRequestType(@Param("placeId") Long placeId,
-                        @Param("requestType") RequestCategory requestType);
-
-        /**
-         * [2-2] 특정 장소의 모든 요청 타입 삭제 (장소 삭제 시) [미사용]
+         * [2-1] 특정 장소의 모든 요청 타입 삭제 (장소 삭제 시)
+         * PlaceService: updatePlace
          * - 장소 삭제 또는 전체 타입 초기화 용도
          */
         @Modifying

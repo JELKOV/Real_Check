@@ -7,7 +7,7 @@ import java.util.Optional;
 import java.util.List;
 
 /**
- * FavoritePlaceRepository
+ * FavoritePlaceRepository (ALL DONE)
  * - 사용자의 즐겨찾기 장소 정보를 관리하는 JPA Repository
  * - 기본 CRUD 외에 사용자-장소 기반의 커스텀 쿼리 제공
  */

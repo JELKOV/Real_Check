@@ -25,7 +25,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 /**
- * PlaceController 클래스
+ * PlaceController 클래스 (ALL DONE)
  * - 장소(Place)와 관련된 요청을 처리하는 컨트롤러 클래스
  * - 사용자의 요청을 받아 PlaceService를 통해 비즈니스 로직을 처리
  */

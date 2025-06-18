@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
 /**
- * PageController
+ * PageController (ALL DONE)
  * - 단순 JSP 페이지 이동을 담당하는 컨트롤러
  */
 @Controller

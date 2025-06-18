@@ -26,35 +26,6 @@ const categoryLabelMap = {
   ETC: "❓ 기타",
 };
 
-// 공통 유틸: 입력 필드 값 변환 (boolean, number 등)
-function parseFieldValue(input) {
-  const val = input.val();
-  if (val === "") return null;
-  if (input.attr("type") === "number") return parseInt(val, 10);
-  if (val === "true" || val === "false") return val === "true";
-  return val;
-}
-
-// 공통 유틸: 이미지 삭제 버튼 처리
-function handleImageRemoveBtn(e) {
-  const $btn = $(e.target);
-  const $wrapper = $btn.closest(".position-relative");
-  const url = $wrapper.find("img").data("url");
-
-  // 배열에서도 삭제 (등록용 이미지 미리보기일 때만)
-  uploadedImageUrls = uploadedImageUrls.filter((item) => item !== url);
-
-  $wrapper.remove();
-}
-
-// 공통 유틸: 이미지 미리보기 모달 열기
-function handleImagePreviewModal() {
-  const imageUrl = $(this).data("url");
-  $("#modalImage").attr("src", imageUrl);
-  const modal = new bootstrap.Modal(document.getElementById("imageModal"));
-  modal.show();
-}
-
 // ─────────────────────────────────────────────────────────────
 // [1] 문서 준비 및 이벤트 바인딩
 // ─────────────────────────────────────────────────────────────
@@ -998,4 +969,33 @@ function submitAnswer(e) {
       },
     });
   });
+}
+
+// 공통 유틸: 입력 필드 값 변환 (boolean, number 등)
+function parseFieldValue(input) {
+  const val = input.val();
+  if (val === "") return null;
+  if (input.attr("type") === "number") return parseInt(val, 10);
+  if (val === "true" || val === "false") return val === "true";
+  return val;
+}
+
+// 공통 유틸: 이미지 삭제 버튼 처리
+function handleImageRemoveBtn(e) {
+  const $btn = $(e.target);
+  const $wrapper = $btn.closest(".position-relative");
+  const url = $wrapper.find("img").data("url");
+
+  // 배열에서도 삭제 (등록용 이미지 미리보기일 때만)
+  uploadedImageUrls = uploadedImageUrls.filter((item) => item !== url);
+
+  $wrapper.remove();
+}
+
+// 공통 유틸: 이미지 미리보기 모달 열기
+function handleImagePreviewModal() {
+  const imageUrl = $(this).data("url");
+  $("#modalImage").attr("src", imageUrl);
+  const modal = new bootstrap.Modal(document.getElementById("imageModal"));
+  modal.show();
 }

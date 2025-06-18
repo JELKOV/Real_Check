@@ -17,39 +17,49 @@ const categoryLabelMap = {
   ETC: "기타",
 };
 
+// [1] 초기 진입
 $(document).ready(function () {
-  initializeCategoryFilter();
-  bindEventListeners();
-  loadRequestList();
+  initMyRequestPage();
 });
 
-// [1] 이벤트 리스너 바인딩
-function bindEventListeners() {
-  // 검색 버튼
-  $("#filterBtn").click(function () {
-    currentPage = 0;
-    loadRequestList();
-  });
-
-  // 상세보기
-  $(document).on("click", ".view-detail", function (e) {
-    e.preventDefault();
-    const id = $(this).data("id");
-    window.location.href = `/request/${id}`;
-  });
-
-  // 페이지네이션 클릭
-  $(document).on("click", ".page-link", function (e) {
-    e.preventDefault();
-    const page = $(this).data("page");
-    if (page !== undefined && page !== currentPage) {
-      currentPage = page;
-      loadRequestList();
-    }
-  });
+// [1-1] 초기화 통합 함수
+function initMyRequestPage() {
+  bindEventListeners();
+  initializeCategoryFilter();
+  loadRequestList();
 }
 
-// [2] 요청 목록 불러오기
+// [2] 이벤트 리스너 바인딩
+function bindEventListeners() {
+  $("#filterBtn").click(handleFilterClick);
+  $(document).on("click", ".view-detail", handleViewDetailClick);
+  $(document).on("click", ".page-link", handlePageClick);
+}
+
+// 검색 버튼
+function handleFilterClick() {
+  currentPage = 0;
+  loadRequestList();
+}
+
+// 상세보기
+function handleViewDetailClick(e) {
+  e.preventDefault();
+  const id = $(this).data("id");
+  location.href = `/request/${id}`;
+}
+
+// 페이지네이션 클릭
+function handlePageClick(e) {
+  e.preventDefault();
+  const page = $(this).data("page");
+  if (page !== undefined && page !== currentPage) {
+    currentPage = page;
+    loadRequestList();
+  }
+}
+
+// [3] 요청 목록 불러오기
 function loadRequestList() {
   const category = $("#categoryFilter").val();
   const keyword = $("#searchKeyword").val();
@@ -63,9 +73,7 @@ function loadRequestList() {
     const { content, totalPages } = resp;
 
     if (!content || content.length === 0) {
-      $("#requestTableContainer").html(`
-        <div class="alert alert-secondary">등록한 요청이 없습니다.</div>
-      `);
+      showEmptyRequestMessage();
       return;
     }
 
@@ -77,7 +85,14 @@ function loadRequestList() {
   });
 }
 
-// [3] 요청 테이블 생성
+// [3-1] 응답 없을때 처리 함수
+function showEmptyRequestMessage() {
+  $("#requestTableContainer").html(`
+    <div class="alert alert-secondary">등록한 요청이 없습니다.</div>
+  `);
+}
+
+// [4] 요청 테이블 생성
 function generateRequestTable(data) {
   let html = `
     <table class="table table-bordered align-middle text-center">
@@ -103,22 +118,16 @@ function generateRequestTable(data) {
   return html;
 }
 
-// [4] 개별 행 생성
+// [5] 개별 행 생성
 function generateRequestRow(req) {
   const status = req.closed ? "✅ 마감됨" : "🟢 진행 중";
   const alertText =
     !req.closed && req.answerCount === 3
       ? `<div class='text-info small'>⚠️ 채택 필요</div>`
       : "";
-  const formattedDate = new Date(req.createdAt).toLocaleString();
-  let pointDisplay = `🪙 ${req.point} 포인트`;
-
-  if (!req.closed) {
-    pointDisplay += `<div class="text-secondary small">(예치 중)</div>`;
-  } else if (req.refundProcessed) {
-    pointDisplay += `<div class="text-success small">(환불됨)</div>`;
-  }
   const categoryLabel = categoryLabelMap[req.category] || req.category;
+  const formattedDate = formatDate(req.createdAt);
+  const pointDisplay = formatPoint(req);
 
   return `
     <tr>
@@ -135,7 +144,23 @@ function generateRequestRow(req) {
   `;
 }
 
-// [5] 페이지네이션 렌더링
+// [5-1] 날짜 보조 함수
+function formatDate(dateStr) {
+  return new Date(dateStr).toLocaleString();
+}
+
+// [5-2] 포인트 보조 함수
+function formatPoint(req) {
+  let point = `🪙 ${req.point} 포인트`;
+  if (!req.closed) {
+    point += `<div class="text-secondary small">(예치 중)</div>`;
+  } else if (req.refundProcessed) {
+    point += `<div class="text-success small">(환불됨)</div>`;
+  }
+  return point;
+}
+
+// [6] 페이지네이션 렌더링
 function generatePagination(totalPages, currentPage) {
   if (totalPages <= 1) return "";
 
@@ -151,7 +176,7 @@ function generatePagination(totalPages, currentPage) {
   return html;
 }
 
-// [6] 카테고리 필터 옵션 로딩 (라벨 적용)
+// [7] 카테고리 필터 옵션 로딩 (라벨 적용)
 function initializeCategoryFilter() {
   $.get("/api/request/categories", function (categories) {
     let options = `<option value="">전체 카테고리</option>`;

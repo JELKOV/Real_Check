@@ -27,7 +27,7 @@ import com.realcheck.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 
 /**
- * PlaceService 클래스
+ * PlaceService 클래스 (ALL DONE)
  * - 장소(Place) 관련 비즈니스 로직을 담당하는 서비스 계층
  * - 컨트롤러로부터 요청을 받아 실제 동작을 처리하고, DB 작업은 Repository에 위임함
  */
