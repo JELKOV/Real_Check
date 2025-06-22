@@ -1,20 +1,69 @@
-.map-container {
-  width: 100%;
-  height: 700px;
-  margin-bottom: 20px;
+/* ─────────────────────────────────────────── */
+/* 📌 지도 스타일 및 반응형 대응              */
+/* ─────────────────────────────────────────── */
+
+#mainMap {
+  height: 100vh; /* 화면 높이 전체 사용 */
+  border-radius: 10px;
   border: 1px solid #ccc;
-  border-radius: 8px;
-  overflow: hidden;
+  position: sticky; /* 고정 위치 */
+  top: 40px; /* 헤더 밑으로 살짝 여유 */
+  z-index: 1;
 }
 
+@media (min-width: 768px) {
+  #mainMap {
+    position: sticky;
+    top: 40px;
+    height: 85vh;
+    max-height: 800px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  #requestForm {
+    margin-top: 40px; /* 지도와 맞추기 위해 동일한 top 값 부여 */
+  }
+}
+
+@media (max-width: 767px) {
+  #mainMap {
+    position: relative;
+    height: 300px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+  }
+
+  #requestForm {
+    margin-top: 20px;
+  }
+}
+
+/* ─────────────────────────────────────────── */
+/* 📌 장소 검색 결과 리스트                    */
+/* ─────────────────────────────────────────── */
 #placeSearchResults {
   max-height: 200px;
   overflow-y: auto;
+  background-color: #fff;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #dee2e6;
 }
 
 .place-item {
   cursor: pointer;
+  padding: 10px 12px;
   transition: background-color 0.3s;
+  border-bottom: 1px solid #f1f1f1;
+}
+
+.place-item:hover {
+  background-color: #f2f8ff;
+}
+
+.place-item:last-child {
+  border-bottom: none;
 }
 
 .place-item.selected {
@@ -23,42 +72,48 @@
   border-left: 4px solid #007bff;
 }
 
+/* ─────────────────────────────────────────── */
+/* 📌 요청 폼 영역                             */
+/* ─────────────────────────────────────────── */
+/* 중앙 정렬 제거: 오른쪽 칼럼에 배치됨 */
 #requestForm {
-  max-width: 700px;
-  margin: 0 auto;
+  padding: 0 10px;
 }
 
-#infoLink:hover {
-  background-color: #0dcaf0;
-  color: white;
-  transition: 0.2s ease-in-out;
-  text-decoration: none;
+/* ───────── 카드형 입력 구역 ───────── */
+.form-section-card {
+  background-color: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
+  margin-bottom: 1.5rem;
+  scroll-margin-top: 90px;
+  transition: all 0.3s ease;
 }
 
-/* Hover 시 파란색 배경 제거 (Bootstrap 기본 버튼) */
-.btn-primary:hover {
-  background-color: #000000 !important;
-  color: #ebf3f8 !important;
-  border-color: #2a00fd !important;
-  transform: scale(1.05);
-  transition: transform 0.2s ease, background-color 0.2s ease;
+.form-section-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
-.btn-outline-primary:hover {
-  background-color: #ffffff !important;
-  color: #050506 !important;
-  border-color: #2a00fd !important;
-  transform: scale(1.05);
-  transition: transform 0.2s ease, background-color 0.2s ease;
+.form-section-card h5 {
+  font-weight: 600;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #dee2e6;
+  padding-bottom: 0.5rem;
 }
 
+/* ─────────────────────────────────────────── */
+/* 📌 선택된 장소 스타일                       */
+/* ─────────────────────────────────────────── */
 .selected-place-input {
   transition: box-shadow 0.3s, background-color 0.3s;
 }
 
 .selected-place-input.selected {
-  box-shadow: 0 0 5px 2px #0454aa;
-  background-color: #ffffff;
+  border: 2px solid #0d6efd;
+  background-color: #e9f3ff;
+  font-weight: 600;
+  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
 }
 
 .selected-marker {
@@ -70,6 +125,9 @@
   color: #007bff;
 }
 
+/* ─────────────────────────────────────────── */
+/* 📌 공식 장소 정보 카드                      */
+/* ─────────────────────────────────────────── */
 .info-card {
   background-color: #f8f9fa;
   border: 2px solid #007bff;
@@ -94,14 +152,39 @@
   margin-bottom: 8px;
 }
 
-.info-link {
-  display: inline-block;
-  margin-top: 10px;
-  font-weight: bold;
+#infoLink {
+  font-weight: 500;
+  border: 1px solid #0d6efd;
+}
+
+#infoLink:hover {
+  background-color: #0dcaf0;
+  color: white;
+  transition: 0.2s ease-in-out;
   text-decoration: none;
-  color: #080808;
-  background-color: #dfe2e6;
-  padding: 8px 12px;
-  border-radius: 8px;
-  transition: background-color 0.3s;
+}
+
+/* ─────────────────────────────────────────── */
+/* 📌 버튼 hover 효과 개선                     */
+/* ─────────────────────────────────────────── */
+.btn-primary:hover {
+  background-color: #000000 !important;
+  color: #ebf3f8 !important;
+  border-color: #2a00fd !important;
+  transform: scale(1.05);
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.btn-outline-primary:hover {
+  background-color: #ffffff !important;
+  color: #050506 !important;
+  border-color: #2a00fd !important;
+  transform: scale(1.05);
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.btn-group .btn.active {
+  background-color: #0d6efd !important;
+  color: white !important;
+  border-color: #0d6efd !important;
 }

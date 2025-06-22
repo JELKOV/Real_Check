@@ -32,7 +32,7 @@ public class AutoCloseRequestService {
         LocalDateTime threshold = LocalDateTime.now().minusHours(3);
         List<Request> openRequests = requestService.findOpenRequestsWithAnswers(threshold);
 
-        // [디버깅용 로그 추가]
+        // [디버깅용 로그]
         System.out.println("[AutoClose] " + LocalDateTime.now() +
                 " - 자동 마감 대상 요청 수: " + openRequests.size());
 

@@ -197,7 +197,7 @@ public class StatusLogService {
         } catch (RedisConnectionFailureException e) {
             // Redis 연결 실패 시 예외 발생 → 조회수 증가 허용
             // allowIncrease = true;
-            System.out.println("[⚠️ Redis 실패] 조회 제한 없이 조회수 증가 허용 (logId=" + logId + ", userId=" + userId
+            System.out.println("[Redis 실패] 조회 제한 없이 조회수 증가 허용 (logId=" + logId + ", userId=" + userId
                     + " allowIncrease=" + allowIncrease + ")");
         }
 
