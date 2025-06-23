@@ -1,20 +1,75 @@
-.sticky-container {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  background-color: white;
-  padding-bottom: 10px;
+/* 1. 요청 목록 영역 스크롤 가능하도록 설정 */
+#requestListContainer {
+  height: 85vh;
+  overflow-y: auto;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 10px;
 }
 
-.map-area {
+/* 2. 지도 영역 고정 크기 */
+#map {
   width: 100%;
-  height: 500px;
+  height: 85vh;
+  min-height: 600px;
   border: 1px solid #ccc;
   position: relative;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 3. 버튼 위치 조정 */
+.map-control-button {
+  position: absolute;
+  z-index: 1000;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.1);
+  font-size: 20px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+#myLocationButton {
+  bottom: 80px;
+  right: 10px;
+}
+
+#refreshNearbyButton {
+  bottom: 30px;
+  right: 10px;
 }
 
 .filter-area select {
   margin-bottom: 10px;
+}
+
+.map-control-button:hover {
+  background-color: #0dcaf0;
+}
+
+.request-card {
+  min-height: auto;
+  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease;
+}
+
+.request-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+.scrollable-list {
+  overflow-y: auto;
+  background-color: #fff;
 }
 
 /* 모달 스타일 */
@@ -30,4 +85,41 @@
 /* 로딩 인디케이터 기본적으로 숨김 */
 #loadingIndicator {
   display: none;
+}
+
+/* 5. 반응형 보완 (768px 이하일 때 1단으로 전환) */
+@media (max-width: 768px) {
+  #map,
+  #requestListContainer {
+    height: 400px;
+  }
+}
+
+/* 반응형 대응 */
+@media (max-width: 576px) {
+  .map-control-button {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+    right: 8px;
+  }
+
+  #myLocationButton {
+    bottom: 70px;
+  }
+
+  #refreshNearbyButton {
+    bottom: 24px;
+  }
+
+  .map-filter-group {
+    top: 8px;
+    left: 8px;
+    padding: 4px 6px;
+  }
+
+  .map-filter-group .btn {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.75rem;
+  }
 }

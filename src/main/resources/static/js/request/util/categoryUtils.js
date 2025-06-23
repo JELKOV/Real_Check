@@ -1,6 +1,9 @@
 /**
  * 사용하는 곳
  * - request/register.js
+ * - 1, 2, 3, 4
+ * - request/lists.js
+ * - 5
  */
 
 // 기본 카테고리 설정
@@ -88,4 +91,27 @@ export function applyPlaceholdersForCategory(category) {
     "placeholder",
     contentPlaceholderMap[category] || "요청 내용을 입력하세요"
   );
+}
+
+
+// 기본 카테고리 뱃지지
+const categoryLabelMap = {
+  PARKING: "🅿️ 주차",
+  WAITING_STATUS: "⏳ 대기",
+  STREET_VENDOR: "🥟 노점",
+  PHOTO_REQUEST: "📸 사진",
+  BUSINESS_STATUS: "🏪 영업",
+  OPEN_SEAT: "💺 좌석",
+  BATHROOM: "🚻 화장실",
+  WEATHER_LOCAL: "☁️ 날씨",
+  NOISE_LEVEL: "🔊 소음",
+  FOOD_MENU: "🍔 메뉴",
+  CROWD_LEVEL: "👥 혼잡",
+  ETC: "❓ 기타",
+};
+
+
+// [5] 카테고리 코드에 해당하는 라벨 반환
+export function getCategoryLabel(code) {
+  return categoryLabelMap[code] || code;
 }

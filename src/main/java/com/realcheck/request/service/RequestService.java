@@ -177,7 +177,8 @@ public class RequestService {
      */
     public List<RequestDto> findOpenRequests(int page, int size, double lat, double lng, double radius,
             String category) {
-        Pageable pageable = PageRequest.of(page - 1, size);
+        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt").and(Sort.by(Sort.Direction.DESC, "id"));
+        Pageable pageable = PageRequest.of(page - 1, size, sort);
         LocalDateTime threshold = LocalDateTime.now().minusHours(3);
         RequestCategory categoryEnum = parseCategory(category);
 

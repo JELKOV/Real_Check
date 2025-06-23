@@ -1,15 +1,13 @@
 /**
  * 사용하는 곳
  * - request/register.js
+ * - 1 ,2 ,3, 4
+ * - request/lists.js
+ * - 5
  */
 
-// [0] 전역 변수 설정
-let mainMap;
-let mainMarker = null;
-// 사용자 지정 장소 마커
-let customMarker = null;
-
 // [1] 지도 초기화
+let mainMap;
 export function initializeMap() {
   mainMap = new naver.maps.Map("mainMap", {
     center: new naver.maps.LatLng(37.5665, 126.978),
@@ -66,9 +64,31 @@ export function resetSelectedPlace(isCustom = false) {
   $("#infoSection").hide();
 }
 
+// [5] 반경 원 표시
+let radiusCircle = null;
+
+export function drawRadiusCircle(map, center, radius) {
+  if (radiusCircle) radiusCircle.setMap(null);
+  radiusCircle = new naver.maps.Circle({
+    map,
+    center,
+    radius,
+    strokeColor: "#007BFF",
+    strokeOpacity: 0.6,
+    strokeWeight: 2,
+    fillColor: "#007BFF",
+    fillOpacity: 0.15,
+  });
+}
+
 // ─────────────────────────────────────────────────────────────
 // 내부 함수
 // ─────────────────────────────────────────────────────────────
+
+// 장소 마커
+let mainMarker = null;
+// 사용자 지정 장소 마커
+let customMarker = null;
 
 // [1] 마커 생성/갱신 공통 함수
 function createOrUpdateMarker(type, lat, lng) {

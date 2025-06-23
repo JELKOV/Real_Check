@@ -24,7 +24,7 @@
           href="/place/my"
           class="text-white mx-2 text-decoration-none fs-6 hover-glow"
         >
-          📍 내 장소 관리
+          내 장소 관리
         </a>
       </c:if>
       <c:choose>

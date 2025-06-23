@@ -1,27 +1,14 @@
+import { shortenText, formatPointInfo } from "./util/commonUtils.js";
+import { drawRadiusCircle } from "./util/mapUtils.js";
+import { getCategoryLabel } from "./util/categoryUtils.js";
+
 let map;
 let markers = [];
-let radiusCircle = null;
 let currentPage = 1;
 let isLoading = false;
 let hasMore = true;
 let searchCenter = null;
 let activeInfoWindow = null;
-
-// 카테고리 라벨 매핑
-const categoryLabelMap = {
-  PARKING: "🅿️ 주차",
-  WAITING_STATUS: "⏳ 대기",
-  STREET_VENDOR: "🥟 노점",
-  PHOTO_REQUEST: "📸 사진",
-  BUSINESS_STATUS: "🏪 영업",
-  OPEN_SEAT: "💺 좌석",
-  BATHROOM: "🚻 화장실",
-  WEATHER_LOCAL: "☁️ 날씨",
-  NOISE_LEVEL: "🔊 소음",
-  FOOD_MENU: "🍔 메뉴",
-  CROWD_LEVEL: "👥 혼잡",
-  ETC: "❓ 기타",
-};
 
 // 초기화
 $(document).ready(function () {
@@ -62,19 +49,32 @@ function bindUIEvents() {
   $("#searchLocationBtn").on("click", searchLocation);
 
   // 위치 검색 입력창에서 Enter 키 입력 시 검색 실행
-  $("#locationInput").on(
-    "keydown",
-    (e) => e.key === "Enter" && searchLocation()
-  );
+  $("#locationInput").on("keyup", (e) => e.key === "Enter" && searchLocation());
 
   // 무한 스크롤 이벤트
   // 스크롤이 페이지 하단에 근접하면 다음 페이지 요청 자동 로드
-  $(window).on("scroll", function () {
-    const nearBottom =
-      $(window).scrollTop() + $(window).height() >= $(document).height() - 100;
+  $("#requestListContainer").on("scroll", function () {
+    const $this = $(this);
+    const scrollTop = $this.scrollTop();
+    const scrollHeight = $this[0].scrollHeight;
+    const clientHeight = $this.outerHeight();
+
+    const nearBottom = scrollTop + clientHeight >= scrollHeight - 150;
+
+    // console.log("스크롤 이벤트 확인", {
+    //   scrollTop,
+    //   scrollHeight,
+    //   clientHeight,
+    //   nearBottom,
+    //   isLoading,
+    //   hasMore,
+    //   currentPage,
+    // });
 
     if (nearBottom && !isLoading && hasMore) {
-      loadRequests(); // 다음 페이지 요청
+      // console.log("무한스크롤 조건 만족 → loadRequests 호출");
+      isLoading = true;
+      loadRequests();
     }
   });
 }
@@ -90,7 +90,7 @@ function moveToCurrentLocation() {
       pos.coords.longitude
     );
     map.setCenter(latlng);
-    drawRadiusCircle(latlng, parseInt($("#radiusFilter").val()));
+    drawRadiusCircle(map, latlng, parseInt($("#radiusFilter").val()));
     resetAndLoad();
   });
 }
@@ -104,6 +104,8 @@ function resetAndLoad() {
   hasMore = true;
   clearMarkers();
   loadRequests();
+
+  $("#endOfListMessage").hide();
 }
 
 // 마커 초기화
@@ -198,66 +200,93 @@ function searchByRoadAddress(roadAddress) {
 
 // 요청 로드 (무한 스크롤 + 지도 이동)
 function loadRequests() {
-  if (isLoading) return;
-  isLoading = true;
+  // console.log("loadRequests() 실행 - currentPage:", currentPage);
+
   $("#loadingIndicator").show();
 
-  // 필터 파라미터 설정
   const category = $("#categoryFilter").val() || null;
   const radius = parseInt($("#radiusFilter").val(), 10);
   const centerLat = searchCenter.lat();
   const centerLng = searchCenter.lng();
 
-  drawRadiusCircle(searchCenter, radius);
+  drawRadiusCircle(map, searchCenter, radius);
 
-  // API 호출하여 요청 목록 로드
+  const pageSize = currentPage === 1 ? 10 : 5;
+
   $.get(
     "/api/request/open",
     {
       page: currentPage,
-      size: 10,
+      size: pageSize,
       lat: centerLat,
       lng: centerLng,
       radius: radius,
       category: category,
     },
     function (data) {
+      // console.log("서버 응답 데이터:", data);
+
       if (currentPage === 1) {
         clearMarkers();
         $("#requestList").empty();
+        $("#endOfListMessage").hide();
       }
+
+      // console.log(
+      //   "현재 페이지:",
+      //   currentPage,
+      //   "받은 개수:",
+      //   data.length,
+      //   "hasMore:",
+      //   hasMore
+      // );
 
       renderRequests(data);
       currentPage++;
 
-      hasMore = data.length === 10;
+      hasMore = data.length === pageSize;
+
+      if (!hasMore) {
+        $("#endOfListMessage").show();
+      }
+      // console.log(`페이지 ${currentPage - 1} 완료. hasMore: ${hasMore}`);
+    }
+  )
+    .fail((err) => {
+      // console.error("요청 실패", err);
+    })
+    .always(() => {
       isLoading = false;
       $("#loadingIndicator").hide();
-    }
-  ).fail(() => {
-    isLoading = false;
-    $("#loadingIndicator").hide();
-    alert("요청 로드 중 오류");
-  });
+    });
 }
 
 // 요청 목록 렌더링
 function renderRequests(data) {
   const container = $("#requestList");
 
-  data.forEach(function (req) {
-    if ($(`[data-request-id="${req.id}"]`).length > 0) return;
+  // console.log("카드 렌더링 시작, 현재 목록 길이:", container.children().length);
+
+  data.forEach(function (req, i) {
+    if ($(`[data-request-id="${req.id}"]`).length > 0) {
+      // console.log(`중복 요청(${req.id}) 생략`);
+      return;
+    }
+
+    // console.log(`${i + 1}. 요청 추가 → ${req.title} (ID: ${req.id})`);
 
     // 카드 HTML 생성 후 추가
     const cardHtml = generateRequestCard(req);
     container.append(cardHtml);
 
-    // 지도 마커 생성 및 저장
+    // 지도 마커 생성
     if (req.lat && req.lng) {
       const markerInfo = createMarkerWithInfo(req);
       markers.push(markerInfo);
     }
   });
+
+  // console.log("렌더링 완료, 총 카드 수:", container.children().length);
 
   // 카드 클릭 시 마커 이동
   $(".request-card")
@@ -278,9 +307,9 @@ function renderRequests(data) {
 function generateRequestCard(req) {
   // 카테고리 뱃지 HTML
   const badge = req.category
-    ? `<span class="badge bg-secondary mb-2">${
-        categoryLabelMap[req.category] || req.category
-      }</span>`
+    ? `<span class="badge bg-secondary mb-2">${getCategoryLabel(
+        req.category
+      )}</span>`
     : "";
 
   // 요청 정보 카드 템플릿
@@ -302,16 +331,6 @@ function generateRequestCard(req) {
     </div>`;
 }
 
-function shortenText(text, length = 30) {
-  return text && text.length > length
-    ? text.substring(0, length) + "..."
-    : text;
-}
-
-function formatPointInfo(point) {
-  return `<small>포인트: ${point}</small>`;
-}
-
 // 요청에 대한 마커 + 정보창 생성 함수
 function createMarkerWithInfo(req) {
   const position = new naver.maps.LatLng(req.lat, req.lng);
@@ -321,9 +340,9 @@ function createMarkerWithInfo(req) {
   const infoWindow = new naver.maps.InfoWindow({
     content: `<div style="padding: 10px; max-width: 200px;"><strong>${
       req.title
-    }</strong><br/>${req.content}<br/><small>${
-      categoryLabelMap[req.category] || req.category
-    }</small></div>`,
+    }</strong><br/>${req.content}<br/><small>${getCategoryLabel(
+      req.category
+    )}</small></div>`,
     maxWidth: 200,
   });
 
@@ -337,31 +356,4 @@ function createMarkerWithInfo(req) {
 
   // markers 배열에 저장할 객체 반환
   return { id: req.id, marker, infoWindow };
-}
-
-// 거리 계산 함수
-function getDistance(lat1, lng1, lat2, lng2) {
-  const R = 6371e3;
-  const toRad = (deg) => deg * (Math.PI / 180);
-  const dLat = toRad(lat2 - lat1);
-  const dLng = toRad(lng2 - lng1);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
-  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
-}
-
-// 반경 원 그리기
-function drawRadiusCircle(center, radius) {
-  if (radiusCircle) radiusCircle.setMap(null);
-  radiusCircle = new naver.maps.Circle({
-    map: map,
-    center: center,
-    radius: radius,
-    strokeColor: "#007BFF",
-    strokeOpacity: 0.6,
-    strokeWeight: 2,
-    fillColor: "#007BFF",
-    fillOpacity: 0.15,
-  });
 }
