@@ -1,4 +1,7 @@
-/* 1. 요청 목록 영역 스크롤 가능하도록 설정 */
+/* ─────────────────────────────────────────────
+ * [1] 요청 목록 컨테이너 (오른쪽) - 내부 스크롤
+ * 높이 고정하여 지도 영역과 높이 맞춤
+ * ───────────────────────────────────────────── */
 #requestListContainer {
   height: 85vh;
   overflow-y: auto;
@@ -7,7 +10,9 @@
   border-radius: 10px;
 }
 
-/* 2. 지도 영역 고정 크기 */
+/* ─────────────────────────────────────────────
+ * [2] 지도 영역 (왼쪽) - 고정 높이 및 스타일
+ * ───────────────────────────────────────────── */
 #map {
   width: 100%;
   height: 85vh;
@@ -18,7 +23,9 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* 3. 버튼 위치 조정 */
+/* ─────────────────────────────────────────────
+ * [3] 지도 위 제어 버튼 스타일 - 공통
+ * ───────────────────────────────────────────── */
 .map-control-button {
   position: absolute;
   z-index: 1000;
@@ -36,24 +43,32 @@
   transition: background-color 0.2s ease;
 }
 
+/* 버튼 hover 효과 */
+.map-control-button:hover {
+  background-color: #0dcaf0;
+}
+
+/* 지도 위 버튼 위치 설정 */
 #myLocationButton {
   bottom: 80px;
   right: 10px;
 }
-
 #refreshNearbyButton {
   bottom: 30px;
   right: 10px;
 }
 
+/* ─────────────────────────────────────────────
+ * [4] 필터 select 요소 간격
+ * ───────────────────────────────────────────── */
 .filter-area select {
   margin-bottom: 10px;
 }
 
-.map-control-button:hover {
-  background-color: #0dcaf0;
-}
-
+/* ─────────────────────────────────────────────
+ * [5] 요청 카드 개별 스타일
+ * min-height를 auto로 설정 (내용에 따라 유동적)
+ * ───────────────────────────────────────────── */
 .request-card {
   min-height: auto;
   margin-bottom: 8px;
@@ -63,31 +78,38 @@
   cursor: pointer;
   transition: box-shadow 0.2s ease;
 }
-
 .request-card:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
+
+/* 요청 리스트 내부 스크롤 공통 클래스 */
 .scrollable-list {
   overflow-y: auto;
   background-color: #fff;
 }
 
-/* 모달 스타일 */
+/* ─────────────────────────────────────────────
+ * [6] 위치 검색 결과 모달 스타일
+ * ───────────────────────────────────────────── */
 #searchResultModal .modal-body {
   max-height: 400px;
   overflow-y: auto;
 }
-
 .modal .list-group-item {
   cursor: pointer;
 }
 
-/* 로딩 인디케이터 기본적으로 숨김 */
+/* ─────────────────────────────────────────────
+ * [7] 로딩 인디케이터 - 기본 숨김
+ * ───────────────────────────────────────────── */
 #loadingIndicator {
   display: none;
 }
 
-/* 5. 반응형 보완 (768px 이하일 때 1단으로 전환) */
+/* ─────────────────────────────────────────────
+ * [8] 반응형 레이아웃 (태블릿 이하)
+ * 지도 + 요청 목록 높이 축소
+ * ───────────────────────────────────────────── */
 @media (max-width: 768px) {
   #map,
   #requestListContainer {
@@ -95,7 +117,10 @@
   }
 }
 
-/* 반응형 대응 */
+/* ─────────────────────────────────────────────
+ * [9] 반응형 레이아웃 (모바일 이하)
+ * 버튼 및 필터 그룹 크기 축소
+ * ───────────────────────────────────────────── */
 @media (max-width: 576px) {
   .map-control-button {
     width: 36px;

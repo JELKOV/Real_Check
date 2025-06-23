@@ -1,30 +1,44 @@
-// TODO: 수정 모드시 UI 겹침 제거 (edit-delete-buttons 비활성화 방식 개선)
+// 카테고리 관련 import
+import { getCategoryLabel } from "./util/categoryUtils.js";
+
+// 이미지 관련 import
+import {
+  handleImageFileChange,
+  renderImagePreview,
+  handleImageRemoveBtn,
+  handleImagePreviewModal,
+} from "./util/imageUtils.js";
+
+// 신고 관련 import
+import {
+  updateReportButton,
+  handleReportToggle,
+  handleSubmitReportReason,
+} from "./util/reportUtils.js";
+
+// 파싱함수 import
+import { parseFieldValue } from "../util/common.js";
+
+// 폼 관련련 import
+import {
+  renderAnswerFields,
+  renderExtraAnswerFields,
+  manageAnswerFormVisibility,
+} from "./util/formUtils.js";
+
+// 지도 렌더링
+import { renderMap } from "./util/mapUtils.js";
 
 // ─────────────────────────────────────────────────────────────
 // [0] 전역 변수 및 유틸 함수
 // ─────────────────────────────────────────────────────────────
 let loginUserIdNum = null;
 let requestId = null;
+let editingId = null;
 let uploadedImageUrls = [];
 let requestLat = null;
 let requestLng = null;
 let placeId = null;
-
-// 카테고리 코드 → 라벨 매핑 (배지 및 필터용)
-const categoryLabelMap = {
-  PARKING: "🅿️ 주차 가능 여부",
-  WAITING_STATUS: "⏳ 대기 상태",
-  STREET_VENDOR: "🥟 노점 현황",
-  PHOTO_REQUEST: "📸 사진 요청",
-  BUSINESS_STATUS: "🏪 가게 영업 여부",
-  OPEN_SEAT: "💺 좌석 여유",
-  BATHROOM: "🚻 화장실 여부",
-  WEATHER_LOCAL: "☁️ 날씨 상태",
-  NOISE_LEVEL: "🔊 소음 여부",
-  FOOD_MENU: "🍔 메뉴/음식",
-  CROWD_LEVEL: "👥 혼잡도",
-  ETC: "❓ 기타",
-};
 
 // ─────────────────────────────────────────────────────────────
 // [1] 문서 준비 및 이벤트 바인딩
@@ -55,8 +69,15 @@ function bindEventListeners() {
 
   // 답변 등록 처리
   $("#answerForm").on("submit", submitAnswer);
+
   // 사진 올리기 (파일선택) 클릭
-  $(document).on("change", "#fileInput", handleImageFileChange);
+  $(document).on("change", "#fileInput", (e) => {
+    handleImageFileChange(e, uploadedImageUrls, () => {
+      // 이미지 미리보기 처리
+      renderImagePreview("#uploadedPreview", uploadedImageUrls);
+    });
+  });
+
   // 수정용 이미지 업로드 핸들러
   $(document).on("change", ".edit-file-input", handleEditImageUpload);
 
@@ -79,16 +100,27 @@ function bindEventListeners() {
   //(4) 신고 관련
 
   // 신고 버튼 클릭 (toggle 방식으로 대체)
-  $(document).on("click", ".report-toggle-btn", handleReportToggle);
+  $(document).on("click", ".report-toggle-btn", function () {
+    handleReportToggle.call(this, loadAnswerList, requestId);
+  });
+
   // 신고 사유 선택 후 전송 버튼 클릭
-  $(document).on("click", "#submitReportBtn", handleSubmitReportReason);
+  $(document).on("click", "#submitReportBtn", function () {
+    handleSubmitReportReason(loadAnswerList, requestId);
+  });
 
   // (5) 이미지 관련
 
   // 수정 이미지 삭제 버튼 클릭 + 초기 업로드 삭제도 포함
-  $(document).on("click", ".delete-image-btn", handleImageRemoveBtn);
+  $(document).on("click", ".delete-image-btn", (e) =>
+    handleImageRemoveBtn(e, uploadedImageUrls)
+  );
   // 이미지 미리보기 (확대) 핸들러
-  $(document).on("click", ".carousel-image", handleImagePreviewModal);
+  $(document).on(
+    "click",
+    ".carousel-image, .img-thumbnail",
+    handleImagePreviewModal
+  );
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -101,10 +133,15 @@ function loadRequestDetail(requestId) {
     renderRequestDetail(request);
 
     // 답변 입력창 비활성화 조건 확인
-    manageAnswerFormVisibility(request);
+    manageAnswerFormVisibility(request, loginUserIdNum);
 
     // 지도 표시
-    renderMap(request.lat, request.lng);
+    renderMap(
+      request.lat,
+      request.lng,
+      request.title,
+      request.placeName || request.customPlaceName || ""
+    );
     renderAnswerFields(request.category);
 
     // 사용자지정 요청인 경우에만 위경도 저장
@@ -131,9 +168,9 @@ function renderRequestDetail(request) {
   const closedBadge = request.closed
     ? `<span class="badge bg-danger ms-2">🔒 마감</span>`
     : "";
-  const categoryBadge = `<span class="badge bg-primary">${
-    categoryLabelMap[request.category] || request.category
-  }</span>`;
+  const categoryBadge = `<span class="badge bg-primary">${getCategoryLabel(
+    request.category
+  )}</span>`;
 
   const html = `
     <div class="card mt-3 ${
@@ -213,146 +250,6 @@ function closeRequestManually(requestId) {
   });
 }
 
-// [2-3] 지도 표시 함수
-function renderMap(lat, lng) {
-  if (lat && lng) {
-    const map = new naver.maps.Map("map", {
-      center: new naver.maps.LatLng(lat, lng),
-      zoom: 16,
-    });
-    new naver.maps.Marker({
-      position: new naver.maps.LatLng(lat, lng),
-      map: map,
-    });
-  } else {
-    $("#map").text("위치 정보가 없습니다.");
-  }
-}
-
-// [2-4] 답변 입력창 비활성화 관리
-function manageAnswerFormVisibility(request) {
-  let disableReason = "";
-
-  if (request.closed) {
-    disableReason = "🔒 이 요청은 마감되었습니다.";
-  } else if (request.visibleAnswerCount >= 3) {
-    disableReason = "🚫 최대 답변 수(3개)에 도달했습니다.";
-  } else if (loginUserIdNum === request.requesterId) {
-    disableReason = "🙋 요청 작성자는 답변을 등록할 수 없습니다.";
-  }
-
-  if (disableReason) {
-    $("#answerFormSection").hide();
-    $("#answerFormSection").before(`
-      <div class="alert alert-warning mt-3">
-        ${disableReason}
-      </div>
-    `);
-  } else {
-    $("#answerFormSection").show();
-    $(".alert-warning").remove();
-  }
-}
-
-// [2-5] 유틸 함수: 카테고리별 동적 필드 생성
-function renderAnswerFields(category) {
-  const container = $("#dynamicAnswerFields");
-  container.empty();
-
-  const fieldMap = {
-    PARKING: {
-      label: "주차 가능 여부",
-      name: "isParkingAvailable",
-      type: "select",
-      options: [
-        { value: "true", text: "가능" },
-        { value: "false", text: "불가능" },
-      ],
-    },
-    WAITING_STATUS: {
-      label: "대기 인원",
-      name: "waitCount",
-      type: "number",
-    },
-    CROWD_LEVEL: {
-      label: "혼잡도",
-      name: "waitCount",
-      type: "number",
-    },
-    BATHROOM: {
-      label: "화장실 여부",
-      name: "hasBathroom",
-      type: "select",
-      options: [
-        { value: "true", text: "있음" },
-        { value: "false", text: "없음" },
-      ],
-    },
-    FOOD_MENU: {
-      label: "메뉴 정보",
-      name: "menuInfo",
-      type: "text",
-    },
-    WEATHER_LOCAL: {
-      label: "날씨 상태",
-      name: "weatherNote",
-      type: "text",
-    },
-    STREET_VENDOR: {
-      label: "노점 이름",
-      name: "vendorName",
-      type: "text",
-    },
-    PHOTO_REQUEST: {
-      label: "사진 요청 메모",
-      name: "photoNote",
-      type: "text",
-    },
-    NOISE_LEVEL: {
-      label: "소음 상태",
-      name: "noiseNote",
-      type: "text",
-    },
-    BUSINESS_STATUS: {
-      label: "영업 여부",
-      name: "isOpen",
-      type: "select",
-      options: [
-        { value: "true", text: "영업 중" },
-        { value: "false", text: "영업 종료" },
-      ],
-    },
-    OPEN_SEAT: {
-      label: "남은 좌석 수",
-      name: "seatCount",
-      type: "number",
-    },
-    ETC: {
-      label: "기타 메모",
-      name: "extra",
-      type: "text",
-    },
-  };
-
-  const config = fieldMap[category];
-  if (!config) return;
-
-  let fieldHtml = `<div class="mb-3"><label>${config.label}</label>`;
-  if (config.type === "select") {
-    fieldHtml += `<select class="form-select" name="${config.name}" required>`;
-    fieldHtml += `<option value="">선택하세요</option>`;
-    config.options.forEach((opt) => {
-      fieldHtml += `<option value="${opt.value}">${opt.text}</option>`;
-    });
-    fieldHtml += `</select>`;
-  } else {
-    fieldHtml += `<input type="${config.type}" class="form-control" name="${config.name}" required />`;
-  }
-  fieldHtml += `</div>`;
-
-  container.append(fieldHtml);
-}
-
 // ─────────────────────────────────────────────────────────────
 // [3] 답변 관련 기능
 // ─────────────────────────────────────────────────────────────
@@ -371,45 +268,74 @@ function loadAnswerList(requestId) {
 
     const hasSelected = answers.some((a) => a.selected);
 
-    answers
+    const visibleAnswers = answers
       .filter((answer) => !answer.hidden)
-      .sort((a, b) => (b.selected ? 1 : 0) - (a.selected ? 1 : 0))
-      .forEach((answer) => {
-        const row = generateAnswerRow(answer, hasSelected);
-        $("#answerList").append(row);
-      });
+      .sort((a, b) => (b.selected ? 1 : 0) - (a.selected ? 1 : 0));
 
-    // 신고 버튼 상태 동기화 (렌더링 후 실행)
-    answers.forEach((answer) => {
+    visibleAnswers.forEach((answer) => {
+      const row = generateAnswerRow(answer, hasSelected, false);
+      $("#answerList").append(row);
+    });
+
+    visibleAnswers.forEach((answer) => {
       const canReport =
         loginUserIdNum !== null &&
         loginUserIdNum !== answer.userId &&
         !answer.selected &&
         !answer.requestClosed;
+
       if (canReport) {
         updateReportButton(answer.id, answer.reportCount);
       }
     });
 
-    updateAutoCloseNotice(answers.length);
+    const oldestAnswer = answers.reduce((oldest, current) => {
+      return new Date(current.createdAt) < new Date(oldest.createdAt)
+        ? current
+        : oldest;
+    }, answers[0]);
+
+    updateAutoCloseNotice(answers.length, oldestAnswer?.createdAt);
   });
 }
 
 // [3-2] 답변 자동 마감 안내
-function updateAutoCloseNotice(visibleAnswerCount) {
-  if (visibleAnswerCount > 0) {
-    $("#autoCloseNotice").html(`
-      <div class="alert alert-warning mt-2">
-        ⚠️ 답변이 등록된 이후 3시간 내에 채택되지 않으면 자동 마감되고 포인트가 답변자들에게 분배됩니다.
+function updateAutoCloseNotice(visibleAnswerCount, createdAtStr) {
+  const $notice = $("#autoCloseNotice");
+  $notice.empty();
+
+  if (visibleAnswerCount === 0 || !createdAtStr) return;
+
+  const createdAt = new Date(createdAtStr);
+  if (isNaN(createdAt.getTime())) return;
+
+  const expireTime = new Date(createdAt.getTime() + 3 * 60 * 60 * 1000);
+  const now = new Date();
+  const msRemaining = expireTime - now;
+
+  if (msRemaining <= 0) {
+    $notice.html(`
+      <div class="alert alert-danger mt-3">
+        ⌛ 답변 마감 시간이 지났습니다. 포인트가 자동 분배되었을 수 있습니다.
       </div>
     `);
-  } else {
-    $("#autoCloseNotice").empty();
+    return;
   }
+
+  const totalMinutes = Math.floor(msRemaining / 60000);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  $notice.html(`
+    <div class="alert alert-warning mt-3">
+      ⏳ <strong>${hours}시간 ${minutes}분</strong> 후 이 요청이 자동 마감되며,
+      <span class="text-danger fw-bold">포인트가 답변자들에게 자동 분배</span>됩니다.
+    </div>
+  `);
 }
 
 // [3-3] 답변 행 생성 함수
-function generateAnswerRow(answer, hasSelected) {
+function generateAnswerRow(answer, hasSelected, isEditing = false) {
   const nickname = answer.nickname || "익명 사용자";
   const selectedBadge = answer.selected
     ? `<span class="badge bg-success ms-2">✅ 채택됨</span>`
@@ -421,14 +347,44 @@ function generateAnswerRow(answer, hasSelected) {
       ? `<span class="badge bg-danger ms-2">🚨 ${answer.reportCount}회 신고</span>`
       : "";
 
-  // 수정 삭제 채택 신고 버튼
-  const actionButtons = generateActionButtons(answer, hasSelected);
+  // 날짜 표시
   const formattedDate = new Date(answer.createdAt).toLocaleString("ko-KR");
 
-  // 캐러셀 생성 (imageUrls 기준)
-  const carouselId = `carousel-${answer.id}`;
-  let carouselHtml = "";
-  if (Array.isArray(answer.imageUrls) && answer.imageUrls.length > 0) {
+  // 수정 삭제 채택 신고 버튼
+  const actionButtons = generateActionButtons(answer, hasSelected, isEditing);
+
+  // 텍스트 영역: 수정 모드 여부에 따라 분기
+  const textHtml = isEditing
+    ? `<textarea class="form-control edit-answer-input" data-id="${answer.id}">${answer.content}</textarea>`
+    : `<p id="answer-text-${answer.id}">${answer.content}</p>`;
+
+  // 동적 필드
+  const extraFieldsHtml = renderExtraAnswerFields(answer, isEditing);
+
+  // 이미지 영역
+  let imageHtml = "";
+  if (isEditing) {
+    const uploaded = (answer.imageUrls || [])
+      .map(
+        (url) => `
+        <div class="position-relative d-inline-block">
+          <img src="${url}" data-old="true" data-url="${url}" class="me-2 mb-2 img-thumbnail" style="max-width:100px;" />
+          <button type="button" class="btn btn-sm btn-close position-absolute top-0 end-0 delete-image-btn"
+                  style="background-color: rgba(0,0,0,0.6); color: white;" title="삭제"></button>
+        </div>
+      `
+      )
+      .join("");
+
+    imageHtml = `
+      <label class="mt-2">이미지 수정</label>
+      <input type="file" class="form-control edit-file-input" accept="image/*" multiple />
+      <div class="edit-uploaded-preview mt-2 d-flex flex-wrap gap-2">
+        ${uploaded}
+      </div>
+    `;
+  } else if (Array.isArray(answer.imageUrls) && answer.imageUrls.length > 0) {
+    const carouselId = `carousel-${answer.id}`;
     const indicators = answer.imageUrls
       .map(
         (_, i) =>
@@ -442,12 +398,12 @@ function generateAnswerRow(answer, hasSelected) {
       .map(
         (url, i) =>
           `<div class="carousel-item ${i === 0 ? "active" : ""}">
-          <img src="${url}" class="d-block w-100 img-thumbnail carousel-image" style="max-height: 200px; object-fit: contain;" data-url="${url}" />
-        </div>`
+            <img src="${url}" class="d-block w-100 img-thumbnail carousel-image" style="max-height: 200px; object-fit: contain;" data-url="${url}" />
+          </div>`
       )
       .join("");
 
-    carouselHtml = `
+    imageHtml = `
       <div id="${carouselId}" class="carousel slide mt-2" data-bs-ride="carousel">
         <div class="carousel-indicators">${indicators}</div>
         <div class="carousel-inner">${slides}</div>
@@ -459,8 +415,7 @@ function generateAnswerRow(answer, hasSelected) {
           </button>
           <button class="carousel-control-next" type="button" data-bs-target="#${carouselId}" data-bs-slide="next">
             <span class="carousel-control-next-icon" aria-hidden="true"></span>
-          </button>
-        `
+          </button>`
             : ""
         }
       </div>
@@ -472,14 +427,15 @@ function generateAnswerRow(answer, hasSelected) {
       answer
     )}'>
       <strong>${nickname}</strong> ${selectedBadge} ${reportBadge}
-      <p id="answer-text-${answer.id}">${answer.content}</p>
+      ${textHtml}
       <div class="dynamic-fields">
-        ${renderExtraAnswerFields(answer)}
+        ${extraFieldsHtml}
+        ${imageHtml}
       </div>
-      ${carouselHtml}
       <br><small class="text-muted">${formattedDate}</small>
       ${actionButtons}
-    </li>`;
+    </li>
+  `;
 }
 
 // [3-4] 답변 채택 가능 여부 판단 함수
@@ -502,7 +458,15 @@ function canEditOrDeleteAnswer(answer) {
 }
 
 // [3-6] 수정/삭제/신고 버튼 생성 함수
-function generateActionButtons(answer, hasSelected) {
+function generateActionButtons(answer, hasSelected, isEditing = false) {
+  if (isEditing) {
+    return `
+      <div class="save-cancel-buttons mt-2 d-flex gap-2">
+        <button class="btn btn-primary save-edit-btn" data-id="${answer.id}">저장</button>
+        <button class="btn btn-secondary cancel-edit-btn" data-id="${answer.id}">취소</button>
+      </div>
+    `;
+  }
   const canSelect = canSelectAnswer(answer, hasSelected);
   const canEditOrDelete = canEditOrDeleteAnswer(answer);
   const canReport =
@@ -511,10 +475,9 @@ function generateActionButtons(answer, hasSelected) {
     !answer.selected &&
     !answer.requestClosed;
 
-  const selectButton =
-    canSelect && !answer.selected && !answer.requestClosed
-      ? `<button class="btn btn-sm btn-outline-success select-answer-btn" data-id="${answer.id}">✅ 채택</button>`
-      : "";
+  const selectButton = canSelect
+    ? `<button class="btn btn-sm btn-outline-success select-answer-btn" data-id="${answer.id}">✅ 채택</button>`
+    : "";
 
   const editDeleteButtons = canEditOrDelete
     ? `
@@ -523,9 +486,8 @@ function generateActionButtons(answer, hasSelected) {
     `
     : "";
 
-  // report-toggle-btn은 렌더링 후 updateReportButton()에서 실제 상태 적용됨
   const reportButton = canReport
-    ? `<button class="btn btn-sm btn-secondary report-toggle-btn" data-id="${answer.id}" disabled>🚨 신고 상태 확인 중...</button>`
+    ? `<button class="btn btn-sm btn-secondary report-toggle-btn" data-id="${answer.id}" disabled>🚨 신고</button>`
     : "";
 
   return `
@@ -533,10 +495,6 @@ function generateActionButtons(answer, hasSelected) {
       ${selectButton}
       ${editDeleteButtons}
       ${reportButton}
-    </div>
-    <div class="save-cancel-buttons mt-2" style="display:none;">
-      <button class="btn btn-primary save-edit-btn" data-id="${answer.id}">저장</button>
-      <button class="btn btn-secondary cancel-edit-btn" data-id="${answer.id}">취소</button>
     </div>
   `;
 }
@@ -578,51 +536,43 @@ function handleEditImageUpload() {
 // [3-8] 답변 수정 모드 활성화
 function activateEditMode() {
   const answerId = $(this).data("id");
-  const answerRow = $(`li[data-answer-data*='"id":${answerId}']`);
-  const answerTextElement = answerRow.find(`#answer-text-${answerId}`);
-  const originalText = answerTextElement.text().trim();
-  const answer = JSON.parse(answerRow.attr("data-answer-data"));
+  editingId = answerId;
 
-  // 1. 본문 텍스트 수정 영역
-  answerTextElement.html(`
-    <textarea class="form-control edit-answer-input" data-id="${answerId}">${originalText}</textarea>
-  `);
+  // 기존 답변 리스트 → 해당 답변만 다시 렌더링
+  $.get(`/api/status/by-request/${requestId}`, function (answers) {
+    const hasSelected = answers.some((a) => a.selected);
+    const visibleAnswers = answers.filter((a) => !a.hidden);
 
-  // 2. 이미지 업로드 영역
-  const imageHtml = `
-    <label class="mt-2">이미지 수정</label>
-    <input type="file" class="form-control edit-file-input" accept="image/*" multiple />
-    <div class="edit-uploaded-preview mt-2 d-flex flex-wrap gap-2">
-      ${
-        Array.isArray(answer.imageUrls)
-          ? answer.imageUrls
-              .map(
-                (url) => `
-                <div class="position-relative d-inline-block">
-                  <img src="${url}" data-old="true" data-url="${url}" class="me-2 mb-2 img-thumbnail" style="max-width:100px;" />
-                  <button type="button" class="btn btn-sm btn-close position-absolute top-0 end-0 delete-image-btn"
-                          style="background-color: rgba(0,0,0,0.6); color: white;" title="삭제"></button>
-                </div>
-              `
-              )
-              .join("")
-          : ""
+    // answerList 전체 비우고 다시 그리되, 수정 중인 항목만 수정모드로
+    $("#answerList").empty();
+    visibleAnswers.forEach((answer) => {
+      const rowHtml =
+        answer.id === editingId
+          ? generateAnswerRow(answer, hasSelected, true) // 수정모드 표시
+          : generateAnswerRow(answer, hasSelected, false); // 일반모드
+      $("#answerList").append(rowHtml);
+    });
+
+    // 신고 버튼 상태 갱신
+    visibleAnswers.forEach((answer) => {
+      const canReport =
+        loginUserIdNum !== null &&
+        loginUserIdNum !== answer.userId &&
+        !answer.selected &&
+        !answer.requestClosed;
+      if (canReport) {
+        updateReportButton(answer.id, answer.reportCount);
       }
-    </div>
-  `;
-
-  // 3. 동적 필드 + 이미지 같이 렌더링
-  const extraFieldHtml = renderExtraAnswerFields(answer, true);
-  answerRow.find(".dynamic-fields").html(extraFieldHtml + imageHtml);
-
-  // 4. 버튼 전환
-  answerRow.find(".edit-delete-buttons").hide();
-  answerRow.find(".save-cancel-buttons").show();
+    });
+  });
 }
 
 // [3-9] 수정 취소 처리
 function cancelEditMode() {
-  loadAnswerList(requestId); // 원래 답변 목록으로 되돌리기
+  editingId = null;
+
+  // 원래 answer 다시 렌더링
+  loadAnswerList(requestId);
 }
 
 // [3-10] 수정 저장 처리
@@ -696,202 +646,11 @@ function deleteAnswer() {
 }
 
 // ─────────────────────────────────────────────────────────────
-// [4] 신고 관련 기능
+// [4] 응답 필드 표시용
 // ─────────────────────────────────────────────────────────────
 
-//[4-1] 신고버튼 UI 업데이트 토글 형식
-function updateReportButton(statusLogId, reportCount) {
-  $.get(`/api/report/check?statusLogId=${statusLogId}`, function (isReported) {
-    const btn = $(`.report-toggle-btn[data-id=${statusLogId}]`);
-    if (isReported) {
-      btn
-        .removeClass("btn-secondary btn-danger")
-        .addClass("btn-outline-danger")
-        .text(`🚨 신고됨 (${reportCount})`)
-        .prop("disabled", false);
-    } else {
-      btn
-        .removeClass("btn-secondary btn-outline-danger")
-        .addClass("btn-danger")
-        .text(`🚨 신고 (${reportCount})`)
-        .prop("disabled", false);
-    }
-  });
-}
-
-// [4-2] 신고 버튼 클릭 처리 : 모달 생성
-function handleReportToggle() {
-  const statusLogId = $(this).data("id");
-  const btn = $(this);
-  const isAlreadyReported = btn.hasClass("btn-outline-danger");
-
-  if (isAlreadyReported) {
-    // 신고 취소
-    if (!confirm("🚨 신고를 취소하시겠습니까?")) return;
-
-    $.ajax({
-      url: `/api/report?statusLogId=${statusLogId}`,
-      method: "DELETE",
-      success: function () {
-        alert("신고가 취소되었습니다.");
-        loadAnswerList(requestId);
-      },
-      error: function (xhr) {
-        alert("신고 취소 실패: " + xhr.responseText);
-      },
-    });
-  } else {
-    // 신고 모달 표시
-    $("#reportTargetStatusLogId").val(statusLogId);
-    $("#reportReasonSelect").val(""); // 초기화
-    const modal = new bootstrap.Modal(
-      document.getElementById("reportReasonModal")
-    );
-    modal.show();
-  }
-}
-
-// [4-3] 신고 처리 하기
-function handleSubmitReportReason() {
-  const statusLogId = $("#reportTargetStatusLogId").val();
-  const reason = $("#reportReasonSelect").val();
-  const modal = bootstrap.Modal.getInstance(
-    document.getElementById("reportReasonModal")
-  );
-
-  if (!reason) {
-    alert("🚨 신고 사유를 선택해주세요.");
-    return;
-  }
-
-  $.ajax({
-    url: `/api/report`,
-    method: "POST",
-    contentType: "application/json",
-    data: JSON.stringify({ statusLogId, reason }),
-    success: function () {
-      alert("신고가 접수되었습니다.");
-      modal.hide();
-      loadAnswerList(requestId);
-    },
-    error: function (xhr) {
-      alert("신고 실패: " + xhr.responseText);
-    },
-  });
-}
-
-// [4-4] 유틸 함수: 응답 필드 표시용 텍스트 생성 (수정 모드 지원)
-function renderExtraAnswerFields(answer, isEditMode = false) {
-  const fieldMap = {
-    PARKING: {
-      label: "주차 가능 여부",
-      field: "isParkingAvailable",
-      boolean: true,
-    },
-    WAITING_STATUS: { label: "대기 인원", field: "waitCount", unit: "명" },
-    CROWD_LEVEL: { label: "혼잡도", field: "waitCount", unit: "명" },
-    BATHROOM: { label: "화장실 여부", field: "hasBathroom", boolean: true },
-    FOOD_MENU: { label: "메뉴 정보", field: "menuInfo" },
-    WEATHER_LOCAL: { label: "날씨 상태", field: "weatherNote" },
-    STREET_VENDOR: { label: "노점 이름", field: "vendorName" },
-    PHOTO_REQUEST: { label: "사진 메모", field: "photoNote" },
-    NOISE_LEVEL: { label: "소음 상태", field: "noiseNote" },
-    BUSINESS_STATUS: { label: "영업 여부", field: "isOpen", boolean: true },
-    OPEN_SEAT: { label: "남은 좌석 수", field: "seatCount", unit: "개" },
-    ETC: { label: "기타 메모", field: "extra" },
-  };
-
-  const config = fieldMap[answer.category];
-  if (!config) return "";
-
-  const value = answer[config.field];
-  if (value == null) return "";
-
-  if (isEditMode) {
-    // 수정 모드: 필드 수정 가능하게 표시
-    if (config.boolean) {
-      return `
-        <div class="mb-2">
-          <label>${config.label}</label>
-          <select class="form-select edit-extra-input" data-field="${
-            config.field
-          }">
-            <option value="true" ${value ? "selected" : ""}>있음</option>
-            <option value="false" ${!value ? "selected" : ""}>없음</option>
-          </select>
-        </div>
-      `;
-    } else {
-      return `
-        <div class="mb-2">
-          <label>${config.label}</label>
-          <input type="text" class="form-control edit-extra-input" data-field="${config.field}" value="${value}">
-        </div>
-      `;
-    }
-  }
-
-  // 일반 모드 (텍스트로 표시)
-  if (config.boolean) {
-    return `<div class="text-muted">${config.label}: ${
-      value ? "있음" : "없음"
-    }</div>`;
-  }
-
-  return `<div class="text-muted">${config.label}: ${value}${
-    config.unit || ""
-  }</div>`;
-}
-
-// [4-5] 파일 선택 시 실행될 함수
-function handleImageFileChange(e) {
-  const files = e.target.files;
-  if (files.length > 0) {
-    handleFileUpload(files);
-  }
-}
-
-// [4-6] 다중 사진 업로드 함수
-function handleFileUpload(files) {
-  const formData = new FormData();
-  for (let i = 0; i < files.length; i++) {
-    formData.append("files", files[i]); // 다중 파일 전송
-  }
-
-  $.ajax({
-    url: "/api/upload/multi",
-    method: "POST",
-    data: formData,
-    processData: false,
-    contentType: false,
-    success: function (res) {
-      uploadedImageUrls = res; // 서버에서 받은 URL 배열
-      renderImagePreview(); // 미리보기 렌더링
-    },
-    error: function (xhr) {
-      alert("이미지 업로드 실패: " + xhr.responseText);
-    },
-  });
-}
-
-// [4-7] 업로드 미리보기 사진
-function renderImagePreview() {
-  const html = uploadedImageUrls
-    .map(
-      (url) => `
-        <div class="position-relative d-inline-block">
-          <img src="${url}" data-url="${url}" class="me-2 mb-2 img-thumbnail" style="max-width:100px;" />
-          <button type="button" class="btn btn-sm btn-close position-absolute top-0 end-0 delete-image-btn"
-                  style="background-color: rgba(0,0,0,0.6); color: white;" title="삭제" data-url="${url}"></button>
-        </div>
-      `
-    )
-    .join("");
-  $("#uploadedPreview").html(html);
-}
-
 /**
- * [4-8] 답변 채택 버튼 처리
+ * [4-1] 답변 채택 버튼 처리
  */
 function handleSelectAnswer() {
   const statusLogId = $(this).data("id");
@@ -912,7 +671,7 @@ function handleSelectAnswer() {
 }
 
 /**
- * [4-9] 답변 제출 처리 (중복 방지)
+ * [4-2] 답변 제출 처리 (중복 방지)
  */
 function submitAnswer(e) {
   e.preventDefault();
@@ -969,33 +728,4 @@ function submitAnswer(e) {
       },
     });
   });
-}
-
-// 공통 유틸: 입력 필드 값 변환 (boolean, number 등)
-function parseFieldValue(input) {
-  const val = input.val();
-  if (val === "") return null;
-  if (input.attr("type") === "number") return parseInt(val, 10);
-  if (val === "true" || val === "false") return val === "true";
-  return val;
-}
-
-// 공통 유틸: 이미지 삭제 버튼 처리
-function handleImageRemoveBtn(e) {
-  const $btn = $(e.target);
-  const $wrapper = $btn.closest(".position-relative");
-  const url = $wrapper.find("img").data("url");
-
-  // 배열에서도 삭제 (등록용 이미지 미리보기일 때만)
-  uploadedImageUrls = uploadedImageUrls.filter((item) => item !== url);
-
-  $wrapper.remove();
-}
-
-// 공통 유틸: 이미지 미리보기 모달 열기
-function handleImagePreviewModal() {
-  const imageUrl = $(this).data("url");
-  $("#modalImage").attr("src", imageUrl);
-  const modal = new bootstrap.Modal(document.getElementById("imageModal"));
-  modal.show();
 }

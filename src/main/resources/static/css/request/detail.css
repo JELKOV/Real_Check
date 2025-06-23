@@ -1,22 +1,57 @@
-.answer-item {
+#requestDetail .card-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+#requestDetail .list-unstyled li {
+  padding-left: 1.5rem;
   position: relative;
-  padding-top: 10px;
-  padding-bottom: 10px;
+  margin-bottom: 0.5rem;
 }
 
-.edit-delete-buttons {
+#requestDetail .list-unstyled li i {
   position: absolute;
-  top: 5px;
-  right: 5px;
-  z-index: 10;
+  left: 0;
+  top: 3px;
+  color: #0d6efd;
 }
 
+#requestDetail .badge-container .badge {
+  font-size: 0.95rem;
+  padding: 0.4em 0.7em;
+}
+
+#closeRequestBtn {
+  margin-top: 10px;
+  float: right;
+}
+
+.answer-item {
+  border: 1px solid #dee2e6;
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  background-color: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.2s;
+}
+
+.answer-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.answer-item .dynamic-fields {
+  margin-top: 0.5rem;
+}
+
+.edit-delete-buttons,
 .save-cancel-buttons {
-  position: absolute;
-  bottom: 5px;
-  right: 5px;
-  z-index: 10;
-  display: none; /* 기본적으로 숨기되, 수정 모드에서만 표시 */
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  justify-content: flex-end;
 }
 
 /* 캐러셀 좌우 화살표 아이콘 색상 변경 */

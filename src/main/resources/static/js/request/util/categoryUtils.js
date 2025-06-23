@@ -4,6 +4,9 @@
  * - 1, 2, 3, 4
  * - request/lists.js
  * - 5
+ * - request/detail.js
+ * - 5, 6
+ * - request/util/formUtils.js 
  */
 
 // 기본 카테고리 설정
@@ -93,7 +96,6 @@ export function applyPlaceholdersForCategory(category) {
   );
 }
 
-
 // 기본 카테고리 뱃지지
 const categoryLabelMap = {
   PARKING: "🅿️ 주차",
@@ -110,8 +112,89 @@ const categoryLabelMap = {
   ETC: "❓ 기타",
 };
 
-
 // [5] 카테고리 코드에 해당하는 라벨 반환
 export function getCategoryLabel(code) {
   return categoryLabelMap[code] || code;
 }
+
+// [6] 카테고리별 필드 정의
+export const categoryFieldMap = {
+  PARKING: {
+    label: "주차 가능 여부",
+    name: "isParkingAvailable",
+    type: "select",
+    boolean: true,
+    options: [
+      { value: "true", text: "가능" },
+      { value: "false", text: "불가능" },
+    ],
+  },
+  WAITING_STATUS: {
+    label: "대기 인원",
+    name: "waitCount",
+    type: "number",
+    unit: "명",
+  },
+  CROWD_LEVEL: {
+    label: "혼잡도",
+    name: "waitCount",
+    type: "number",
+    unit: "명",
+  },
+  BATHROOM: {
+    label: "화장실 여부",
+    name: "hasBathroom",
+    type: "select",
+    boolean: true,
+    options: [
+      { value: "true", text: "있음" },
+      { value: "false", text: "없음" },
+    ],
+  },
+  FOOD_MENU: {
+    label: "메뉴 정보",
+    name: "menuInfo",
+    type: "text",
+  },
+  WEATHER_LOCAL: {
+    label: "날씨 상태",
+    name: "weatherNote",
+    type: "text",
+  },
+  STREET_VENDOR: {
+    label: "노점 이름",
+    name: "vendorName",
+    type: "text",
+  },
+  PHOTO_REQUEST: {
+    label: "사진 요청 메모",
+    name: "photoNote",
+    type: "text",
+  },
+  NOISE_LEVEL: {
+    label: "소음 상태",
+    name: "noiseNote",
+    type: "text",
+  },
+  BUSINESS_STATUS: {
+    label: "영업 여부",
+    name: "isOpen",
+    type: "select",
+    boolean: true,
+    options: [
+      { value: "true", text: "영업 중" },
+      { value: "false", text: "영업 종료" },
+    ],
+  },
+  OPEN_SEAT: {
+    label: "남은 좌석 수",
+    name: "seatCount",
+    type: "number",
+    unit: "개",
+  },
+  ETC: {
+    label: "기타 메모",
+    name: "extra",
+    type: "text",
+  },
+};

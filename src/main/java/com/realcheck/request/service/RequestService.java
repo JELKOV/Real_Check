@@ -142,7 +142,7 @@ public class RequestService {
      */
     @Transactional(readOnly = true)
     public List<Request> findOpenRequestsWithAnswers(LocalDateTime threshold) {
-        return requestRepository.findAllVisibleStatusLogsAfterThreshold(threshold);
+        return requestRepository.findRequestsWithOldVisibleAnswers(threshold);
     }
 
     /**

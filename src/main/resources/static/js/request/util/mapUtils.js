@@ -4,6 +4,8 @@
  * - 1 ,2 ,3, 4
  * - request/lists.js
  * - 5
+ * - request/detail.js
+ * - 6
  */
 
 // [1] 지도 초기화
@@ -79,6 +81,42 @@ export function drawRadiusCircle(map, center, radius) {
     fillColor: "#007BFF",
     fillOpacity: 0.15,
   });
+}
+
+// [6] 지도 표시 함수
+export function renderMap(
+  lat,
+  lng,
+  requestTitle = "요청 위치",
+  placeName = ""
+) {
+  const position = new naver.maps.LatLng(lat, lng);
+
+  const map = new naver.maps.Map("map", {
+    center: position,
+    zoom: 16,
+  });
+
+  const marker = new naver.maps.Marker({
+    position: position,
+    map: map,
+  });
+
+  // InfoWindow 추가
+  const infoWindow = new naver.maps.InfoWindow({
+    content: `
+      <div style="padding:8px; max-width:200px;">
+        <strong>📌 ${requestTitle}</strong><br />
+        <span style="font-size:0.9rem;">${placeName}</span>
+      </div>
+    `,
+    backgroundColor: "#fff",
+    borderColor: "#666",
+    borderWidth: 1,
+    anchorSize: new naver.maps.Size(10, 10),
+  });
+
+  infoWindow.open(map, marker);
 }
 
 // ─────────────────────────────────────────────────────────────

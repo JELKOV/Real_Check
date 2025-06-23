@@ -46,10 +46,14 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
       <div id="answerFormSection">
         <h5>답변 등록</h5>
         <form id="answerForm" enctype="multipart/form-data">
+          <div class="alert alert-info mb-4">
+            ✍️ 정확하고 유용한 정보를 입력해 주세요! 이미지도 첨부하실 수
+            있어요.
+          </div>
           <!-- 카테고리별 추가 입력 필드: JavaScript로 동적 생성 -->
           <div id="dynamicAnswerFields"></div>
 
-          <div class="mb-3">
+          <div class="mb-4">
             <textarea
               class="form-control"
               name="content"
@@ -61,8 +65,10 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
           </div>
 
           <!-- 이미지 업로드 필드 -->
-          <div class="mb-3">
-            <label class="form-label">이미지 첨부 (선택)</label>
+          <div class="mb-4">
+            <label class="form-label"
+              >이미지 첨부 <span class="text-muted">(선택)</span></label
+            >
             <input
               type="file"
               name="files"
@@ -75,7 +81,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
             <div id="uploadedPreview" class="mt-2"></div>
           </div>
 
-          <button type="submit" class="btn btn-success w-100">
+          <button type="submit" class="btn btn-success w-100 py-2 fw-bold">
             답변 등록하기
           </button>
         </form>
@@ -143,6 +149,6 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
     </div>
 
     <%@ include file="../common/footer.jsp" %>
-    <script src="/js/request/detail.js"></script>
+    <script type="module" src="/js/request/detail.js"></script>
   </body>
 </html>
