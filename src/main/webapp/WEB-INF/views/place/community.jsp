@@ -45,8 +45,12 @@ uri="http://java.sun.com/jsp/jstl/functions" %>
     </c:choose>
 
     <div class="container mt-4">
-      <h2><c:out value="${place.name}" /></h2>
-      <p class="text-muted"><c:out value="${place.address}" /></p>
+      <div class="mb-4">
+        <h2 class="fw-bold display-6"><c:out value="${place.name}" /></h2>
+        <p class="text-muted small">
+          <i class="bi bi-geo-alt"></i> <c:out value="${place.address}" />
+        </p>
+      </div>
 
       <!-- 장소 지도 -->
       <h5 class="mt-4">📍 장소 위치</h5>
@@ -57,16 +61,25 @@ uri="http://java.sun.com/jsp/jstl/functions" %>
       ></div>
 
       <c:if test="${not empty latestLog}">
-        <div class="alert alert-info mt-3">
-          <div class="d-flex justify-content-between align-items-start">
-            <div>
-              <div class="fw-bold">📢 최근 공지</div>
-              <div class="mt-1">${latestLog.content}</div>
+        <div class="card border-info shadow-sm mb-4">
+          <div
+            class="card-body d-flex flex-column flex-md-row justify-content-between align-items-start gap-3"
+          >
+            <div class="flex-grow-1">
+              <div class="d-flex align-items-center mb-2">
+                <span class="badge bg-info text-dark me-2">📢 최근 공지</span>
+                <small
+                  class="text-muted"
+                  data-created-at="${latestLog.createdAt}"
+                ></small>
+              </div>
+
+              <p class="fs-6 mb-2"><c:out value="${latestLog.content}" /></p>
 
               <!-- 카테고리 요약 정보 -->
               <c:if test="${not empty latestLog.category}">
                 <div
-                  class="mt-2 small text-muted category-summary"
+                  class="small text-muted category-summary"
                   data-category="${latestLog.category}"
                   data-wait-count="${latestLog.waitCount}"
                   data-has-bathroom="${latestLog.hasBathroom}"
@@ -88,14 +101,11 @@ uri="http://java.sun.com/jsp/jstl/functions" %>
             <c:if test="${not empty latestLog.imageUrls}">
               <div
                 id="carousel-latest-log"
-                class="carousel slide ms-3"
-                style="width: 180px; max-height: 200px"
+                class="carousel slide"
+                style="width: 200px"
                 data-bs-ride="carousel"
               >
-                <div
-                  class="carousel-inner border rounded"
-                  style="max-height: 200px; overflow: hidden"
-                >
+                <div class="carousel-inner rounded border">
                   <c:forEach
                     var="img"
                     items="${latestLog.imageUrls}"
@@ -105,7 +115,11 @@ uri="http://java.sun.com/jsp/jstl/functions" %>
                       <img
                         src="${img}"
                         class="d-block w-100 log-image"
-                        style="object-fit: contain; height: 200px"
+                        style="
+                          object-fit: contain;
+                          height: 250px;
+                          background-color: #f8f9fa;
+                        "
                         data-bs-toggle="modal"
                         data-bs-target="#imageModal"
                         data-img="${img}"
@@ -135,9 +149,6 @@ uri="http://java.sun.com/jsp/jstl/functions" %>
               </div>
             </c:if>
           </div>
-          <div class="text-muted small mt-2">
-            🕒 <span data-created-at="${latestLog.createdAt}"></span>
-          </div>
         </div>
       </c:if>
 
@@ -159,13 +170,17 @@ uri="http://java.sun.com/jsp/jstl/functions" %>
           <div class="row gy-3">
             <c:forEach var="log" items="${pagedNotices.content}">
               <div class="col-12">
-                <div class="card">
+                <div class="card notice-card shadow-sm rounded-3">
                   <div class="card-body">
-                    <h5><c:out value="${log.content}" /></h5>
+                    <!-- 공지 내용 -->
+                    <h6 class="fw-semibold mb-2">
+                      <c:out value="${log.content}" />
+                    </h6>
 
+                    <!-- 카테고리 요약 -->
                     <c:if test="${not empty log.category}">
                       <div
-                        class="mt-2 small text-muted category-summary"
+                        class="small text-muted category-summary mb-2"
                         data-category="${log.category}"
                         data-wait-count="${log.waitCount}"
                         data-has-bathroom="${log.hasBathroom}"
@@ -182,10 +197,11 @@ uri="http://java.sun.com/jsp/jstl/functions" %>
                       ></div>
                     </c:if>
 
+                    <!-- 이미지 캐러셀 -->
                     <c:if test="${not empty log.imageUrls}">
                       <div
                         id="carousel-${log.id}"
-                        class="carousel slide mb-3"
+                        class="carousel slide my-3"
                         data-bs-ride="carousel"
                       >
                         <div
@@ -203,11 +219,14 @@ uri="http://java.sun.com/jsp/jstl/functions" %>
                               <img
                                 src="${img}"
                                 class="d-block w-100 log-image"
-                                alt="공지 이미지"
+                                style="
+                                  object-fit: contain;
+                                  height: 250px;
+                                  background-color: #f8f9fa;
+                                "
                                 data-bs-toggle="modal"
                                 data-bs-target="#imageModal"
                                 data-img="${img}"
-                                style="object-fit: contain; height: 250px"
                               />
                             </div>
                           </c:forEach>
@@ -233,10 +252,12 @@ uri="http://java.sun.com/jsp/jstl/functions" %>
                       </div>
                     </c:if>
 
+                    <!-- 하단 메타 정보 -->
                     <div class="text-muted small mt-2">
-                      등록일: <span data-created-at="${log.createdAt}"></span>
+                      🕒 <span data-created-at="${log.createdAt}"></span>
                     </div>
 
+                    <!-- 수정/삭제 버튼 -->
                     <c:if
                       test="${loginUser != null && loginUser.id == log.userId}"
                     >
@@ -244,13 +265,13 @@ uri="http://java.sun.com/jsp/jstl/functions" %>
                         <a
                           href="/status/edit?logId=${log.id}"
                           class="btn btn-sm btn-outline-secondary"
+                          >✏️ 수정</a
                         >
-                          ✏️ 수정
-                        </a>
                         <button
                           type="button"
-                          class="btn btn-sm btn-outline-danger"
-                          onclick="confirmDelete('${log.id}', '${place.id}')"
+                          class="btn btn-sm btn-outline-danger delete-log-btn"
+                          data-log-id="${log.id}"
+                          data-place-id="${place.id}"
                         >
                           🗑️ 삭제
                         </button>
@@ -282,39 +303,48 @@ uri="http://java.sun.com/jsp/jstl/functions" %>
       <!-- 해당 장소에 대한 요청 목록 -->
       <h5 class="mt-4">📥 요청 목록</h5>
       <c:if test="${not empty placeRequests}">
-        <div class="list-group mb-4">
+        <div class="list-group mb-4 shadow-sm rounded overflow-hidden">
           <c:forEach var="req" items="${placeRequests}">
-            <div
-              class="list-group-item d-flex justify-content-between align-items-center"
-            >
-              <div>
-                <strong><c:out value="${req.title}" /></strong>
-                <c:if test="${req.closed || req.hasSelectedAnswer}">
-                  <span class="badge bg-secondary ms-2">🔒 종료</span>
-                </c:if>
-                <br />
-                <span
-                  class="text-muted small"
-                  data-created-at="${req.createdAt}"
-                ></span>
-              </div>
-              <div>
-                <c:choose>
-                  <c:when
-                    test="${loginUser != null && !req.closed && !req.hasSelectedAnswer}"
-                  >
-                    <a href="/request/${req.id}" class="btn btn-primary btn-sm"
-                      >응답하러 가기</a
+            <div class="list-group-item py-3">
+              <div
+                class="d-flex justify-content-between align-items-center flex-column flex-md-row gap-2"
+              >
+                <!-- 왼쪽: 제목 + 상태 + 시간 -->
+                <div class="flex-grow-1">
+                  <div class="fw-semibold fs-6 mb-1">
+                    <c:out value="${req.title}" />
+                    <c:if test="${req.closed || req.hasSelectedAnswer}">
+                      <span class="badge bg-secondary ms-2">🔒 종료</span>
+                    </c:if>
+                  </div>
+                  <div class="text-muted small">
+                    🕒 <span data-created-at="${req.createdAt}"></span>
+                  </div>
+                </div>
+
+                <!-- 오른쪽 버튼 -->
+                <div>
+                  <c:choose>
+                    <c:when
+                      test="${loginUser != null && !req.closed && !req.hasSelectedAnswer}"
                     >
-                  </c:when>
-                  <c:otherwise>
-                    <a
-                      href="/request/${req.id}"
-                      class="btn btn-outline-primary btn-sm"
-                      >상세보러 가기</a
-                    >
-                  </c:otherwise>
-                </c:choose>
+                      <a
+                        href="/request/${req.id}"
+                        class="btn btn-sm btn-primary"
+                      >
+                        응답하러 가기
+                      </a>
+                    </c:when>
+                    <c:otherwise>
+                      <a
+                        href="/request/${req.id}"
+                        class="btn btn-sm btn-outline-primary"
+                      >
+                        상세보기
+                      </a>
+                    </c:otherwise>
+                  </c:choose>
+                </div>
               </div>
             </div>
           </c:forEach>
@@ -331,58 +361,53 @@ uri="http://java.sun.com/jsp/jstl/functions" %>
           <div class="row gy-3">
             <c:forEach var="log" items="${recentLogs}">
               <div class="col-12">
-                <div class="card shadow-sm rounded-3 position-relative">
+                <div class="card shared-log-card shadow-sm rounded-3">
                   <div class="card-body p-4">
-                    <!-- 응답 내용 블록 -->
+                    <!-- 응답 내용 -->
                     <div class="mb-3">
                       <div
-                        class="bg-light rounded p-3 border position-relative"
+                        class="d-flex justify-content-between align-items-start mb-2"
                       >
-                        <div
-                          class="d-flex justify-content-between align-items-start"
+                        <span class="fw-semibold text-secondary"
+                          >💬 응답 내용</span
                         >
-                          <div class="mb-1 fw-semibold text-secondary">
-                            💬 응답 내용
-                          </div>
 
-                          <!-- 카테고리 뱃지 (응답 블록 내부 오른쪽 상단) -->
-                          <c:if test="${not empty log.category}">
-                            <span
-                              class="badge bg-info text-dark category-badge ms-2"
-                              data-category="${log.category}"
-                            >
-                              ${log.category}
-                            </span>
-                          </c:if>
-                        </div>
-
-                        <div class="fs-6 text-dark">
-                          <c:out value="${log.content}" />
-                        </div>
-
-                        <!-- 카테고리 상세 요약 -->
                         <c:if test="${not empty log.category}">
-                          <div
-                            class="mt-2 small text-muted category-summary"
+                          <span
+                            class="badge bg-info text-dark category-badge ms-2"
                             data-category="${log.category}"
-                            data-wait-count="${log.waitCount}"
-                            data-has-bathroom="${log.hasBathroom}"
-                            data-menu-info="${log.menuInfo}"
-                            data-weather-note="${log.weatherNote}"
-                            data-vendor-name="${log.vendorName}"
-                            data-photo-note="${log.photoNote}"
-                            data-noise-note="${log.noiseNote}"
-                            data-is-parking-available="${log.isParkingAvailable}"
-                            data-is-open="${log.isOpen}"
-                            data-seat-count="${log.seatCount}"
-                            data-crowd-level="${log.crowdLevel}"
-                            data-extra="${log.extra}"
-                          ></div>
+                          >
+                            ${log.category}
+                          </span>
                         </c:if>
                       </div>
+
+                      <div class="fs-6 text-dark">
+                        <c:out value="${log.content}" />
+                      </div>
+
+                      <!-- 카테고리 상세 요약 -->
+                      <c:if test="${not empty log.category}">
+                        <div
+                          class="mt-2 small text-muted category-summary"
+                          data-category="${log.category}"
+                          data-wait-count="${log.waitCount}"
+                          data-has-bathroom="${log.hasBathroom}"
+                          data-menu-info="${log.menuInfo}"
+                          data-weather-note="${log.weatherNote}"
+                          data-vendor-name="${log.vendorName}"
+                          data-photo-note="${log.photoNote}"
+                          data-noise-note="${log.noiseNote}"
+                          data-is-parking-available="${log.isParkingAvailable}"
+                          data-is-open="${log.isOpen}"
+                          data-seat-count="${log.seatCount}"
+                          data-crowd-level="${log.crowdLevel}"
+                          data-extra="${log.extra}"
+                        ></div>
+                      </c:if>
                     </div>
 
-                    <!-- 이미지 (있는 경우) -->
+                    <!-- 이미지 캐러셀 -->
                     <c:if test="${not empty log.imageUrls}">
                       <div
                         id="carousel-recent-${log.id}"
@@ -408,13 +433,15 @@ uri="http://java.sun.com/jsp/jstl/functions" %>
                                 data-bs-toggle="modal"
                                 data-bs-target="#imageModal"
                                 data-img="${img}"
-                                style="object-fit: contain; height: 250px"
+                                style="
+                                  object-fit: contain;
+                                  height: 250px;
+                                  background-color: #f8f9fa;
+                                "
                               />
                             </div>
                           </c:forEach>
                         </div>
-
-                        <!-- 좌우 이동 버튼 (ID 맞춰야 함) -->
                         <c:if test="${fn:length(log.imageUrls) > 1}">
                           <button
                             class="carousel-control-prev"
@@ -435,35 +462,32 @@ uri="http://java.sun.com/jsp/jstl/functions" %>
                         </c:if>
                       </div>
                     </c:if>
-
-                    <!-- 하단: 작성자 / 날짜 / 상세보기 -->
+                    <!-- 작성자/날짜/버튼 -->
                     <div
                       class="d-flex justify-content-between align-items-center pt-3 border-top"
                     >
                       <div class="text-muted small">
                         👤
-                        <span
-                          >${log.nickname != null ? log.nickname : "익명"}</span
-                        ><br /> 🕒
+                        <c:out
+                          value="${log.nickname != null ? log.nickname : '익명'}"
+                        /><br /> 🕒
                         <span data-created-at="${log.createdAt}"></span>
                       </div>
+
                       <div>
                         <c:choose>
                           <c:when test="${not empty log.requestId}">
-                            <!-- 요청 연결된 응답 -->
                             <a
                               href="/request/${log.requestId}"
                               class="btn btn-outline-primary btn-sm"
                             >
-                              상세보러 가기
+                              상세보기
                             </a>
                           </c:when>
                           <c:when test="${log.type == 'REGISTER'}">
-                            <!-- 공지글인 경우 -->
                             <span class="badge bg-success">📢 공지</span>
                           </c:when>
                           <c:when test="${log.type == 'FREE_SHARE'}">
-                            <!-- 자발 공유인 경우 -->
                             <span class="badge bg-secondary"
                               >📡 자발적 공유</span
                             >
@@ -495,6 +519,6 @@ uri="http://java.sun.com/jsp/jstl/functions" %>
     </div>
 
     <%@ include file="../common/footer.jsp" %>
-    <script src="/js/place/community.js"></script>
+    <script type="module" src="/js/place/community.js"></script>
   </body>
 </html>

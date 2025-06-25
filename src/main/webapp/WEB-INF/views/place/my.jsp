@@ -34,17 +34,26 @@ uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
                   <h5 class="card-title">${place.name}</h5>
                   <p class="card-text text-muted">${place.address}</p>
                   <span class="badge bg-success">승인됨</span>
-                  <div class="d-flex justify-content-between mt-2">
+
+                  <!-- 버튼  -->
+                  <div class="d-flex flex-wrap gap-2 mt-3">
                     <a
                       href="/place/place-edit/${place.id}"
-                      class="btn btn-outline-primary btn-sm"
-                      >✏️ 수정하기</a
+                      class="btn btn-sm btn-outline-primary d-flex align-items-center"
                     >
+                      ✏️ <span class="ms-1">수정하기</span>
+                    </a>
+                    <a
+                      href="/place/community/${place.id}"
+                      class="btn btn-sm btn-outline-success d-flex align-items-center"
+                    >
+                      🏠 <span class="ms-1">커뮤니티</span>
+                    </a>
                     <button
-                      class="btn btn-outline-danger btn-sm"
+                      class="btn btn-sm btn-outline-danger d-flex align-items-center"
                       onclick="deletePlace('${place.id}')"
                     >
-                      🗑️ 등록 취소하기
+                      🗑️ <span class="ms-1">취소하기</span>
                     </button>
                   </div>
                 </div>
@@ -109,7 +118,6 @@ uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
             </c:if>
           </c:forEach>
         </div>
-      
       </div>
     </div>
 

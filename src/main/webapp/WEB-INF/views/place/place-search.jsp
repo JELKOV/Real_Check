@@ -77,6 +77,6 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
     </div>
 
     <%@ include file="../common/footer.jsp" %>
-    <script src="/js/place/place-search.js"></script>
+    <script type="module" src="/js/place/place-search.js"></script>
   </body>
 </html>

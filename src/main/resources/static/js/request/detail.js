@@ -59,8 +59,9 @@ $(document).ready(function () {
   bindEventListeners();
 
   // 초기 데이터 로드
-  loadRequestDetail(requestId);
-  loadAnswerList(requestId);
+  loadRequestDetail(requestId, function (request) {
+    loadAnswerList(requestId, request); // request 전달
+  });
 });
 
 // 이벤트 리스너 바인딩 함수
@@ -128,13 +129,11 @@ function bindEventListeners() {
 // ─────────────────────────────────────────────────────────────
 
 // [2-1] 상세 정보 관련 전체 로드 헬퍼 함수
-function loadRequestDetail(requestId) {
+function loadRequestDetail(requestId, callback) {
   $.get(`/api/request/${requestId}`, function (request) {
     renderRequestDetail(request);
-
     // 답변 입력창 비활성화 조건 확인
     manageAnswerFormVisibility(request, loginUserIdNum);
-
     // 지도 표시
     renderMap(
       request.lat,
@@ -149,9 +148,13 @@ function loadRequestDetail(requestId) {
       requestLat = request.lat;
       requestLng = request.lng;
     }
-
     // placeId도 전역 변수에 저장 (공식 장소 여부 판별용)
     placeId = request.placeId;
+
+    // request 정보 전달
+    if (typeof callback === "function") {
+      callback(request);
+    }
   });
 }
 
@@ -255,7 +258,7 @@ function closeRequestManually(requestId) {
 // ─────────────────────────────────────────────────────────────
 
 // [3-1] 답변 리스트 로드
-function loadAnswerList(requestId) {
+function loadAnswerList(requestId, request = null) {
   $.get(`/api/status/by-request/${requestId}`, function (answers) {
     $("#answerList").empty();
     if (answers.length === 0) {
@@ -289,13 +292,16 @@ function loadAnswerList(requestId) {
       }
     });
 
-    const oldestAnswer = answers.reduce((oldest, current) => {
-      return new Date(current.createdAt) < new Date(oldest.createdAt)
-        ? current
-        : oldest;
-    }, answers[0]);
+    // request 정보 전달되었을 경우만 마감 안내 표시
+    if (request && !request.closed && loginUserIdNum === request.requesterId) {
+      const oldestAnswer = answers.reduce((oldest, current) => {
+        return new Date(current.createdAt) < new Date(oldest.createdAt)
+          ? current
+          : oldest;
+      }, answers[0]);
 
-    updateAutoCloseNotice(answers.length, oldestAnswer?.createdAt);
+      updateAutoCloseNotice(answers.length, oldestAnswer?.createdAt);
+    }
   });
 }
 
@@ -720,8 +726,9 @@ function submitAnswer(e) {
         $("#uploadedPreview").empty(); // 미리보기 제거
         uploadedImageUrls = []; // 사진 배열 초기화
 
-        loadAnswerList(requestId); // 답변 목록 즉시 새로고침
-        loadRequestDetail(requestId); // 답변 카운트 갱신
+        loadRequestDetail(requestId, function (request) {
+          loadAnswerList(requestId, request); // 안내 문구 포함됨
+        }); // 답변 카운트 갱신
       },
       error: function (xhr) {
         alert("답변 등록 실패: " + xhr.responseText);

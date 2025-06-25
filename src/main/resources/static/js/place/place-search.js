@@ -1,3 +1,7 @@
+import { debounce, escapeRegex } from "../util/common.js";
+import { addPlaceMarker, clearMarkers } from "./util/mapUtils.js";
+import { setActive } from "./util/formUtils.js";
+
 // 공식 장소 검색 페이지 JS
 let currentFocus = -1; // 현재 키보드로 포커싱된 검색 결과 인덱스
 let isNavigatingByKey = false; // 키보드 탐색 중 여부 플래그
@@ -62,13 +66,13 @@ function bindSearchInputEvents() {
     if (e.key === "ArrowDown") {
       e.preventDefault();
       currentFocus = (currentFocus + 1) % items.length;
-      setActive(items);
+      setActive(items, currentFocus);
     }
     // ↑ 키: 이전 항목으로 이동
     else if (e.key === "ArrowUp") {
       e.preventDefault();
       currentFocus = (currentFocus - 1 + items.length) % items.length;
-      setActive(items);
+      setActive(items, currentFocus);
     }
     // Enter 키: 현재 포커싱된 항목 클릭
     else if (e.key === "Enter") {
@@ -97,7 +101,7 @@ function bindSearchResultEvents() {
   $("#placeSearchResults").on("mouseenter", ".place-item", function () {
     const items = $("#placeSearchResults .place-item");
     currentFocus = items.index(this);
-    setActive(items);
+    setActive(items, currentFocus);
   });
 
   // 즐겨찾기 버튼 이벤트 바인딩
@@ -127,17 +131,7 @@ function bindSearchResultEvents() {
  *  1. 검색 결과 탐색 및 렌더링 관련
  */
 
-// [1] 키보드 포커스 시 하이라이트 처리
-function setActive(items) {
-  items.removeClass("active");
-  if (currentFocus >= 0 && currentFocus < items.length) {
-    const target = items.eq(currentFocus);
-    target.addClass("active");
-    target[0].scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }
-}
-
-// [2] 검색어 입력 시 호출되는 API 처리
+// [1] 검색어 입력 시 호출되는 API 처리
 function handlePlaceSearch() {
   if (isNavigatingByKey) return;
 
@@ -145,7 +139,7 @@ function handlePlaceSearch() {
   if (!query) {
     $("#placeSearchResults").empty().hide();
     $("#selectedPlaceInfo").addClass("d-none");
-    clearMarkers();
+    clearMarkers(placeMarkers, { open: openInfoWindow });
     return;
   }
 
@@ -157,7 +151,7 @@ function handlePlaceSearch() {
 // [3] 검색 API 결과 렌더링
 function renderSearchResults(places) {
   currentFocus = -1;
-  clearMarkers();
+  clearMarkers(placeMarkers, { open: openInfoWindow });
 
   if (!places.length) {
     $("#placeSearchResults")
@@ -176,7 +170,7 @@ function renderSearchResults(places) {
         "<mark>$1</mark>"
       );
 
-      addPlaceMarker(place); // 검색 결과도 지도에 마커 표시
+      addPlaceMarker(mainMap, place, placeMarkers, { open: openInfoWindow }); // 검색 결과도 지도에 마커 표시
 
       return `<li class="list-group-item place-item" 
                  data-id="${place.id}" 
@@ -194,10 +188,10 @@ function renderSearchResults(places) {
 }
 
 /**
- *  2. 장소 선택 및 마커 관련
+ *  2. 장소 선택
  */
 
-// [4] 특정 장소를 선택했을 때 정보 표시 및 마커 이동
+// [1] 특정 장소를 선택했을 때 정보 표시 및 마커 이동
 function renderSelectedPlaceInfo(id, name, address, lat, lng) {
   if (openInfoWindow) {
     openInfoWindow.close();
@@ -235,43 +229,13 @@ function renderSelectedPlaceInfo(id, name, address, lat, lng) {
   // 지도 이동 및 마커 표시
   const latlng = new naver.maps.LatLng(lat, lng);
   mainMap.setCenter(latlng);
-  clearMarkers();
-  addPlaceMarker({ lat, lng, name });
+  clearMarkers(placeMarkers, { open: openInfoWindow });
+  addPlaceMarker(mainMap, { lat, lng, name }, placeMarkers, {
+    open: openInfoWindow,
+  });
 }
 
-// [5] 마커 추가
-function addPlaceMarker(place) {
-  const marker = new naver.maps.Marker({
-    position: new naver.maps.LatLng(place.lat, place.lng),
-    map: mainMap,
-    title: place.name,
-  });
-
-  const infoWindow = new naver.maps.InfoWindow({
-    content: `<div style="padding:5px;">${place.name}</div>`,
-  });
-
-  naver.maps.Event.addListener(marker, "click", function () {
-    if (openInfoWindow) openInfoWindow.close();
-    infoWindow.open(mainMap, marker);
-    openInfoWindow = infoWindow;
-  });
-
-  placeMarkers.push(marker);
-}
-
-// [6] 마커 전체 제거
-function clearMarkers() {
-  placeMarkers.forEach((m) => m.setMap(null));
-  placeMarkers = [];
-
-  if (openInfoWindow) {
-    openInfoWindow.close();
-    openInfoWindow = null;
-  }
-}
-
-// [7] 내 위치 받아오기 및 지도 중심 설정
+// [2] 내 위치 받아오기 및 지도 중심 설정
 function getUserLocation() {
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
@@ -293,7 +257,7 @@ function getUserLocation() {
 function loadNearbyPlaces(lat, lng) {
   $.get("/api/place/nearby", { lat, lng, radiusMeters: 10000 }).done(
     (places) => {
-      clearMarkers();
+      clearMarkers(placeMarkers, { open: openInfoWindow });
 
       places.forEach((place) => {
         const marker = new naver.maps.Marker({
@@ -320,7 +284,7 @@ function loadNearbyPlaces(lat, lng) {
   );
 }
 
-// [9] 주변 장소 리스트 렌더링
+// [3] 주변 장소 리스트 렌더링
 function renderNearbyPlaceList(places) {
   if (!places.length) {
     $("#placeSearchResults")
@@ -350,21 +314,7 @@ function renderNearbyPlaceList(places) {
  * 3. 유틸리티 함수
  */
 
-// [10] 정규식 특수문자 이스케이프 처리
-function escapeRegex(text) {
-  return text.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
-}
-
-// [11] 디바운스 유틸 함수
-function debounce(fn, delay) {
-  let timeout;
-  return function () {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => fn.apply(this, arguments), delay);
-  };
-}
-
-// [12] 즐겨찾기 버튼 UI 상태 업데이트
+// [1] 즐겨찾기 버튼 UI 상태 업데이트
 function updateFavoriteButtonUI(btn) {
   const isNowFavorite = !btn.hasClass("btn-warning"); // 현재가 즐겨찾기 아님 → 등록되는 상태
   btn.toggleClass("btn-outline-warning", !isNowFavorite);

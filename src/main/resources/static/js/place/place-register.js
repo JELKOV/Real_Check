@@ -1,30 +1,34 @@
-// ─────────────────────────────────────────────
-// [0] 카테고리 한글 라벨 맵
-// ─────────────────────────────────────────────
-const categoryLabelMap = {
-  PARKING: "🅿️ 주차 가능 여부",
-  WAITING_STATUS: "⏳ 대기 상태",
-  STREET_VENDOR: "🥟 노점 현황",
-  PHOTO_REQUEST: "📸 사진 요청",
-  BUSINESS_STATUS: "🏪 가게 영업 여부",
-  OPEN_SEAT: "💺 좌석 여유",
-  BATHROOM: "🚻 화장실 여부",
-  WEATHER_LOCAL: "☁️ 날씨 상태",
-  NOISE_LEVEL: "🔊 소음 여부",
-  FOOD_MENU: "🍔 메뉴/음식",
-  CROWD_LEVEL: "👥 혼잡도",
-  ETC: "❓ 기타",
-};
+import { getCategoryLabel } from "./util/categoryUtils.js";
+import { bindSearchAddress, searchAddress } from "./util/addressUtils.js";
+import {
+  bindCategorySelectAll,
+  getSelectedCategoryValues,
+} from "./util/formUtils.js";
+import { initMapWithClickHandler } from "./util/mapUtils.js";
 
 // ─────────────────────────────────────────────
 // [1] 문서 준비 시 초기화
 // ─────────────────────────────────────────────
 $(document).ready(function () {
   initMap();
+
+  // 버튼 클릭 → 수동으로 직접 처리
+  $("#searchAddressBtn").click(() => {
+    const query = $("#addressInput").val();
+    if (!query) return alert("주소를 입력하세요.");
+    searchAddress(query, handleAddressResult);
+  });
+
+  // 엔터 입력 → 유틸 사용
+  bindSearchAddress("#addressInput", handleAddressResult);
+
   renderCategoryLabels();
-  bindSearchAddress();
   bindPlaceFormSubmit();
-  bindCategorySelectAll();
+  bindCategorySelectAll(
+    "#selectAllCategoriesBtn",
+    "#deselectAllCategoriesBtn",
+    "input[name='categories']"
+  );
 });
 
 // ─────────────────────────────────────────────
@@ -33,37 +37,12 @@ $(document).ready(function () {
 let map, marker;
 
 function initMap() {
-  const defaultCenter = new naver.maps.LatLng(37.5665, 126.978);
-  map = new naver.maps.Map("map", {
-    center: defaultCenter,
-    zoom: 15,
-  });
+  const lat = parseFloat($("#lat").val()) || 37.5665;
+  const lng = parseFloat($("#lng").val()) || 126.978;
 
-  marker = new naver.maps.Marker({
-    position: defaultCenter,
-    map: map,
-  });
-
-  naver.maps.Event.addListener(map, "click", function (e) {
-    const lat = e.coord.lat();
-    const lng = e.coord.lng();
-    marker.setPosition(e.coord);
-    $("#lat").val(lat);
-    $("#lng").val(lng);
-
-    naver.maps.Service.reverseGeocode(
-      {
-        coords: new naver.maps.LatLng(lat, lng),
-        orders: ["roadaddr", "addr"],
-      },
-      function (status, response) {
-        if (status === naver.maps.Service.Status.OK) {
-          const result = response.v2.address;
-          $("#address").val(result.roadAddress || result.jibunAddress || "");
-        }
-      }
-    );
-  });
+  const result = initMapWithClickHandler("map", lat, lng);
+  map = result.map;
+  marker = result.marker;
 }
 
 // ─────────────────────────────────────────────
@@ -72,44 +51,23 @@ function initMap() {
 function renderCategoryLabels() {
   $(".category-label").each(function () {
     const code = $(this).data("category");
-    $(this).text(categoryLabelMap[code] || code);
+    $(this).text(getCategoryLabel(code));
   });
 }
 
 // ─────────────────────────────────────────────
-// [4] 주소 검색 버튼 바인딩 + 엔터 방지 및 처리
+// [4] 주소 검색
 // ─────────────────────────────────────────────
-function bindSearchAddress() {
-  $("#searchAddressBtn").click(searchAddress);
 
-  // 주소 입력창에서 Enter 눌렀을 때 form 제출 막고 검색 실행
-  $("#addressInput").on("keydown", function (e) {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      searchAddress();
-    }
-  });
-}
+// 공통 콜백
+function handleAddressResult(item) {
+  const latlng = new naver.maps.LatLng(item.y, item.x);
+  map.setCenter(latlng);
+  marker.setPosition(latlng);
 
-function searchAddress() {
-  const query = $("#addressInput").val();
-  if (!query) return alert("주소를 입력하세요.");
-
-  naver.maps.Service.geocode({ query }, function (status, response) {
-    if (status !== naver.maps.Service.Status.OK)
-      return alert("주소를 찾을 수 없습니다.");
-
-    const item = response.v2.addresses[0];
-    if (!item) return alert("주소 결과 없음");
-
-    const latlng = new naver.maps.LatLng(item.y, item.x);
-    map.setCenter(latlng);
-    marker.setPosition(latlng);
-
-    $("#address").val(item.roadAddress || item.jibunAddress);
-    $("#lat").val(item.y);
-    $("#lng").val(item.x);
-  });
+  $("#address").val(item.roadAddress || item.jibunAddress);
+  $("#lat").val(item.y);
+  $("#lng").val(item.x);
 }
 
 // ─────────────────────────────────────────────
@@ -123,16 +81,16 @@ function bindPlaceFormSubmit() {
     const address = $("input[name='address']").val();
     const lat = $("#lat").val();
     const lng = $("#lng").val();
-    const selectedCategories = $("input[name='categories']:checked")
-      .map(function () {
-        return this.value;
-      })
-      .get();
+    const selectedCategories = getSelectedCategoryValues(
+      "input[name='categories']"
+    );
 
     // 유효성 검사
     if (!name) return alert("📌 장소 이름을 입력하세요.");
-    if (!address || !lat || !lng) return alert("📌 주소를 검색하거나 지도를 클릭하세요.");
-    if (selectedCategories.length === 0) return alert("📌 최소 하나 이상의 카테고리를 선택하세요.");
+    if (!address || !lat || !lng)
+      return alert("📌 주소를 검색하거나 지도를 클릭하세요.");
+    if (selectedCategories.length === 0)
+      return alert("📌 최소 하나 이상의 카테고리를 선택하세요.");
 
     const data = {
       name,
@@ -155,18 +113,5 @@ function bindPlaceFormSubmit() {
         alert("❌ 등록 실패: " + xhr.responseText);
       },
     });
-  });
-}
-
-// ─────────────────────────────────────────────
-// [6] 카테고리 전체 선택 기능
-// ─────────────────────────────────────────────
-function bindCategorySelectAll() {
-  $("#selectAllCategoriesBtn").click(function () {
-    $("input[name='categories']").prop("checked", true);
-  });
-
-  $("#deselectAllCategoriesBtn").click(function () {
-    $("input[name='categories']").prop("checked", false);
   });
 }

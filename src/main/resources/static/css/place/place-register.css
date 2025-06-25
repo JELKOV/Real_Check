@@ -1,0 +1,54 @@
+/* ============================= */
+/* 공통 스타일 (데스크탑 기준) */
+/* ============================= */
+#placeForm {
+  max-height: none;
+  overflow-y: visible;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background-color: #fff;
+}
+
+#map {
+  width: 100%;
+  min-height: 400px;
+  border-radius: 8px;
+}
+
+.row.align-items-stretch {
+  height: auto !important;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+/* 버튼 그룹 정렬 */
+.btn-group.btn-group-sm {
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+/* 카테고리 라벨 */
+.category-label {
+  font-size: 0.95rem;
+  word-break: keep-all;
+  white-space: normal;
+}
+
+/* 모바일 화면에서 높이 재조정 */
+@media (max-width: 767px) {
+  #map {
+    height: 250px !important;
+    margin-bottom: 1rem;
+  }
+
+  #placeForm {
+    height: auto !important;
+    overflow-y: visible;
+    padding: 1rem;
+  }
+
+  .row.align-items-stretch {
+    flex-direction: column !important;
+    height: auto !important;
+  }
+}

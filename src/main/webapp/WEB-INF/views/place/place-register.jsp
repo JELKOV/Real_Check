@@ -9,6 +9,7 @@ uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="/css/place/place-register.css" />
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script
       type="text/javascript"
@@ -20,20 +21,22 @@ uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
     <div class="container mt-5">
       <h3 class="mb-4 text-center">장소 등록</h3>
-      <div class="row">
-        <div class="col-md-6 mb-4">
-          <div id="map" style="width: 100%; height: 400px"></div>
+      <div class="row align-items-stretch">
+        <!-- 지도 영역 -->
+        <div class="col-md-6">
+          <div id="map" class="h-100"></div>
         </div>
 
+        <!-- 수정 폼 -->
         <div class="col-md-6">
-          <form id="placeForm" class="card p-4 shadow-sm">
+          <form id="placeForm" class="card p-4 shadow-sm h-100">
             <div class="mb-3">
-              <label class="form-label">장소 이름</label>
+              <label class="form-label" for="name">장소 이름</label>
               <input type="text" name="name" class="form-control" required />
             </div>
 
             <div class="mb-3">
-              <label class="form-label">주소 검색</label>
+              <label class="form-label" for="addressInput">주소 검색</label>
               <div class="input-group">
                 <input
                   type="text"
@@ -52,7 +55,7 @@ uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
             </div>
 
             <div class="mb-3">
-              <label class="form-label">주소</label>
+              <label class="form-label" for="address">주소</label>
               <input
                 type="text"
                 name="address"
@@ -64,7 +67,7 @@ uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
             <div class="row">
               <div class="col-md-6 mb-3">
-                <label class="form-label">위도</label>
+                <label class="form-label" for="lat">위도</label>
                 <input
                   type="text"
                   name="lat"
@@ -74,7 +77,7 @@ uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
                 />
               </div>
               <div class="col-md-6 mb-3">
-                <label class="form-label">경도</label>
+                <label class="form-label" for="lng">경도</label>
                 <input
                   type="text"
                   name="lng"
@@ -87,7 +90,9 @@ uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
             <!-- 카테고리 선택 영역 개선 -->
             <div class="mb-3">
-              <label class="form-label">허용 요청 카테고리</label>
+              <label class="form-label" for="allowedRequestTypes"
+                >허용 요청 카테고리</label
+              >
 
               <div
                 class="d-flex justify-content-between align-items-center mb-2"
@@ -146,6 +151,6 @@ uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
     <%@ include file="../common/footer.jsp" %>
 
-    <script src="/js/place/place-register.js"></script>
+    <script type="module" src="/js/place/place-register.js"></script>
   </body>
 </html>

@@ -512,6 +512,10 @@ public class StatusLogService {
             log.setIsOpen(dto.getIsOpen());
         if (dto.getSeatCount() != null)
             log.setSeatCount(dto.getSeatCount());
+        if (dto.getCrowdLevel() != null) 
+            log.setCrowdLevel(dto.getCrowdLevel());
+        if (dto.getExtra() != null)
+            log.setExtra(dto.getExtra());
 
         log.setImageUrls(dto.getImageUrls());
 

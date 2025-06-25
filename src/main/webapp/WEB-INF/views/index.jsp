@@ -108,7 +108,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
               class="p-4 bg-white rounded shadow hover-shadow d-flex flex-column h-100 text-center"
             >
               <div class="fs-1 mb-2">🗺️</div>
-              <h5 class="fw-bold">지도 요청 보기</h5>
+              <h5 class="fw-bold">주변 요청 보기</h5>
               <p class="text-muted flex-grow-1">
                 지도에서 요청 위치를 확인하고 응답해보세요.
               </p>

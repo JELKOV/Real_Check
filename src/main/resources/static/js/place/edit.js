@@ -1,48 +1,30 @@
-let uploadedImageUrls = [...existingImageUrls]; // 서버로부터 내려온 기존 이미지
-const logId = $("#logId").val();
-const placeId = $("#placeId").val();
+// 모듈 import
+import {
+  renderAnswerFields,
+  renderCategoryOptions,
+} from "./util/categoryUtils.js";
 
-const categoryLabelMap = {
-  PARKING: "🅿️ 주차 가능 여부",
-  WAITING_STATUS: "⏳ 대기 상태",
-  STREET_VENDOR: "🥟 노점 현황",
-  PHOTO_REQUEST: "📸 사진 요청",
-  BUSINESS_STATUS: "🏪 가게 영업 여부",
-  OPEN_SEAT: "💺 좌석 여유",
-  BATHROOM: "🚻 화장실 여부",
-  WEATHER_LOCAL: "☁️ 날씨 상태",
-  NOISE_LEVEL: "🔊 소음 여부",
-  FOOD_MENU: "🍔 메뉴/음식",
-  CROWD_LEVEL: "👥 혼잡도",
-  ETC: "❓ 기타",
-};
+import {
+  uploadImages,
+  renderImagePreview,
+  clearImagePreview,
+} from "./util/imageUtils.js";
+
+// 전역 변수
+let uploadedImageUrls = [...(existingImageUrls || [])].filter(
+  (url) => url && url !== "undefined" && url.trim() !== ""
+);
 
 $(document).ready(function () {
-  renderCategoryOptions();
+  renderCategoryOptions($("#category"), [currentCategory], currentCategory);
+  $("#category").prop("disabled", true);
   bindEventListeners();
   updateCharCount();
-  renderImagePreviews();
-  renderAnswerFields(currentCategory, statusLogJson);
+  renderPreviewWithDelete(); // 이미지 미리보기 렌더링
+  renderAnswerFields($("#dynamicAnswerFields"), currentCategory, statusLogJson);
 });
 
-// ─────────────────────────────────────
-// 카테고리 옵션 렌더링
-// ─────────────────────────────────────
-function renderCategoryOptions() {
-  const $select = $("#category");
-  $select.empty();
-  $select.append(`<option value="">-- 선택하세요 --</option>`);
-
-  allowedTypes.forEach((cat) => {
-    const label = categoryLabelMap[cat] || cat;
-    const selected = cat === currentCategory ? "selected" : "";
-    $select.append(`<option value="${cat}" ${selected}>${label}</option>`);
-  });
-}
-
-// ─────────────────────────────────────
 // 이벤트 바인딩
-// ─────────────────────────────────────
 function bindEventListeners() {
   $("#selectImageBtn").on("click", () => $("#fileInput").click());
   $("#fileInput").on("change", handleFileUpload);
@@ -50,236 +32,151 @@ function bindEventListeners() {
   $("#content").on("input", updateCharCount);
   $("#category").on("change", function () {
     const selected = $(this).val();
-    renderAnswerFields(selected, {});
+    console.log("선택된 카테고리:", selected); // 값 제대로 찍히는지 확인
+    renderAnswerFields($("#dynamicAnswerFields"), selected, {});
   });
   $("#editForm").on("submit", handleSubmit);
+
+  // 이미지 클릭 시 모달로 보기
+  $(document).on("click", "#uploadedPreview img", function () {
+    const url = $(this).data("url");
+    $("#modalImage").attr("src", url);
+    $("#imageModal").modal("show");
+  });
 }
 
-// ─────────────────────────────────────
 // 이미지 처리
-// ─────────────────────────────────────
 function handleFileUpload() {
   const files = $("#fileInput")[0].files;
   if (!files.length) return;
 
-  const formData = new FormData();
-  for (const file of files) formData.append("files", file);
-
-  $.ajax({
-    url: "/api/upload/multi",
-    method: "POST",
-    data: formData,
-    processData: false,
-    contentType: false,
-    success: function (urls) {
+  uploadImages(files)
+    .then((urls) => {
       uploadedImageUrls.push(...urls);
-      renderImagePreviews();
-    },
-    error: function (xhr) {
-      alert("업로드 실패: " + xhr.responseText);
-    },
-  });
-}
-
-function renderImagePreviews() {
-  const $container = $("#uploadedPreview").empty();
-  if (uploadedImageUrls.length > 0) {
-    $("#cancelImageBtn").removeClass("d-none");
-  } else {
-    $("#cancelImageBtn").addClass("d-none");
-  }
-
-  uploadedImageUrls.forEach((url, index) => {
-    const $block = $(`
-      <div class="position-relative d-inline-block">
-        <img src="${url}" class="img-thumbnail me-2 mb-2" style="max-width: 100px;" />
-        <button type="button" class="btn btn-sm btn-close position-absolute top-0 end-0" data-index="${index}"></button>
-      </div>
-    `);
-    $block.find("button").on("click", function () {
-      uploadedImageUrls.splice($(this).data("index"), 1);
-      renderImagePreviews();
+      renderPreviewWithDelete();
+      $("#fileInput").val(""); // 같은 파일 재업로드 가능하도록 초기화
+    })
+    .catch((err) => {
+      alert("업로드 실패: " + err.responseText);
     });
-    $container.append($block);
-  });
 }
 
 function clearAllImages() {
   uploadedImageUrls = [];
-  renderImagePreviews();
+  clearImagePreview("uploadedPreview");
+  $("#fileInput").val(""); // input 초기화
+  renderPreviewWithDelete(); // wrapper d-none 적용을 위해 호출
 }
 
-// ─────────────────────────────────────
-// 동적 카테고리 필드 렌더링
-// ─────────────────────────────────────
-function renderAnswerFields(category, data = {}) {
-  const container = $("#dynamicAnswerFields");
-  container.empty();
+// 미리보기 렌더링 및 삭제 버튼 처리
+function renderPreviewWithDelete() {
+  renderImagePreview(uploadedImageUrls, "uploadedPreview", onDeleteImage);
 
-  const fieldMap = {
-    PARKING: {
-      label: "주차 가능 여부",
-      name: "isParkingAvailable",
-      type: "select",
-      options: [
-        { value: "true", text: "가능" },
-        { value: "false", text: "불가능" },
-      ],
-    },
-    WAITING_STATUS: {
-      label: "대기 인원",
-      name: "waitCount",
-      type: "number",
-    },
-    CROWD_LEVEL: {
-      label: "혼잡도",
-      name: "crowdLevel",
-      type: "number",
-    },
-    BATHROOM: {
-      label: "화장실 여부",
-      name: "hasBathroom",
-      type: "select",
-      options: [
-        { value: "true", text: "있음" },
-        { value: "false", text: "없음" },
-      ],
-    },
-    FOOD_MENU: {
-      label: "메뉴 정보",
-      name: "menuInfo",
-      type: "text",
-    },
-    WEATHER_LOCAL: {
-      label: "날씨 상태",
-      name: "weatherNote",
-      type: "text",
-    },
-    STREET_VENDOR: {
-      label: "노점 이름",
-      name: "vendorName",
-      type: "text",
-    },
-    PHOTO_REQUEST: {
-      label: "사진 요청 메모",
-      name: "photoNote",
-      type: "text",
-    },
-    NOISE_LEVEL: {
-      label: "소음 상태",
-      name: "noiseNote",
-      type: "text",
-    },
-    BUSINESS_STATUS: {
-      label: "영업 여부",
-      name: "isOpen",
-      type: "select",
-      options: [
-        { value: "true", text: "영업 중" },
-        { value: "false", text: "영업 종료" },
-      ],
-    },
-    OPEN_SEAT: {
-      label: "남은 좌석 수",
-      name: "seatCount",
-      type: "number",
-    },
-    ETC: {
-      label: "기타 메모",
-      name: "extra",
-      type: "text",
-    },
-  };
-
-  const config = fieldMap[category];
-  if (!config) return;
-
-  let html = `<div class="mb-3"><label class="form-label">${config.label}</label>`;
-
-  const currentValue = data[config.name];
-
-  if (config.type === "select") {
-    html += `<select name="${config.name}" class="form-select">`;
-    html += `<option value="">선택하세요</option>`;
-    config.options.forEach((opt) => {
-      const selected = String(currentValue) === opt.value ? "selected" : "";
-      html += `<option value="${opt.value}" ${selected}>${opt.text}</option>`;
-    });
-    html += `</select>`;
+  const $wrapper = $("#uploadedPreview").closest(".position-relative");
+  if (uploadedImageUrls.length > 0) {
+    $wrapper.removeClass("d-none");
   } else {
-    html += `<input type="${config.type}" class="form-control" name="${
-      config.name
-    }" value="${currentValue ?? ""}" />`;
+    $wrapper.addClass("d-none");
   }
 
-  html += `</div>`;
-  container.append(html);
+  $("#cancelImageBtn").toggleClass("d-none", uploadedImageUrls.length === 0);
 }
 
-// ─────────────────────────────────────
+function onDeleteImage(index) {
+  uploadedImageUrls.splice(index, 1);
+  renderPreviewWithDelete();
+}
+
 // 글자 수 표시
-// ─────────────────────────────────────
 function updateCharCount() {
   const len = $("#content").val().trim().length;
   $("#contentCount").text(`${len} / 300자`);
 }
 
-// ─────────────────────────────────────
 // 수정 요청 제출
-// ─────────────────────────────────────
 function handleSubmit(e) {
   e.preventDefault();
 
+  const category = currentCategory; // 고정된 카테고리 사용
   const body = {
     content: $("#content").val().trim(),
-    category: $("#category").val(),
+    category,
     imageUrls: uploadedImageUrls,
+    waitCount: null,
+    hasBathroom: null,
+    menuInfo: null,
+    weatherNote: null,
+    vendorName: null,
+    photoNote: null,
+    noiseNote: null,
+    isParkingAvailable: null,
+    isOpen: null,
+    seatCount: null,
+    crowdLevel: null,
+    extra: null,
   };
 
-  switch (body.category) {
-    case "WAITING_STATUS":
-      body.waitCount = parseInt($("#waitCount").val());
+  // 카테고리에 따른 값만 채우기
+  switch (category) {
+    case "WAITING_STATUS": {
+      const val = $("#waitCount").val();
+      body.waitCount = val === "" ? null : parseInt(val);
       break;
+    }
     case "FOOD_MENU":
-      body.menuInfo = $("#menuInfo").val();
+      body.menuInfo = $("#menuInfo").val().trim() || null;
       break;
-    case "BATHROOM":
-      body.hasBathroom = $("#hasBathroom").val() === "true";
+    case "BATHROOM": {
+      const val = $("#hasBathroom").val();
+      body.hasBathroom = val === "" ? null : val === "true";
       break;
-    case "ETC":
-      body.extra = $("#extra").val();
-      break;
-    case "CROWD_LEVEL":
-      body.crowdLevel = parseInt($("#crowdLevel").val());
-      break;
+    }
     case "WEATHER_LOCAL":
-      body.weatherNote = $("#weatherNote").val();
+      body.weatherNote = $("#weatherNote").val().trim() || null;
       break;
     case "STREET_VENDOR":
-      body.vendorName = $("#vendorName").val();
+      body.vendorName = $("#vendorName").val().trim() || null;
       break;
     case "PHOTO_REQUEST":
-      body.photoNote = $("#photoNote").val();
+      body.photoNote = $("#photoNote").val().trim() || null;
       break;
     case "NOISE_LEVEL":
-      body.noiseNote = $("#noiseNote").val();
+      body.noiseNote = $("#noiseNote").val().trim() || null;
       break;
-    case "BUSINESS_STATUS":
-      body.isOpen = $("#isOpen").val() === "true";
+    case "PARKING": {
+      const val = $("#isParkingAvailable").val();
+      body.isParkingAvailable = val === "" ? null : val === "true";
       break;
-    case "OPEN_SEAT":
-      body.seatCount = parseInt($("#seatCount").val());
+    }
+    case "BUSINESS_STATUS": {
+      const val = $("#isOpen").val();
+      body.isOpen = val === "" ? null : val === "true";
+      break;
+    }
+    case "OPEN_SEAT": {
+      const val = $("#seatCount").val();
+      body.seatCount = val === "" ? null : parseInt(val);
+      break;
+    }
+    case "CROWD_LEVEL": {
+      const val = $("#crowdLevel").val();
+      body.crowdLevel = val === "" ? null : parseInt(val);
+      break;
+    }
+    case "ETC":
+      body.extra = $("#extra").val().trim() || null;
       break;
   }
 
+  const logId = $("#logId").val();
   $.ajax({
     url: `/api/status/${logId}`,
     method: "PUT",
     contentType: "application/json",
     data: JSON.stringify(body),
     success: function () {
-      alert("수정 완료!");
-      window.location.href = `/place/community/${placeId}`;
+      alert("수정이 완료되었습니다.");
+      window.location.href = `/place/community/${$("#placeId").val()}`;
     },
     error: function (xhr) {
       alert("수정 실패: " + xhr.responseText);
