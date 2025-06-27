@@ -293,8 +293,12 @@ public class StatusLogService {
 
         // 3. 그룹핑된 로그들에서 PlaceLogGroupDto로 변환 (REGISTER 1개 + ANSWER n개)
         return grouped.entrySet().stream()
-                .map((Map.Entry<Long, List<StatusLog>> entry) -> {
+                .map(entry -> {
                     List<StatusLog> logs = entry.getValue();
+
+                    // 등록된 로그가 없는 경우는 skip
+                    if (logs.isEmpty())
+                        return null;
 
                     // 최신 REGISTER 로그 1개 추출
                     StatusLog latestRegister = logs.stream()
@@ -307,29 +311,33 @@ public class StatusLogService {
                             .filter(l -> l.getStatusType() == StatusType.ANSWER)
                             .toList();
 
-                    // 등록된 로그가 없는 경우는 skip (안전장치)
-                    if (logs.isEmpty())
-                        return null;
-
-                    // Place 정보는 REGISTER가 있으면 거기서, 없으면 아무 로그에서 추출
+                    // Place 정보는 latestRegister가 null이면 다른 로그에서 가져옴
                     Place place = (latestRegister != null) ? latestRegister.getPlace() : logs.get(0).getPlace();
 
                     // DTO로 변환 후 반환
-                    return PlaceLogGroupDto.from(place, latestRegister, answers);
+                    return PlaceLogGroupDto.builder()
+                            .placeId(place.getId())
+                            .placeName(place.getName())
+                            .address(place.getAddress())
+                            .latestRegister(latestRegister != null ? StatusLogDto.fromEntity(latestRegister) : null)
+                            .answerLogs(answers.stream()
+                                    .map(StatusLogDto::fromEntity)
+                                    .toList())
+                            .build();
                 })
                 .filter(Objects::nonNull) // null 제거 (logs.isEmpty() 방어용)
                 .toList();
     }
 
     /**
-     * [3-2] 사용자 지정 요청 응답 로그 조회
+     * [3-2] 일반 장소 요청 응답 로그 조회
      * StatusLogController: getNearbyUserLocationLogs
      * - 공식 장소(Place)와 연결되지 않은 ANSWER 로그만 필터링
      */
     @Transactional(readOnly = true)
-    public List<StatusLog> findNearbyUserLocationLogs(double lat, double lng, double radiusMeters) {
+    public Page<StatusLog> findNearbyUserLocationLogs(double lat, double lng, double radiusMeters, Pageable pageable) {
         LocalDateTime cutoff = LocalDateTime.now().minusHours(3);
-        return statusLogRepository.findNearbyUserAnswerLogs(lat, lng, radiusMeters, cutoff);
+        return statusLogRepository.findNearbyUserAnswerLogs(lat, lng, radiusMeters, cutoff, pageable);
     }
 
     /**
@@ -512,7 +520,7 @@ public class StatusLogService {
             log.setIsOpen(dto.getIsOpen());
         if (dto.getSeatCount() != null)
             log.setSeatCount(dto.getSeatCount());
-        if (dto.getCrowdLevel() != null) 
+        if (dto.getCrowdLevel() != null)
             log.setCrowdLevel(dto.getCrowdLevel());
         if (dto.getExtra() != null)
             log.setExtra(dto.getExtra());

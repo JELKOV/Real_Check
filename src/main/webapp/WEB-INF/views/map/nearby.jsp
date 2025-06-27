@@ -23,24 +23,60 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
     <div class="container-fluid mt-4">
       <h3 class="text-center mb-4">등록된 현장 정보 탐색</h3>
       <div class="row">
+        <!-- 사이드 정보 패널 -->
+        <div class="col-md-4">
+          <div
+            id="sidebarWrapper"
+            class="bg-light border rounded shadow-sm p-3"
+            style="height: 85vh; overflow-y: auto; display: block"
+          >
+            <!-- 1. 최상단 타이틀 -->
+            <h4 class="fw-bold mb-3">📌 주변 응답 정보</h4>
+
+            <!-- 2. 공식 장소 응답 -->
+            <div id="sidebarOfficialContent" style="display: none">
+              <h5 class="text-primary fw-bold">🏛 공식 장소</h5>
+              <div id="sidebarGroupedLogs"></div>
+            </div>
+
+            <!-- 3. 사용자 지정 응답 -->
+            <div id="sidebarUserContent" style="display: none">
+              <h5 class="text-success fw-bold">📍 일반 장소</h5>
+              <div id="sidebarUserLogs"></div>
+            </div>
+          </div>
+        </div>
+
         <!-- 지도 영역 -->
         <div class="col-md-8">
-          <div class="map-container-wrapper">
-            <!-- 좌측 상단 필터 버튼 -->
-            <div class="map-filter-group">
+          <div
+            class="map-container-wrapper position-relative"
+            style="height: 85vh"
+          >
+            <!-- 왼쪽 상단 필터 버튼 (map-filter-group) -->
+            <div class="map-filter-top-right">
               <button
-                class="btn btn-outline-primary btn-sm me-1 filter-btn"
+                class="btn btn-outline-primary btn-sm me-2 filter-btn"
                 id="filterModeOfficial"
+                title="공식 장소"
               >
-                공식장소
+                🏛 공식장소
               </button>
               <button
                 class="btn btn-outline-success btn-sm filter-btn"
                 id="filterModeUser"
+                title="사용자 지정 장소"
               >
-                사용자지정장소
+                📍 일반장소
               </button>
             </div>
+
+            <!-- 지도 표시 영역 -->
+            <div
+              id="statusMap"
+              class="map-container"
+              style="height: 100%"
+            ></div>
 
             <!-- 우측 하단 제어 버튼 -->
             <div
@@ -57,39 +93,12 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
             >
               🔄
             </div>
-
-            <!-- 지도 표시 영역 -->
-            <div id="statusMap" class="map-container"></div>
-          </div>
-        </div>
-
-        <!-- 사이드 정보 패널 -->
-        <div class="col-md-4">
-          <div
-            id="sidebarWrapper"
-            class="bg-light border rounded shadow-sm p-3"
-            style="height: 85vh; overflow-y: auto; display: block"
-          >
-            <!-- 1. 최상단 타이틀 -->
-            <h4 class="fw-bold mb-3">📌 주변 응답 정보</h4>
-
-            <!-- 2. 공식 장소 응답 -->
-            <div id="sidebarOfficialContent" style="display: none">
-              <h5 class="text-primary fw-bold">🏛 공식 장소 응답</h5>
-              <div id="sidebarGroupedLogs"></div>
-            </div>
-
-            <!-- 3. 사용자 지정 응답 -->
-            <div id="sidebarUserContent" style="display: none">
-              <h5 class="text-success fw-bold">📍 사용자 지정 응답</h5>
-              <div id="sidebarUserLogs"></div>
-            </div>
           </div>
         </div>
       </div>
     </div>
 
     <%@ include file="../common/footer.jsp" %>
-    <script src="/js/map/nearby.js"></script>
+    <script type="module" src="/js/map/nearby.js"></script>
   </body>
 </html>

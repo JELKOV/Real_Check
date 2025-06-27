@@ -98,27 +98,33 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
         <!-- 지도 영역 -->
         <div id="freeShareMap" class="position-relative">
-          <div class="map-control-button" id="myLocationButton" title="내 위치">
-            📍
-          </div>
-          <div
-            class="map-control-button"
-            id="refreshNearbyButton"
-            title="주변 새로고침"
-          >
-            🔄
-          </div>
-          <div
-            class="map-control-button"
-            id="registerToggleButton"
-            title="등록 모드 전환"
-          >
-            📝
+          <div class="map-control-container">
+            <div
+              class="map-control-button"
+              id="registerToggleButton"
+              title="등록 모드 전환"
+            >
+              📝<br /><span id="registerBtnLabel">정보 등록</span>
+            </div>
+            <div
+              class="map-control-button"
+              id="myLocationButton"
+              title="내 위치"
+            >
+              📍<br /><span>내위치</span>
+            </div>
+            <div
+              class="map-control-button"
+              id="refreshNearbyButton"
+              title="주변 새로고침"
+            >
+              🔄<br /><span>새로고침</span>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- 등록 모달 -->
+      <!-- 정보 등록용 모달 -->
       <div
         class="modal fade"
         id="registerModal"
@@ -220,9 +226,25 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
           </div>
         </div>
       </div>
-    </div>
 
-    <script src="/js/map/free-share.js"></script>
+      <!-- 같은 위치의 여러 정보 보기 모달 -->
+      <div class="modal fade" id="groupDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">같은 위치의 공유 정보들</h5>
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+              ></button>
+            </div>
+            <div class="modal-body" id="groupDetailContent"></div>
+          </div>
+        </div>
+      </div>
+    </div>
     <%@ include file="../common/footer.jsp" %>
+    <script type="module" src="/js/map/free-share.js"></script>
   </body>
 </html>

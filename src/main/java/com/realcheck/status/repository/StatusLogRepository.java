@@ -266,21 +266,21 @@ public interface StatusLogRepository extends JpaRepository<StatusLog, Long> {
                         @Param("cutoff") LocalDateTime cutoff);
 
         /**
-         * [5-2] 사용자 지정 위치의 ANSWER 로그만 필터링
+         * [5-2] 일반 장소 위치의 ANSWER 로그만 필터링
          * StatusLogService: findNearbyUserLocationLogs
          */
         @Query("""
-                            SELECT s
-                            FROM StatusLog s
+                            SELECT s FROM StatusLog s
                             WHERE s.statusType = com.realcheck.status.entity.StatusType.ANSWER
                               AND s.place IS NULL
                               AND FUNCTION('ST_Distance_Sphere', POINT(s.lng, s.lat), POINT(:lng, :lat)) <= :radius
                               AND s.createdAt >= :cutoff
                               AND s.isHidden = false
                         """)
-        List<StatusLog> findNearbyUserAnswerLogs(
+        Page<StatusLog> findNearbyUserAnswerLogs(
                         @Param("lat") double lat,
                         @Param("lng") double lng,
                         @Param("radius") double radius,
-                        @Param("cutoff") LocalDateTime cutoff);
+                        @Param("cutoff") LocalDateTime cutoff,
+                        Pageable pageable);
 }

@@ -36,15 +36,15 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
          * - Pageable을 통한 정렬 및 페이지네이션 처리
          */
         @Query("""
-        SELECT r FROM Request r
-        WHERE r.user.id = :userId
-        AND (:category IS NULL OR r.category = :category)
-        AND (
-        :keyword IS NULL
-        OR LOWER(r.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
-        OR LOWER(r.content) LIKE LOWER(CONCAT('%', :keyword, '%'))
-        )
-        """)
+                        SELECT r FROM Request r
+                        WHERE r.user.id = :userId
+                        AND (:category IS NULL OR r.category = :category)
+                        AND (
+                        :keyword IS NULL
+                        OR LOWER(r.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                        OR LOWER(r.content) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                        )
+                        """)
         Page<Request> findMyRequestsWithFilters(
                         @Param("userId") Long userId,
                         @Param("category") RequestCategory category,
@@ -91,20 +91,20 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
          * - 지도 기반 필터링 기능에서 사용됨
          */
         @Query("""
-        SELECT r
-        FROM Request r
-        WHERE r.isClosed = false
-                AND SIZE(r.statusLogs) < 3
-                AND r.createdAt <= :threshold
-                AND r.lat IS NOT NULL
-                AND r.lng IS NOT NULL
-                AND (:category IS NULL OR r.category = :category)
-                AND (6371 * acos(
-                cos(radians(:lat)) * cos(radians(r.lat)) *
-                cos(radians(r.lng) - radians(:lng)) +
-                sin(radians(:lat)) * sin(radians(r.lat))
-                )) <= (:radius / 1000)
-        """)
+                        SELECT r
+                        FROM Request r
+                        WHERE r.isClosed = false
+                                AND SIZE(r.statusLogs) < 3
+                                AND r.createdAt <= :threshold
+                                AND r.lat IS NOT NULL
+                                AND r.lng IS NOT NULL
+                                AND (:category IS NULL OR r.category = :category)
+                                AND (6371 * acos(
+                                cos(radians(:lat)) * cos(radians(r.lat)) *
+                                cos(radians(r.lng) - radians(:lng)) +
+                                sin(radians(:lat)) * sin(radians(r.lat))
+                                )) <= (:radius / 1000)
+                        """)
         Page<Request> findOpenRequestsWithLocation(
                         @Param("lat") double lat,
                         @Param("lng") double lng,
@@ -114,23 +114,49 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
                         Pageable pageable);
 
         /**
-         * [2-2] 최신 요청 조회 (현재 위치 기준 / 반경 내 응답 부족 요청 조회)
-         * RequestService: findNearbyValidRequests
-         * - 장소 정보가 있는 요청만 대상으로 함
-         * - 위도/경도 null 방지 포함
+         * [2-2] 최신 요청 조회 (현재 위치 기준 / 반경 내 미마감 요청 중 응답 부족 필터링, 페이지네이션 적용)
+         * RequestService: findNearbyRequestsPaged
+         *
+         * - 장소 좌표(lat/lng)가 존재하는 요청만 대상
+         * - 3시간 이내 생성된 요청만 조회
+         * - 요청이 닫히지 않았으며 (isClosed = false)
+         * - 숨김 처리되지 않은 응답(StatusLog)이 3개 미만인 요청만 반환
+         * - ST_Distance_Sphere 함수를 이용한 반경 필터링 적용
+         * - 최신순(createdAt DESC) 정렬
          */
-        @Query("""
-        SELECT r FROM Request r
-        WHERE r.isClosed = false
-                AND r.lat IS NOT NULL AND r.lng IS NOT NULL
-                AND SIZE(r.statusLogs) < 3
-                AND r.createdAt >= :timeLimit
-                AND FUNCTION('ST_Distance_Sphere', POINT(r.lng, r.lat), POINT(:lng, :lat)) <= :radius """)
-        List<Request> findNearbyValidRequests(
+        @Query(value = """
+                        SELECT r
+                        FROM Request r
+                        WHERE r.isClosed = false
+                          AND r.lat IS NOT NULL AND r.lng IS NOT NULL
+                          AND r.createdAt >= :timeLimit
+                          AND FUNCTION('ST_Distance_Sphere', POINT(r.lng, r.lat), POINT(:lng, :lat)) <= :radius
+                          AND (
+                              SELECT COUNT(s)
+                              FROM StatusLog s
+                              WHERE s.request = r
+                                AND s.isHidden = false
+                          ) < 3
+                        """, countQuery = """
+                        SELECT COUNT(r)
+                        FROM Request r
+                        WHERE r.isClosed = false
+                          AND r.lat IS NOT NULL AND r.lng IS NOT NULL
+                          AND r.createdAt >= :timeLimit
+                          AND FUNCTION('ST_Distance_Sphere', POINT(r.lng, r.lat), POINT(:lng, :lat)) <= :radius
+                          AND (
+                              SELECT COUNT(s)
+                              FROM StatusLog s
+                              WHERE s.request = r
+                                AND s.isHidden = false
+                          ) < 3
+                        """)
+        Page<Request> findNearbyValidRequestsPaged(
                         @Param("lat") double lat,
                         @Param("lng") double lng,
                         @Param("radius") double radius,
-                        @Param("timeLimit") LocalDateTime timeLimit);
+                        @Param("timeLimit") LocalDateTime timeLimit,
+                        Pageable pageable);
 
         // ─────────────────────────────────────────────
         // [3] 자동 마감 관련 메소드
@@ -145,13 +171,13 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
          */
 
         @Query("""
-        SELECT DISTINCT r
-        FROM Request r
-        JOIN r.statusLogs s
-        WHERE r.isClosed = false
-        AND s.isHidden = false
-        AND s.createdAt <= :threshold
-        """)
+                        SELECT DISTINCT r
+                        FROM Request r
+                        JOIN r.statusLogs s
+                        WHERE r.isClosed = false
+                        AND s.isHidden = false
+                        AND s.createdAt <= :threshold
+                        """)
         List<Request> findRequestsWithOldVisibleAnswers(@Param("threshold") LocalDateTime threshold);
 
         // ─────────────────────────────────────────────
@@ -164,13 +190,13 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
          * - 요청 등록 시점(createdAt)을 기준으로 연/월별 등록 수 집계
          */
         @Query("""
-        SELECT new com.realcheck.admin.dto.MonthlyStatDto(
-        YEAR(r.createdAt), MONTH(r.createdAt), COUNT(r)
-        )
-        FROM Request r
-        GROUP BY YEAR(r.createdAt), MONTH(r.createdAt)
-        ORDER BY YEAR(r.createdAt) DESC, MONTH(r.createdAt) DESC
-        """)
+                        SELECT new com.realcheck.admin.dto.MonthlyStatDto(
+                        YEAR(r.createdAt), MONTH(r.createdAt), COUNT(r)
+                        )
+                        FROM Request r
+                        GROUP BY YEAR(r.createdAt), MONTH(r.createdAt)
+                        ORDER BY YEAR(r.createdAt) DESC, MONTH(r.createdAt) DESC
+                        """)
         List<MonthlyStatDto> countMonthlyRequests();
 
         /**
@@ -180,13 +206,13 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
          * - RequestCategory 기준으로 그룹화
          */
         @Query("""
-        SELECT new com.realcheck.admin.dto.CategoryStatDto(
-        r.category, COUNT(r)
-        )
-        FROM Request r
-        GROUP BY r.category
-        ORDER BY COUNT(r) DESC
-        """)
+                        SELECT new com.realcheck.admin.dto.CategoryStatDto(
+                        r.category, COUNT(r)
+                        )
+                        FROM Request r
+                        GROUP BY r.category
+                        ORDER BY COUNT(r) DESC
+                        """)
         List<CategoryStatDto> countByCategory();
 
         /**
@@ -204,14 +230,14 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
          * - 사용자 ID, 닉네임, 요청 수를 포함한 DTO 반환
          */
         @Query("""
-        SELECT new com.realcheck.admin.dto.UserRequestStatDto(
-        r.user.id,
-        r.user.nickname,
-        COUNT(r)
-        )
-        FROM Request r
-        GROUP BY r.user.id, r.user.nickname
-        ORDER BY COUNT(r) DESC
-        """)
+                        SELECT new com.realcheck.admin.dto.UserRequestStatDto(
+                        r.user.id,
+                        r.user.nickname,
+                        COUNT(r)
+                        )
+                        FROM Request r
+                        GROUP BY r.user.id, r.user.nickname
+                        ORDER BY COUNT(r) DESC
+                        """)
         List<UserRequestStatDto> findTopUsersByRequestCount(Pageable pageable);
 }

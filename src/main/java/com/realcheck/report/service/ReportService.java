@@ -33,7 +33,8 @@ public class ReportService {
      * ReportController: report
      * - 신고자가 다른 사용자의 상태 로그를 신고할 때 호출됨
      * - 신고 내용 저장 후, 신고 대상자의 누적 신고 수를 확인
-     * - 일정 횟수(3회) 이상이면 자동으로 계정 비활성화 + 해당 로그 숨김 처리
+     * - 일정 횟수(3회) 이상이면 자동으로 비활성화 + 해당 로그 숨김 처리
+     * -
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     @Retryable(value = ObjectOptimisticLockingFailureException.class, maxAttempts = 3, backoff = @Backoff(delay = 100))

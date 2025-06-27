@@ -209,21 +209,26 @@ public class RequestService {
     }
 
     /**
-     * [3-3] 최신 요청 조회 (현재 사용자 위치 기준 / 지도 반경 기반)
-     * RequestController: findNearbyOpenRequests
-     * - 위도, 경도 기준으로 radius(m) 이내
-     * - 장소 좌표가 존재하며 답변 수가 3개 미만인 요청 필터
-     * - TODO 3시간 이내 수정 (테스트라 48시간으로 바꿈)
+     * [3-3] 최신 요청 조회 (현재 사용자 위치 기준 / 지도 반경 기반, 페이지네이션 포함)
+     * RequestController: findNearbyRequestsPaged
+     * - 위도/경도 기준 반경 내
+     * - TODO: 이후에 3시간으로 수정해야함 현재 테스트상 48시간
+     * - 12시간 이내 생성된 요청
+     * - 미마감 + 응답 수 3개 미만
      */
-    public List<RequestDto> findNearbyValidRequests(double lat, double lng, double radiusMeters) {
+    public Page<RequestDto> findNearbyRequestsPaged(
+            double lat, double lng, double radius, int page, int size) {
+
         LocalDateTime timeLimit = LocalDateTime.now().minusHours(48);
-        List<Request> requests = requestRepository.findNearbyValidRequests(lat, lng, radiusMeters, timeLimit);
-        return requests.stream()
-                .map(r -> {
-                    int visibleCount = countVisibleStatusLogsByRequestId(r.getId());
-                    return RequestDto.fromEntity(r, visibleCount);
-                })
-                .toList();
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        Page<Request> pageResult = requestRepository.findNearbyValidRequestsPaged(
+                lat, lng, radius, timeLimit, pageable);
+
+        return pageResult.map(r -> {
+            int visibleCount = countVisibleStatusLogsByRequestId(r.getId());
+            return RequestDto.fromEntity(r, visibleCount);
+        });
     }
 
     /**

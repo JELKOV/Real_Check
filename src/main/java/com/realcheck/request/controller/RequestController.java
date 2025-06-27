@@ -88,13 +88,15 @@ public class RequestController {
      * - 장소 좌표가 존재하며 답변 수가 3개 미만인 요청 필터
      */
     @GetMapping("/nearby")
-    public ResponseEntity<List<RequestDto>> findNearbyOpenRequests(
+    public ResponseEntity<Page<RequestDto>> findNearbyRequestsPaged(
             @RequestParam double lat,
             @RequestParam double lng,
-            @RequestParam(defaultValue = "3000") double radiusMeters) {
+            @RequestParam(defaultValue = "3000") double radiusMeters,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
 
-        List<RequestDto> dtoList = requestService.findNearbyValidRequests(lat, lng, radiusMeters);
-        return ResponseEntity.ok(dtoList);
+        Page<RequestDto> result = requestService.findNearbyRequestsPaged(lat, lng, radiusMeters, page, size);
+        return ResponseEntity.ok(result);
     }
 
     /**

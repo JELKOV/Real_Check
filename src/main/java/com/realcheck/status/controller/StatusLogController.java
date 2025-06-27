@@ -12,8 +12,10 @@ import com.realcheck.user.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -138,22 +140,19 @@ public class StatusLogController {
     }
 
     /**
-     * [2-4] 사용자 지정 위치 응답 로그 조회 API
+     * [2-4] 일반 장소 위치 응답 로그 조회 API
      * page: map/nearby.jsp
      * - 사용자 요청 응답 중 Place가 없는 것만 조회
      */
     @GetMapping("/nearby/user-locations")
-    public ResponseEntity<List<StatusLogDto>> getNearbyUserLocationLogs(
+    public ResponseEntity<Page<StatusLogDto>> getNearbyUserLocationLogs(
             @RequestParam double lat,
             @RequestParam double lng,
-            @RequestParam(defaultValue = "3000") double radiusMeters) {
+            @RequestParam(defaultValue = "3000") double radiusMeters,
+            @PageableDefault(size = 6, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
-        List<StatusLog> logs = statusLogService.findNearbyUserLocationLogs(lat, lng, radiusMeters);
-        List<StatusLogDto> result = logs.stream()
-                .map(StatusLogDto::fromEntity)
-                .toList();
-
-        return ResponseEntity.ok(result);
+        Page<StatusLog> logs = statusLogService.findNearbyUserLocationLogs(lat, lng, radiusMeters, pageable);
+        return ResponseEntity.ok(logs.map(StatusLogDto::fromEntity));
     }
 
     /**

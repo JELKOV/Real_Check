@@ -6,6 +6,8 @@
  * - 2
  * - place/place-search.js
  * - 1, 3
+ * - map/free-share.js
+ * - 1
  */
 
 // [1] debounce 함수

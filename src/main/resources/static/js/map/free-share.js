@@ -1,3 +1,16 @@
+import { getCurrentPosition, isWithinRadius } from "./util/locationUtils.js";
+import {
+  createUserCircle,
+  updateCircleStyle,
+  moveMapTo,
+  extractLatLngFromMap,
+} from "./util/mapUtils.js";
+
+import { debounce } from "../util/common.js";
+
+import { groupByLocation } from "./util/groupUtils.js";
+import { getCategoryLabel } from "./util/categoryUtils.js";
+
 // ─────────────────────────────────────────────
 // [0] 전역 변수 정의
 // ─────────────────────────────────────────────
@@ -12,52 +25,32 @@ let isLoading = false;
 let hasNextPage = true;
 let isRegisterMode = false;
 
-const categoryLabelMap = {
-  PARKING: "🅿️ 주차 가능 여부",
-  WAITING_STATUS: "⏳ 대기 상태",
-  STREET_VENDOR: "🥟 노점 현황",
-  PHOTO_REQUEST: "📸 사진 요청",
-  BUSINESS_STATUS: "🏪 가게 영업 여부",
-  OPEN_SEAT: "💺 좌석 여유",
-  BATHROOM: "🚻 화장실 여부",
-  WEATHER_LOCAL: "☁️ 날씨 상태",
-  NOISE_LEVEL: "🔊 소음 여부",
-  FOOD_MENU: "🍔 메뉴/음식",
-  CROWD_LEVEL: "👥 혼잡도",
-  ETC: "❓ 기타",
-};
-
 // ─────────────────────────────────────────────
 // [1] 초기화: 문서 준비 완료 시 실행
 // ─────────────────────────────────────────────
 $(document).ready(function () {
-  // [1-1] 사용자 위치를 가져와 지도 초기화 및 리스트 로드 수행
+  // 사용자 위치를 가져와 지도 초기화 및 리스트 로드 수행
   getUserLocation();
 
-  // [1-2] 등록/정보 보기 토글 버튼 초기 텍스트 설정
-  $("#registerToggleButton").text("📋");
+  // 등록/정보 보기 토글 버튼 초기 텍스트 설정
+  toggleRegisterUI(isRegisterMode);
 
   // ───────────── 버튼 및 이벤트 바인딩 ─────────────
 
-  // [1-3] 내 위치로 이동 버튼 클릭 시 → 위치 재탐색
+  // 내 위치로 이동 버튼 클릭 시 → 위치 재탐색
   $("#myLocationButton").on("click", getUserLocation);
-
-  // [1-4] 근처 정보 새로고침 버튼 → 리스트 초기화 및 다시 로드
+  // 근처 정보 새로고침 버튼 → 리스트 초기화 및 다시 로드
   $("#refreshNearbyButton").on("click", resetAndLoadFreeShareList);
-
-  // [1-5] 이미지 업로드 input 변경 시 → 업로드 및 미리보기 렌더링
+  // 이미지 업로드 input 변경 시 → 업로드 및 미리보기 렌더링
   $("#imageInput").on("change", handleImageFileChange);
-
-  // [1-6] 카테고리 선택 시 → 해당하는 동적 필드 렌더링
+  // 카테고리 선택 시 → 해당하는 동적 필드 렌더링
   $("#categorySelect").on("change", renderDynamicFields);
-
-  // [1-7] 등록 폼 제출 시 → 등록 처리 수행
+  // 등록 폼 제출 시 → 등록 처리 수행
   $("#registerForm").on("submit", handleSubmit);
-
-  // [1-8] 일수 필터 변경 시 → 리스트 재로딩
+  // 일수 필터 변경 시 → 리스트 재로딩
   $("#daysSelect").on("change", resetAndLoadFreeShareList);
 
-  // [1-9] 반경 필터 변경 시 → 지도 반경 반영 + 리스트 재로딩
+  // 반경 필터 변경 시 원 반영
   $("#radiusSelect").on("change", function () {
     const radius = parseInt($(this).val());
 
@@ -68,19 +61,17 @@ $(document).ready(function () {
     resetAndLoadFreeShareList(); // 데이터 다시 불러오기
   });
 
-  // [1-10] 더보기 버튼 클릭 시 → 다음 페이지 데이터 불러오기
+  // 더보기 버튼 클릭 시 → 다음 페이지 데이터 불러오기
   $("#loadMoreBtn").on("click", function () {
     loadFreeShareList(true); // append = true (기존에 이어붙임)
   });
-
-  // [1-11] 이미지 미리보기 영역의 삭제 버튼 클릭 시 → 해당 이미지 제거
+  // 이미지 미리보기 영역의 삭제 버튼 클릭 시 → 해당 이미지 제거
   $(document).on("click", ".delete-image-btn", function () {
     const url = $(this).data("url");
     uploadedImageUrls = uploadedImageUrls.filter((u) => u !== url);
     renderImagePreview();
   });
-
-  // [1-12] 주소 검색 버튼 클릭 시 → 지도 이동 및 리스트 로드
+  // 주소 검색 버튼 클릭 시 → 지도 이동 및 리스트 로드
   $("#searchAddressBtn").click(() => {
     if (isRegisterMode) {
       alert("등록 모드에서는 주소 검색을 사용할 수 없습니다.");
@@ -100,13 +91,13 @@ $(document).ready(function () {
 
       const latlng = new naver.maps.LatLng(item.y, item.x);
       map.setCenter(latlng); // 지도 중심 이동
-      userLocation = { lat: latlng.lat(), lng: latlng.lng() }; // 위치 갱신
+      userLocation = extractLatLngFromMap(map); // 위치 갱신
       userCircle.setCenter(latlng); // 원도 이동
       resetAndLoadFreeShareList(); // 리스트 재로딩
     });
   });
 
-  // [1-12-1] 주소 입력창에서 엔터 키 입력 시 → 검색 실행
+  // 주소 입력창에서 엔터 키 입력 시 → 검색 실행
   $("#addressInput").on("keydown", function (e) {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -114,23 +105,17 @@ $(document).ready(function () {
     }
   });
 
-  // [1-13] 등록/정보 보기 토글 버튼 클릭 시
+  // 등록/정보 보기 토글 버튼 클릭 시
   $("#registerToggleButton").on("click", function () {
-    const $btn = $(this);
-    const currentIcon = $btn.text().trim();
-
-    // 등록 모드로 진입
-    if (currentIcon === "📋") {
+    if (isRegisterMode) {
+      exitRegisterMode();
+    } else {
       enterRegisterMode();
     }
-    // 정보 보기 모드로 복귀
-    else if (currentIcon === "❌") {
-      exitRegisterMode();
-    }
 
-    // 지도 위치 재조정 (등록 위치 또는 기존 중심)
+    // 지도 위치 재조정
     if (userLocation && map) {
-      moveMapTo(userLocation.lat, userLocation.lng);
+      moveMapTo(map, userCircle, userLocation.lat, userLocation.lng);
     }
   });
 });
@@ -146,27 +131,16 @@ function resetAndLoadFreeShareList() {
 // [2] 사용자 위치 가져오기 → 지도 초기화 및 리스트 로드
 // ─────────────────────────────────────────────
 function getUserLocation() {
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        userLocation = {
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-        };
-        if (!initialUserLocation) {
-          initialUserLocation = { ...userLocation }; // 최초 좌표 복제 저장
-        }
-        initMap(userLocation.lat, userLocation.lng);
-        if (!isRegisterMode) {
-          resetAndLoadFreeShareList();
-        }
-      },
-      () => alert("위치 정보를 가져올 수 없습니다."),
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
-  } else {
-    alert("이 브라우저는 위치 정보를 지원하지 않습니다.");
-  }
+  getCurrentPosition((pos) => {
+    userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+    if (!initialUserLocation) {
+      initialUserLocation = { ...userLocation };
+    }
+    initMap(userLocation.lat, userLocation.lng);
+    if (!isRegisterMode) {
+      resetAndLoadFreeShareList();
+    }
+  });
 }
 
 // ─────────────────────────────────────────────
@@ -185,16 +159,12 @@ function initMap(lat, lng) {
 
   if (userCircle) userCircle.setMap(null);
 
-  userCircle = new naver.maps.Circle({
-    map: map,
-    center: center,
-    radius: 3000,
-    strokeOpacity: 0.6,
-    strokeWeight: 2,
-    fillOpacity: 0.15,
-  });
-
-  updateUserCircleStyle(isRegisterMode ? "#007bff" : "#28a745", 3000);
+  userCircle = createUserCircle(
+    map,
+    center,
+    3000,
+    isRegisterMode ? "#007bff" : "#28a745"
+  );
 
   // 지도 클릭 시 등록 폼 띄우기
   naver.maps.Event.addListener(map, "click", function (e) {
@@ -215,19 +185,18 @@ function initMap(lat, lng) {
     new bootstrap.Modal(document.getElementById("registerModal")).show();
   });
 
-  // 드래그 이동 후 중심 좌표 업데이트 및 로그 재로딩
-  let dragTimeout;
-  naver.maps.Event.addListener(map, "dragend", function () {
-    if (isRegisterMode) return; // 등록 모드일 땐 드래그 무시
+  // 드래그 후 0.3초 동안 아무 동작 없을 때만 실행
+  const handleDragEnd = debounce(() => {
+    if (isRegisterMode) return;
 
-    clearTimeout(dragTimeout);
-    dragTimeout = setTimeout(() => {
-      const center = map.getCenter();
-      userLocation = { lat: center.lat(), lng: center.lng() };
-      userCircle.setCenter(center);
-      resetAndLoadFreeShareList();
-    }, 300); // 0.3초 debounce
-  });
+    const center = map.getCenter();
+    userLocation = extractLatLngFromMap(map);
+    userCircle.setCenter(center);
+    resetAndLoadFreeShareList();
+  }, 300);
+
+  // 드래그 이동 후 중심 좌표 업데이트 및 로그 재로딩
+  naver.maps.Event.addListener(map, "dragend", handleDragEnd);
 }
 
 // ─────────────────────────────────────────────
@@ -270,7 +239,14 @@ function loadFreeShareList(append = false) {
         return;
       }
 
-      logs.forEach(renderLogItem);
+      // 그룹화 후 대표만 렌더링
+      const grouped = groupByLocation(logs, "lat", "lng", 5);
+
+      for (const key in grouped) {
+        const group = grouped[key];
+        const representative = group[0];
+        renderLogItem(representative, group.length, group);
+      }
 
       if (currentPage >= res.totalPages) {
         hasNextPage = false;
@@ -283,24 +259,34 @@ function loadFreeShareList(append = false) {
   );
 }
 
-function debounce(fn, delay) {
-  let timer = null;
-  return function () {
-    if (timer) clearTimeout(timer);
-    timer = setTimeout(fn, delay);
-  };
-}
-
-function renderLogItem(log) {
-  const label = categoryLabelMap[log.category] || log.category || "정보 공유";
+function renderLogItem(log, groupSize = 1, group = []) {
+  const label = getCategoryLabel(log.category) || "정보 공유";
   const shortContent =
     log.content.length > 50 ? log.content.slice(0, 50) + "..." : log.content;
+
+  const groupMeta =
+    groupSize > 1
+      ? `<div class="group-meta text-end">
+          <span class="badge bg-secondary mb-1">+${
+            groupSize - 1
+          }개 동일 위치</span><br/>
+          <button
+            class="btn btn-sm btn-outline-primary view-group-btn mt-1"
+            data-group='${JSON.stringify(group)}'
+            title="같은 위치 다른 공유 보기">
+            🔍 모두 보기
+          </button>
+        </div>`
+      : "";
 
   const item = $(`
     <div class="card mb-2 free-share-item" data-log-id="${log.id}">
       <div class="card-body">
-        <h6 class="card-title mb-1">${label}</h6>
-        <p class="card-text text-truncate">${shortContent}</p>
+        <div class="d-flex justify-content-between flex-wrap align-items-start">
+          <h6 class="card-title mb-1">${label}</h6>
+          ${groupMeta}
+        </div>
+        <p class="card-text text-truncate mt-2">${shortContent}</p>
         <div class="text-muted mt-2">
           조회수: ${log.viewCount} · ${new Date(log.createdAt).toLocaleString()}
         </div>
@@ -311,6 +297,13 @@ function renderLogItem(log) {
   item.on("click", () => {
     showLogDetail(log);
     focusOnLog(log);
+  });
+
+  // 모두 보기 버튼 클릭 이벤트
+  item.find(".view-group-btn").on("click", (e) => {
+    e.stopPropagation(); // 부모 클릭 이벤트 막기
+    const groupLogs = JSON.parse($(e.currentTarget).attr("data-group"));
+    showGroupDetailModal(groupLogs);
   });
 
   $("#freeShareList").append(item);
@@ -362,9 +355,45 @@ function showLogDetail(log) {
     });
 }
 
+// 동일 위치 여러개 정보 그룹 보기
+function showGroupDetailModal(groupLogs) {
+  const container = $("#groupDetailContent");
+  container.empty();
+
+  groupLogs.forEach((log) => {
+    const label = getCategoryLabel(log.category);
+    const shortContent =
+      log.content.length > 50 ? log.content.slice(0, 50) + "..." : log.content;
+
+    const logItem = $(`
+      <div class="border-bottom mb-3 pb-2">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <strong>${label}</strong><br/>
+            <span>${shortContent}</span>
+            <div class="text-muted small">${new Date(
+              log.createdAt
+            ).toLocaleString()}</div>
+          </div>
+          <button class="btn btn-sm btn-outline-secondary view-detail-btn">상세 보기</button>
+        </div>
+      </div>
+    `);
+
+    logItem.find(".view-detail-btn").on("click", () => {
+      $("#groupDetailModal").modal("hide");
+      showLogDetail(log);
+    });
+
+    container.append(logItem);
+  });
+
+  new bootstrap.Modal(document.getElementById("groupDetailModal")).show();
+}
+
 // 분리된 렌더 함수
 function renderLogDetail(log) {
-  const label = categoryLabelMap[log.category] || log.category || "정보 공유";
+  const label = getCategoryLabel(log.category) || "정보 공유";
 
   const html = `
     <div class="mb-2"><strong>카테고리:</strong> ${label}</div>
@@ -616,28 +645,18 @@ function handleSubmit(e) {
       ).hide();
 
       if (initialUserLocation) {
-        moveMapTo(initialUserLocation.lat, initialUserLocation.lng);
+        moveMapTo(
+          map,
+          userCircle,
+          initialUserLocation.lat,
+          initialUserLocation.lng
+        );
         updateUserCircleStyle("#28a745", 3000);
       }
       resetAndLoadFreeShareList();
     },
     error: (xhr) => alert("등록 실패: " + xhr.responseText),
   });
-}
-
-// ─────────────────────────────────────────────
-// [9] 위치 반경 계산 함수 (하버사인 공식)
-// ─────────────────────────────────────────────
-function isWithinRadius(lat1, lng1, lat2, lng2, radiusMeters) {
-  const R = 6371000;
-  const toRad = (deg) => (deg * Math.PI) / 180;
-  const dLat = toRad(lat2 - lat1);
-  const dLng = toRad(lng2 - lng1);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c <= radiusMeters;
 }
 
 // ─────────────────────────────────────────────
@@ -687,23 +706,7 @@ function renderImagePreview() {
 
 // updateUserCircleStyle(color, radius) 함수
 function updateUserCircleStyle(color = "#28a745", radius = 3000) {
-  if (!userCircle) return;
-  userCircle.setOptions({
-    map: map,
-    strokeColor: color,
-    fillColor: color,
-    strokeOpacity: 0.6,
-    strokeWeight: 2,
-    fillOpacity: 0.15,
-  });
-  userCircle.setRadius(radius);
-}
-
-// moveMapTo(lat, lng) 함수 도입
-function moveMapTo(lat, lng) {
-  const latlng = new naver.maps.LatLng(lat, lng);
-  map.setCenter(latlng);
-  userCircle?.setCenter(latlng);
+  updateCircleStyle(userCircle, color, radius);
 }
 
 // 필터 비활성화/활성화 함수
@@ -724,7 +727,9 @@ function toggleRegisterUI(isRegister) {
   $("#freeShareList").toggle(!isRegister).toggleClass("d-none", isRegister);
   $("#loadMoreContainer").toggle(!isRegister);
 
-  $("#registerToggleButton").text(isRegister ? "❌" : "📋");
+  const icon = isRegister ? "❌" : "📝";
+  const label = isRegister ? "등록 취소" : "정보 등록";
+  $("#registerToggleButton").html(`${icon}<br /><span>${label}</span>`);
 }
 
 // 등록 모드 진입 함수
@@ -732,7 +737,7 @@ function enterRegisterMode() {
   isRegisterMode = true;
   const fixed = initialUserLocation || userLocation;
   userLocation = { ...fixed };
-  moveMapTo(fixed.lat, fixed.lng);
+  moveMapTo(map, userCircle, fixed.lat, fixed.lng);
   updateUserCircleStyle("#007bff", 3000);
 
   $("#radiusSelect").val("3000");
