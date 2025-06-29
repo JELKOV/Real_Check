@@ -73,10 +73,11 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
             </div>
           </div>
 
-          <!-- [2] 장소 관리 -->
+          <!-- 오른쪽 열 전체: 장소 관리 + 포인트 관리 -->
           <div class="col-md-6 mb-4">
+            <!-- 장소 관리 -->
             <h4 class="mb-3">📍 장소 관리</h4>
-            <div class="card p-3 shadow-sm">
+            <div class="card p-3 shadow-sm mb-4">
               <p class="mb-2 text-muted small">
                 내가 등록한 장소와 즐겨찾는 장소를 관리할 수 있습니다.
               </p>
@@ -93,10 +94,38 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
                 >
               </div>
             </div>
+
+            <!-- 포인트 관리 -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h4 class="mb-0">🪙 포인트 관리</h4>
+              <span class="text-muted small"
+                >현재 보유:
+                <strong class="text-primary"
+                  >${loginUser.points}pt</strong
+                ></span
+              >
+            </div>
+            <div class="card p-3 shadow-sm">
+              <p class="mb-2 text-muted small">
+                부족한 포인트를 충전하거나, 포인트를 현금으로 환급해드립니다.
+              </p>
+              <div class="d-flex gap-2">
+                <a
+                  href="/point/charge"
+                  class="btn btn-outline-primary btn-sm flex-grow-1"
+                  >🔋 포인트 충전</a
+                >
+                <a
+                  href="/point/cash"
+                  class="btn btn-outline-secondary btn-sm flex-grow-1"
+                  >💰 포인트 환급</a
+                >
+              </div>
+            </div>
           </div>
 
           <div class="col-12">
-            <!-- [3] 활동/포인트 탭 버튼 -->
+            <!-- [4] 활동/포인트 탭 버튼 -->
             <ul class="nav nav-tabs mb-3" id="mypageTab" role="tablist">
               <li class="nav-item" role="presentation">
                 <button
@@ -124,7 +153,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
               </li>
             </ul>
 
-            <!-- [3-1] 탭 콘텐츠 영역 -->
+            <!-- [4-1] 탭 콘텐츠 영역 -->
             <div class="tab-content">
               <!-- 최근 활동 -->
               <div

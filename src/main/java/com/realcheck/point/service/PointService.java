@@ -16,6 +16,7 @@ import com.realcheck.point.entity.Point;
 import com.realcheck.point.entity.PointType;
 import com.realcheck.point.repository.PointRepository;
 import com.realcheck.status.entity.StatusLog;
+import com.realcheck.user.dto.UserDto;
 import com.realcheck.user.entity.User;
 import com.realcheck.user.repository.UserRepository;
 
@@ -40,6 +41,7 @@ public class PointService {
      * AutoCloseRequestService: distributePointsToAnswerers
      * StatusLogService: giveUserPoint
      * StatusLogService: selectAnswer
+     * PointService: chargePoint
      */
     @Retryable(value = ObjectOptimisticLockingFailureException.class, maxAttempts = 3, backoff = @Backoff(delay = 100))
     @Transactional
@@ -83,6 +85,36 @@ public class PointService {
             givePoint(log.getReporter(), 10, "자발적 공유 보상 재지급", PointType.REWARD);
             log.setRewarded(true);
         }
+    }
+
+    /**
+     * [1-4] 포인트 충전 메서드
+     * PointController: chargePoint
+     * - 테스트 모드
+     */
+    @Transactional
+    public UserDto chargePoint(Long userId, int amount) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        givePoint(user, amount, "테스트 포인트 충전", PointType.CHARGE);
+
+        return UserDto.fromEntity(user);
+    }
+
+    /**
+     * [1-4] 포인트 캐쉬화
+     * PointController: cashOut
+     * - 테스트 모드
+     */
+    @Transactional
+    public UserDto cashOutPoint(Long userId, int amount) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        givePoint(user, -amount, "포인트 환전 신청", PointType.CASH);
+
+        return UserDto.fromEntity(user);
     }
 
     // ─────────────────────────────────────────────

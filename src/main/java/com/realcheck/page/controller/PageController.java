@@ -149,6 +149,34 @@ public class PageController {
         return "user/myfavorite-place";
     }
 
+    /**
+     * [1-8] 포인트 충전 페이지
+     * page: user/mypage.jsp
+     * page: common/header.jsp
+     */
+    @GetMapping("/point/charge")
+    public String pointChargePage(HttpSession session) {
+        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            return "redirect:/login";
+        }
+        return "point/charge";
+    }
+
+    /**
+     * [1-9] 포인트 캐쉬화 페이지
+     * page: user/mypage.jsp
+     * page: common/header.jsp
+     */
+    @GetMapping("/point/cash")
+    public String pointCashPage(HttpSession session) {
+        UserDto loginUser = (UserDto) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            return "redirect:/login";
+        }
+        return "point/cash";
+    }
+
     // ─────────────────────────────────────────────
     // [2] 요청 /응답 관련 페이지
     // ─────────────────────────────────────────────

@@ -298,7 +298,13 @@ function submitRequest(e) {
       location.href = "/my-requests";
     },
     error: (xhr) => {
-      alert("등록 실패: " + xhr.responseText);
+      if (xhr.status === 400 && xhr.responseText.includes("포인트가 부족")) {
+        if (confirm("포인트가 부족합니다. 충전 페이지로 이동하시겠습니까?")) {
+          location.href = "/point/charge";
+        }
+      } else {
+        alert("등록 실패: " + xhr.responseText);
+      }
     },
   });
 }
@@ -414,7 +420,8 @@ function loadPlaceDetails(placeId) {
     if (data.communityLink) {
       $("#infoLink")
         .attr("href", data.communityLink)
-        .attr("target", "_blank") // 새 창으로 열기 (선택)
+        // 새 창으로 열기
+        .attr("target", "_blank")
         .text("커뮤니티 페이지");
     } else {
       $("#infoLink").hide();

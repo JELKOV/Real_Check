@@ -74,8 +74,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
       </div>
     </div>
 
-    <script src="/js/admin/users.js"></script>
-
     <%@ include file="../common/footer.jsp" %>
+    <script src="/js/admin/users.js"></script>
   </body>
 </html>

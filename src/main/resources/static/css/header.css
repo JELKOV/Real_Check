@@ -1,24 +1,30 @@
-/* 공통 네비게이션 링크 스타일 */
-.nav-link-style {
-  transition: all 0.2s ease-in-out;
-}
+/* ─────────────────────────────── */
+/* header.css – 공통 헤더 전용 스타일 */
+/* ─────────────────────────────── */
 
-.nav-link-style:hover {
-  text-decoration: underline;
-  color: #f8f9fa !important;
-}
-
-/* 로고 hover 효과 */
-.hover-glow:hover {
+header .hover-glow:hover {
   color: #0dcaf0 !important;
   text-shadow: 0 0 8px #0dcaf0;
   transition: all 0.2s ease-in-out;
 }
 
-/* 모바일 반응형 대응 */
+header .nav-link-style {
+  transition: all 0.2s ease-in-out;
+}
+
+header .nav-link-style:hover {
+  text-decoration: underline;
+  color: #f8f9fa !important;
+}
+
+header .navbar-dark .dropdown-menu-dark .dropdown-item:hover {
+  background-color: #0dcaf0;
+  color: #000;
+}
+
+/* 모바일 간격 조절 */
 @media (max-width: 576px) {
-  nav {
-    flex-direction: column;
-    gap: 0.25rem;
+  header .navbar-nav .nav-item {
+    margin-bottom: 0.3rem;
   }
 }

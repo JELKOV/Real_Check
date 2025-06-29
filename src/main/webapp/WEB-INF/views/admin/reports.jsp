@@ -96,8 +96,8 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
         </div>
       </div>
     </div>
+    
     <%@ include file="../common/footer.jsp" %>
-
     <script src="/js/admin/reports.js"></script>
   </body>
 </html>

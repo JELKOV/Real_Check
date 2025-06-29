@@ -7,7 +7,6 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
     <title>내 요청 목록 - RealCheck</title>
     <link rel="stylesheet" href="/css/style.css" />
     <link
-    
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />

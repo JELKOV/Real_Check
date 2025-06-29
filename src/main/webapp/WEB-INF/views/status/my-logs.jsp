@@ -13,7 +13,6 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
     />
     <link rel="stylesheet" href="/css/status/my-logs.css" />
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   </head>
   <body>
     <%@ include file="../common/header.jsp" %>
@@ -58,8 +57,6 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
         <ul class="pagination justify-content-center" id="pagination"></ul>
       </nav>
     </div>
-
-    <%@ include file="../common/footer.jsp" %>
 
     <!-- 수정 모달 -->
     <div
@@ -132,6 +129,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
         </div>
       </div>
     </div>
+    <%@ include file="../common/footer.jsp" %>
     <script src="/js/status/my-logs.js"></script>
   </body>
 </html>

@@ -1,5 +1,5 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %> <%@ taglib
+prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
 <html lang="ko">
   <head>
@@ -81,7 +81,7 @@
       <div id="pagination" class="d-flex justify-content-center mt-4"></div>
     </div>
 
-    <script src="/js/admin/logs.js"></script>
     <%@ include file="../common/footer.jsp" %>
+    <script src="/js/admin/logs.js"></script>
   </body>
 </html>
