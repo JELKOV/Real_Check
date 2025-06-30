@@ -176,44 +176,47 @@ public class StatusLogService {
      * - 조회수 10 이상이 되면 최초 1회 포인트 보상 지급
      * - Redis가 없는 로컬 개발 환경에서도 테스트 가능하도록 유연하게 처리
      */
-    public StatusLogDto viewFreeShare(Long logId, Long userId) {
-        // [1] 상태 로그 조회
-        StatusLog log = statusLogRepository.findById(logId)
-                .orElseThrow(() -> new RuntimeException("해당 로그가 존재하지 않습니다."));
+    // public StatusLogDto viewFreeShare(Long logId, Long userId) {
+    // // [1] 상태 로그 조회
+    // StatusLog log = statusLogRepository.findById(logId)
+    // .orElseThrow(() -> new RuntimeException("해당 로그가 존재하지 않습니다."));
 
-        // [2] FREE_SHARE 타입인지 확인
-        if (log.getStatusType() != StatusType.FREE_SHARE) {
-            throw new RuntimeException("자발적 공유가 아닙니다.");
-        }
-        // [3] Redis 조회 제한 체크 - 기본 조회수 증가 허용
-        boolean allowIncrease = true;
+    // // [2] FREE_SHARE 타입인지 확인
+    // if (log.getStatusType() != StatusType.FREE_SHARE) {
+    // throw new RuntimeException("자발적 공유가 아닙니다.");
+    // }
+    // // [3] Redis 조회 제한 체크 - 기본 조회수 증가 허용
+    // boolean allowIncrease = true;
 
-        // Redis 연결 가능할 경우만 어뷰징 방지 로직 적용
-        try {
-            System.out.println("[DEBUG] Redis 조회 제한 체크 시작 - userId: " + userId + ", logId: " + logId);
-            // Redis에서 중복 조회 여부 확인 (false면 최근 조회했음 → 조회수 증가 불가)
-            allowIncrease = viewTrackingService.canIncreaseView(userId, logId); // Redis에서 조회 제한 체크
-            System.out.println("[DEBUG] Redis 조회 제한 결과: " + allowIncrease);
-        } catch (RedisConnectionFailureException e) {
-            // Redis 연결 실패 시 예외 발생 → 조회수 증가 허용
-            // allowIncrease = true;
-            System.out.println("[Redis 실패] 조회 제한 없이 조회수 증가 허용 (logId=" + logId + ", userId=" + userId
-                    + " allowIncrease=" + allowIncrease + ")");
-        }
+    // // Redis 연결 가능할 경우만 어뷰징 방지 로직 적용
+    // try {
+    // System.out.println("[DEBUG] Redis 조회 제한 체크 시작 - userId: " + userId + ",
+    // logId: " + logId);
+    // // Redis에서 중복 조회 여부 확인 (false면 최근 조회했음 → 조회수 증가 불가)
+    // allowIncrease = viewTrackingService.canIncreaseView(userId, logId); //
+    // Redis에서 조회 제한 체크
+    // System.out.println("[DEBUG] Redis 조회 제한 결과: " + allowIncrease);
+    // } catch (RedisConnectionFailureException e) {
+    // // Redis 연결 실패 시 예외 발생 → 조회수 증가 허용
+    // // allowIncrease = true;
+    // System.out.println("[Redis 실패] 조회 제한 없이 조회수 증가 허용 (logId=" + logId + ",
+    // userId=" + userId
+    // + " allowIncrease=" + allowIncrease + ")");
+    // }
 
-        if (allowIncrease) {
-            log.setViewCount(log.getViewCount() + 1);
+    // if (allowIncrease) {
+    // log.setViewCount(log.getViewCount() + 1);
 
-            if (log.getViewCount() >= 10 && !log.isRewarded()) {
-                giveUserPoint(log.getReporter(), 10, "자발적 정보 조회수 보상");
-                log.setRewarded(true);
-            }
+    // if (log.getViewCount() >= 10 && !log.isRewarded()) {
+    // giveUserPoint(log.getReporter(), 10, "자발적 정보 조회수 보상");
+    // log.setRewarded(true);
+    // }
 
-            statusLogRepository.save(log);
-        }
+    // statusLogRepository.save(log);
+    // }
 
-        return StatusLogDto.fromEntity(log);
-    }
+    // return StatusLogDto.fromEntity(log);
+    // }
 
     /**
      * [2-4] 자발적 공유(FREE_SHARE): 조회수 증가 및 포인트 지급 [배포용]
@@ -226,46 +229,46 @@ public class StatusLogService {
      * - 조회수 10 이상이고 보상이 아직 지급되지 않은 경우 포인트 10 지급
      * - 어뷰징 방지를 위해 조회 제한 로직은 반드시 Redis 기반으로 적용되어야 함
      */
-    // public StatusLogDto viewFreeShare(Long logId, Long userId) {
-    // // [1] 상태 로그 조회
-    // StatusLog log = statusLogRepository.findById(logId)
-    // .orElseThrow(() -> new RuntimeException("해당 로그가 존재하지 않습니다."));
+    public StatusLogDto viewFreeShare(Long logId, Long userId) {
+        // [1] 상태 로그 조회
+        StatusLog log = statusLogRepository.findById(logId)
+                .orElseThrow(() -> new RuntimeException("해당 로그가 존재하지 않습니다."));
 
-    // // [2] FREE_SHARE 타입인지 확인
-    // if (log.getStatusType() != StatusType.FREE_SHARE) {
-    // throw new RuntimeException("자발적 공유가 아닙니다.");
-    // }
+        // [2] FREE_SHARE 타입인지 확인
+        if (log.getStatusType() != StatusType.FREE_SHARE) {
+            throw new RuntimeException("자발적 공유가 아닙니다.");
+        }
 
-    // // [3] Redis 조회 제한 체크 (필수: 실패 시 조회수 증가 불가)
-    // boolean allowIncrease;
+        // [3] Redis 조회 제한 체크 (필수: 실패 시 조회수 증가 불가)
+        boolean allowIncrease;
 
-    // try {
-    // allowIncrease = viewTrackingService.canIncreaseView(userId, logId);
-    // System.out.println(
-    // "[PROD_LOG] Redis 조회 제한 여부: " + allowIncrease + " (userId=" + userId + ",
-    // logId=" + logId + ")");
-    // } catch (RedisConnectionFailureException e) {
-    // // Redis 필수 → 실패 시 조회 차단
-    // throw new IllegalStateException("Redis 서버 연결 실패: 조회수 증가 불가능", e);
-    // }
+        try {
+            allowIncrease = viewTrackingService.canIncreaseView(userId, logId);
+            System.out.println(String.format(
+                    "[PROD_LOG] Redis 조회 제한 여부: %s (userId=%d, logId=%d)",
+                    allowIncrease, userId, logId));
+        } catch (RedisConnectionFailureException e) {
+            // Redis 필수 → 실패 시 조회 차단
+            throw new IllegalStateException("Redis 서버 연결 실패: 조회수 증가 불가능", e);
+        }
 
-    // // [4] 조회수 증가 및 포인트 처리
-    // if (allowIncrease) {
-    // log.setViewCount(log.getViewCount() + 1);
+        // [4] 조회수 증가 및 포인트 처리
+        if (allowIncrease) {
+            log.setViewCount(log.getViewCount() + 1);
 
-    // if (log.getViewCount() >= 10 && !log.isRewarded()) {
-    // giveUserPoint(log.getReporter(), 10, "자발적 정보 조회수 보상");
-    // log.setRewarded(true);
-    // }
+            if (log.getViewCount() >= 10 && !log.isRewarded()) {
+                giveUserPoint(log.getReporter(), 10, "자발적 정보 조회수 보상");
+                log.setRewarded(true);
+            }
 
-    // statusLogRepository.save(log);
-    // } else {
-    // System.out.println("[PROD_LOG] Redis에 의해 조회수 증가 차단됨 (userId=" + userId + ",
-    // logId=" + logId + ")");
-    // }
+            statusLogRepository.save(log);
+        } else {
+            System.out.println(String.format(
+                    "[PROD_LOG] Redis에 의해 조회수 증가 차단됨 (userId=%d, logId=%d)", userId, logId));
+        }
 
-    // return StatusLogDto.fromEntity(log);
-    // }
+        return StatusLogDto.fromEntity(log);
+    }
 
     // ─────────────────────────────────────────────
     // [3] 사용자 기능 (상태 로그 조회) READ

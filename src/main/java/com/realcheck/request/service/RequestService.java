@@ -212,14 +212,13 @@ public class RequestService {
      * [3-3] 최신 요청 조회 (현재 사용자 위치 기준 / 지도 반경 기반, 페이지네이션 포함)
      * RequestController: findNearbyRequestsPaged
      * - 위도/경도 기준 반경 내
-     * - TODO: 이후에 3시간으로 수정해야함 현재 테스트상 48시간
-     * - 12시간 이내 생성된 요청
      * - 미마감 + 응답 수 3개 미만
+     * - (TEST: 테스트를 위해서는 시간 변경)
      */
     public Page<RequestDto> findNearbyRequestsPaged(
             double lat, double lng, double radius, int page, int size) {
 
-        LocalDateTime timeLimit = LocalDateTime.now().minusHours(48);
+        LocalDateTime timeLimit = LocalDateTime.now().minusHours(3);
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
         Page<Request> pageResult = requestRepository.findNearbyValidRequestsPaged(

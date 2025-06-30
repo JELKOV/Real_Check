@@ -24,7 +24,8 @@ public class AutoCloseRequestService {
     private final PointService pointService;
 
     /**
-     * 3시간 경과 시 자동 마감 스케줄러 (5분마다 실행) TODO: 이후에 시간 체크
+     * 3시간 경과 시 자동 마감 스케줄러 (5분마다 실행)
+     * - (TEST: 테스트를 위해서는 시간 변경)
      */
     @Scheduled(fixedRate = 300000) // 5분마다 실행
     @Transactional
