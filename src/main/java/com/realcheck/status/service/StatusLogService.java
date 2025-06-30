@@ -394,10 +394,10 @@ public class StatusLogService {
                     .findByReporter_IdAndStatusType(userId, statusType, pageable);
         } else if (hideHidden) {
             pageResult = statusLogRepository
-                    .findByReporter_IdAndIsHiddenFalse(userId, pageable);
+                    .findByReporter_IdAndStatusTypeNotAndIsHiddenFalse(userId, StatusType.REGISTER, pageable);
         } else {
             pageResult = statusLogRepository
-                    .findByReporter_Id(userId, pageable);
+                    .findByReporter_IdAndStatusTypeNot(userId, StatusType.REGISTER, pageable);
         }
 
         List<StatusLogDto> dtoList = pageResult.getContent().stream()

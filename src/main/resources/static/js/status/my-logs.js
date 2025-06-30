@@ -113,6 +113,7 @@ function renderLog(log) {
     );
   }
 
+  // 로그 생성시간
   const relativeTime = getRelativeTime(log.createdAt);
 
   // 답변 블록 (내가 쓴 답변)
@@ -121,10 +122,28 @@ function renderLog(log) {
   // 이미지 HTML
   const imageHtml = getImageCarouselHtml(log);
 
-  // 요청 정보 블록
-  const requestInfoHtml = getRequestInfoHtml(log);
   // 수정 삭제 버튼
   const actionButtons = getActionButtons(log);
+
+  // 요청 정보 블록
+  const requestInfoId = `requestInfo-${log.id}`;
+  const hasRequestInfo =
+    log.type === "ANSWER" && log.requestTitle && log.requestContent;
+
+  const requestToggleHtml = hasRequestInfo
+    ? `
+      <button class="btn btn-sm btn-outline-secondary mb-2" 
+              data-bs-toggle="collapse" 
+              data-bs-target="#${requestInfoId}" 
+              aria-expanded="false" 
+              aria-controls="${requestInfoId}">
+        📌 관련 요청 내용 보기
+      </button>
+      <div class="collapse" id="${requestInfoId}">
+        ${getRequestInfoHtml(log)}
+      </div>
+    `
+    : "";
 
   return `
     <div class="col-12 mb-3" data-id="${log.id}">
@@ -143,8 +162,8 @@ function renderLog(log) {
           <!-- 이미지 -->
           <div class="mb-3">${imageHtml}</div>
 
-          <!-- 관련 요청 내용 -->
-          ${requestInfoHtml}
+          <!-- 관련 요청 내용 (토글) -->
+          ${requestToggleHtml}
 
           <!-- 버튼 -->
           <div class="mt-3 text-end">${actionButtons}</div>
@@ -364,8 +383,8 @@ function getActionButtons(log) {
 function getRequestInfoHtml(log) {
   if (log.type !== "ANSWER" || !log.requestTitle || !log.requestContent)
     return "";
+
   return `
-    <h6 class="fw-bold mt-4 mb-2">📌 관련 요청 내용</h6>
     <div class="bg-light border rounded p-3 mb-2 small">
       <div class="mb-2"><strong>📍 요청 제목:</strong> ${log.requestTitle}</div>
       <div><strong>📄 요청 내용:</strong> ${log.requestContent}</div>

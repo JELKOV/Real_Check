@@ -31,13 +31,15 @@ public interface StatusLogRepository extends JpaRepository<StatusLog, Long> {
          * StatusLogService: getLogsByUser
          * - 마이페이지 기본 조회용
          * - 정렬 포함 (Pageable의 Sort)
+         * - 공지 제외
          */
-        Page<StatusLog> findByReporter_Id(Long userId, Pageable pageable);
+        Page<StatusLog> findByReporter_IdAndStatusTypeNotAndIsHiddenFalse(Long userId, StatusType excludedType,
+                        Pageable pageable);
 
         /**
          * [1-2] 특정 타입(StatusType)의 로그만 조회
          * StatusLogService: getLogsByUser
-         * - ex) 자발 공유만, 요청 답변만
+         * - 자발 공유만, 요청 답변만
          */
         Page<StatusLog> findByReporter_IdAndStatusType(Long userId, StatusType type, Pageable pageable);
 
@@ -46,12 +48,12 @@ public interface StatusLogRepository extends JpaRepository<StatusLog, Long> {
          * StatusLogService: getLogsByUser
          * - "신고된 답변 제외" 필터 적용 시 사용
          */
-        Page<StatusLog> findByReporter_IdAndIsHiddenFalse(Long userId, Pageable pageable);
+        Page<StatusLog> findByReporter_IdAndStatusTypeNot(Long userId, StatusType excludedType, Pageable pageable);
 
         /**
          * [1-4] 특정 타입 + 숨김 제외 조건을 모두 만족하는 로그 조회
          * StatusLogService: getLogsByUser
-         * - 자발공유 중 신고되지 않은 것만
+         * - 공지 제외
          */
         Page<StatusLog> findByReporter_IdAndStatusTypeAndIsHiddenFalse(Long userId, StatusType type, Pageable pageable);
 
