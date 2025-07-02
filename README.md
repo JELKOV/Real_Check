@@ -134,11 +134,11 @@ java -jar target/realcheck-0.0.1-SNAPSHOT.jar
 
 <h6>헤더 일반 사용자</h6>
 
-![헤더일반사용자](./src/main/resources/static/images/HeaderUser.png)
+![헤더일반사용자](./src/main/resources/static/images/Header_User.png)
 
 <h6>헤더 관리자</h6>
 
-![헤더관리자](./src/main/resources/static/images/HeaderAdmin.png) 
+![헤더관리자](./src/main/resources/static/images/Header_Admin.png) 
 
 </details>
 
@@ -146,40 +146,67 @@ java -jar target/realcheck-0.0.1-SNAPSHOT.jar
 <summary>👤 사용자 기능</summary>
 <h6>회원 가입</h6>
 
-![회원가입](./src/main/resources/static/images/Register_User.png)
-> 예: `/static/images/demo_user_mypage.png`
+![회원가입](./src/main/resources/static/images/Register_User.gif)
+
+<h6>로그인</h6>
+
+![로그인](./src/main/resources/static/images/Login_User.gif)
+
+<h6>포인트 충전</h6>
+
+![포인트충전](./src/main/resources/static/images/Point_Charge_Cash.gif)
+
+<h6>정보 수정</h6>
+
+![정보수정](./src/main/resources/static/images/Edit_User.gif)
+
+<h6>회원 탈퇴</h6>
+
+![회원탈퇴](./src/main/resources/static/images/Delete_User.gif)
 
 </details>
 
 <details>
 <summary>📨 요청 기능</summary>
 
-> 예: `/static/images/demo_request_create.png`
-> 예: `/static/images/demo_request_list.png`
+<h6>공식장소 정보요청</h6>
+
+![공식장소 정보요청](./src/main/resources/static/images/PublicPlace_Request.gif)
+
+<h6>일반장소 정보요청</h6>
+
+![일반장소 정보요청](./src/main/resources/static/images/GeneralPlace_Request.gif)
+
+<h6>3시간이 지난 오픈된 요청 보기</h6>
 
 </details>
 
 <details>
 <summary>💬 답변 기능</summary>
 
-> 예: `/static/images/demo_answer_write.png`
-> 예: `/static/images/demo_answer_selected.png`
+<h6>응답 답변</h6>
+
+![응답답변](./src/main/resources/static/images/Request_Answer.gif)
+
+<h6>자발적정보 공유하기</h6>
+
+![자발적공유](./src/main/resources/static/images/Free_Share.gif)
+
+<h6>답변 채택하기</h6>
+
+![답변채택](./src/main/resources/static/images/Free_Share.gif)
 
 </details>
 
 <details>
 <summary>📍 장소 기능</summary>
 
-> 예: `/static/images/demo_place_register.png`
-> 예: `/static/images/demo_place_edit.png`
 
 </details>
 
 <details>
 <summary>🛡️ 관리자 기능</summary>
 
-> 예: `/static/images/demo_admin_dashboard.png`
-> 예: `/static/images/demo_admin_users.png`
 
 </details>
 
