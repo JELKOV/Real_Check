@@ -146,7 +146,16 @@ function generateRequestRow(req) {
 
 // [5-1] 날짜 보조 함수
 function formatDate(dateStr) {
-  return new Date(dateStr).toLocaleString();
+  return new Date(dateStr).toLocaleString("ko-KR", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false, // 24시간 형식
+  });
 }
 
 // [5-2] 포인트 보조 함수

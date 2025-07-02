@@ -34,12 +34,6 @@ $(document).ready(function () {
   initRequestPage();
   setSelectPlaceFn(selectPlace);
   renderCustomCategoryDropdown();
-
-  $(document).on("click", function (e) {
-    if (!$(e.target).closest("#customCategoryDropdown").length) {
-      $dropdown.hide();
-    }
-  });
 });
 
 // [2] 페이지 초기화 관련 함수
@@ -486,5 +480,11 @@ function renderCustomCategoryDropdown() {
 
     // 실제 select 값 변경
     $realSelect.val(value).trigger("change");
+  });
+  
+  $(document).on("click", function (e) {
+    if (!$(e.target).closest("#customCategoryDropdown").length) {
+      $dropdown.hide();
+    }
   });
 }
