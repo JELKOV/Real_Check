@@ -124,22 +124,29 @@ java -jar target/realcheck-0.0.1-SNAPSHOT.jar
 ---
 
 <details>
-<summary>📸 <strong>데모 스크린샷</strong></summary>
+<summary>📸 <strong>프로젝트 시연</strong></summary>
 
 <details>
-<summary>👤 메인페이지</summary>
+<summary>🧭 메인페이지</summary>
+<h6>메인 화면</h6>
 
-<h6>메인화면<h6>
+![메인화면](./src/main/resources/static/images/index.gif)
 
-> `/static/images/index.png`
-> `/static/images/demo_user_mypage.png`
+<h6>헤더 일반 사용자</h6>
+
+![헤더일반사용자](./src/main/resources/static/images/HeaderUser.png)
+
+<h6>헤더 관리자</h6>
+
+![헤더관리자](./src/main/resources/static/images/HeaderAdmin.png) 
 
 </details>
 
 <details>
 <summary>👤 사용자 기능</summary>
+<h6>회원 가입</h6>
 
-> 예: `/static/images/demo_user_register.png`
+![회원가입](./src/main/resources/static/images/Register_User.png)
 > 예: `/static/images/demo_user_mypage.png`
 
 </details>

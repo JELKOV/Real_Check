@@ -66,3 +66,7 @@ Thumbs.db
 /!**/src/test/**/build/
 /!**/src/main/**/target/
 /!**/src/test/**/target/
+
+# 이미지 / gif 제외
+src/main/resources/static/images/*
+!src/main/resources/static/images/.gitkeep
