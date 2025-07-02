@@ -461,9 +461,9 @@ function renderCustomCategoryDropdown() {
   options.each(function () {
     const val = $(this).val();
     const text = $(this).text();
-    if (val) {
-      $dropdown.append(`<li data-value="${val}">${text}</li>`);
-    }
+
+    // 조건 없이 전부 추가 (value가 빈 문자열인 기본 항목도 포함)
+    $dropdown.append(`<li data-value="${val}">${text}</li>`);
   });
 
   // 열기/닫기

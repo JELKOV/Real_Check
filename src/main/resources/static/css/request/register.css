@@ -14,10 +14,10 @@
   min-height: 600px;
   border-radius: 10px;
   border: 1px solid #ccc;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   position: sticky;
   top: 40px;
   z-index: 1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* 오른쪽 폼 영역 */
@@ -26,6 +26,8 @@
   align-self: start;
   padding: 0 10px;
 }
+
+/* ───────────── 커스텀 카테고리 드롭다운 ───────────── */
 
 .custom-dropdown {
   position: relative;
@@ -56,15 +58,51 @@
   margin-top: 2px;
   display: none;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  animation: fadeSlideDown 0.25s ease-out;
 }
 
+/* 열림 애니메이션 */
+@keyframes fadeSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 리스트 아이템 기본 스타일 */
 .dropdown-list li {
-  padding: 8px 12px;
+  padding: 10px 16px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
+/* 호버 효과: 배경 강조 + 글자 진하게 */
 .dropdown-list li:hover {
-  background-color: #f8f9fa;
+  background-color: #e8f0fe;
+  font-weight: 600;
+  color: #0d6efd;
+}
+
+/* 선택된 항목 강조 */
+.dropdown-list li.selected {
+  background-color: #d6eaff;
+  font-weight: bold;
+  color: #0d6efd;
+  position: relative;
+}
+
+/* 선택된 항목에 체크 아이콘 추가 */
+.dropdown-list li.selected::before {
+  content: "✔";
+  color: #0d6efd;
+  font-size: 14px;
+  margin-right: 8px;
 }
 
 .dropdown-arrow {
