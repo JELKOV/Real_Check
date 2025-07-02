@@ -63,7 +63,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
               <div class="fs-1 mb-2">✅</div>
               <h5 class="fw-bold">요청 답변</h5>
               <p class="text-muted flex-grow-1">
-                다른 유저의 요청에 답변하고 보상을 받아보세요.
+                3시간내에 해당지역에서 답변이 없는 다른 유저의 요청에 답변하고 보상을 받아보세요.
               </p>
               <div class="mt-auto">
                 <a href="/request/list" class="btn btn-success btn-sm"

@@ -186,9 +186,23 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
                     <label for="category" class="form-label"
                       >요청 카테고리</label
                     >
-                    <select class="form-select" id="category" name="category">
-                      <option value="">카테고리를 선택하세요</option>
-                    </select>
+                    <div class="d-none">
+                      <select class="form-select" id="category" name="category">
+                        <option value="">카테고리를 선택하세요</option>
+                      </select>
+                    </div>
+
+                    <div id="customCategoryDropdown" class="custom-dropdown">
+                      <button
+                        type="button"
+                        id="dropdownToggle"
+                        class="dropdown-toggle-btn"
+                      >
+                        <span id="dropdownLabel">카테고리를 선택하세요</span>
+                        <span class="dropdown-arrow">▼</span>
+                      </button>
+                      <ul id="dropdownList" class="dropdown-list"></ul>
+                    </div>
                   </div>
 
                   <div class="mb-3">

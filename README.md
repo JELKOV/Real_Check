@@ -194,7 +194,7 @@ java -jar target/realcheck-0.0.1-SNAPSHOT.jar
 
 <h6>답변 채택하기</h6>
 
-![답변채택](./src/main/resources/static/images/Free_Share.gif)
+![답변채택](./src/main/resources/static/images/Select_Answer.gif)
 
 </details>
 

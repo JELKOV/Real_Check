@@ -25,7 +25,51 @@
   flex: 1 1 40%;
   align-self: start;
   padding: 0 10px;
-  margin-top: 0; /* 위쪽 여백 제거 */
+}
+
+.custom-dropdown {
+  position: relative;
+  width: 100%;
+}
+
+.dropdown-toggle-btn {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  background-color: white;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.dropdown-list {
+  position: absolute;
+  z-index: 999;
+  width: 100%;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  list-style: none;
+  padding: 0;
+  margin-top: 2px;
+  display: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.dropdown-list li {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.dropdown-list li:hover {
+  background-color: #f8f9fa;
+}
+
+.dropdown-arrow {
+  font-size: 12px;
+  color: #333;
 }
 
 @media (min-width: 768px) {

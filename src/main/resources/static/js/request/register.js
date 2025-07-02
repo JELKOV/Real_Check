@@ -33,6 +33,13 @@ let isCustomMode = false;
 $(document).ready(function () {
   initRequestPage();
   setSelectPlaceFn(selectPlace);
+  renderCustomCategoryDropdown();
+
+  $(document).on("click", function (e) {
+    if (!$(e.target).closest("#customCategoryDropdown").length) {
+      $dropdown.hide();
+    }
+  });
 });
 
 // [2] 페이지 초기화 관련 함수
@@ -251,6 +258,12 @@ function updatePlaceholders() {
 function submitRequest(e) {
   e.preventDefault();
 
+  // 드롭다운 값을 강제로 select에 반영
+  const selectedValue = $("#dropdownList li.selected").data("value");
+  if (selectedValue) {
+    $("#category").val(selectedValue); // 강제로 반영
+  }
+
   const requestData = {
     title: $("#title").val(),
     content: $("#content").val(),
@@ -433,5 +446,45 @@ function loadPlaceDetails(placeId) {
     }
   }).fail(function (xhr) {
     console.error("API Error:", xhr.responseText);
+  });
+}
+
+// [3] 카테고리 커스텀 바인딩
+function renderCustomCategoryDropdown() {
+  const $realSelect = $("#category");
+  const $dropdown = $("#dropdownList");
+  const $toggle = $("#dropdownToggle");
+
+  // 초기 리스트 렌더링
+  const options = $realSelect.find("option");
+  $dropdown.empty();
+  options.each(function () {
+    const val = $(this).val();
+    const text = $(this).text();
+    if (val) {
+      $dropdown.append(`<li data-value="${val}">${text}</li>`);
+    }
+  });
+
+  // 열기/닫기
+  $toggle.on("click", function () {
+    $dropdown.toggle();
+  });
+
+  // 항목 선택
+  $dropdown.on("click", "li", function () {
+    const value = $(this).data("value");
+    const label = $(this).text();
+
+    // 기존 selected 제거 후 새로 지정
+    $dropdown.find("li").removeClass("selected");
+    $(this).addClass("selected");
+
+    // UI 반영
+    $("#dropdownLabel").text(label);
+    $dropdown.hide();
+
+    // 실제 select 값 변경
+    $realSelect.val(value).trigger("change");
   });
 }
