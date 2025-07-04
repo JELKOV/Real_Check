@@ -66,12 +66,12 @@ function loadAllReports() {
             <!-- 8. 관리자 기능 버튼 -->
             <td>
               <!-- 신고 횟수 조회 -->
-              <button class="btn btn-sm btn-success me-1"
+              <button class="btn btn-sm btn-outline-purple me-1"
                       onclick="getReportCount(${statusLogId})">
                 신고 횟수
               </button>
               <!-- 오탐 신고 취소(삭제) -->
-              <button class="btn btn-sm btn-danger"
+              <button class="btn btn-sm btn-outline-purple"
                       onclick="deleteReport(${r.id})">
                 신고 취소
               </button>
@@ -147,7 +147,7 @@ function loadHiddenLogs() {
           <td>${log.hidden ? "예" : "아니오"}</td>
           <td>${log.updatedAt || "-"}</td>
           <td>
-            <button class="btn btn-sm btn-info" onclick="showStatusLogDetail(${
+            <button class="btn btn-sm btn-outline-purple" onclick="showStatusLogDetail(${
               log.id
             })">
               🔎 신고내역

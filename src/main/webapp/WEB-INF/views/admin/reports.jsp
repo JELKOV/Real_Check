@@ -11,6 +11,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="/css/admin/reports.css" />
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   </head>
   <body>
@@ -96,7 +97,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
         </div>
       </div>
     </div>
-    
+
     <%@ include file="../common/footer.jsp" %>
     <script src="/js/admin/reports.js"></script>
   </body>

@@ -11,6 +11,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="/css/admin/places.css" />
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   </head>
   <body>
@@ -20,8 +21,29 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
       <h3 class="text-center fw-bold mb-4">📍 장소 관리</h3>
 
       <!-- 검색/필터 폼 -->
-      <form id="filterForm" class="row g-3 mb-4">
-        <div class="col-sm-6 col-md-4">
+      <form
+        id="filterForm"
+        class="d-flex justify-content-center gap-2 mb-4 flex-wrap"
+      >
+        <!-- 카테고리 (왼쪽) -->
+        <div class="col-sm-4 col-md-3 order-1">
+          <select id="statusFilter" class="form-select form-select-sm d-none">
+            <option value="">🌐전체</option>
+            <option value="PENDING">⏳Pending</option>
+            <option value="APPROVED">✅승인</option>
+            <option value="REJECTED">❌반려</option>
+          </select>
+          <div class="custom-dropdown" id="statusDropdown">
+            <button type="button" class="dropdown-toggle-btn" id="statusToggle">
+              <span class="label">🌐전체</span>
+              <span class="dropdown-arrow">▼</span>
+            </button>
+            <ul class="dropdown-list" id="statusList"></ul>
+          </div>
+        </div>
+
+        <!-- 검색 input (오른쪽) -->
+        <div class="col-sm-6 col-md-5 order-2">
           <input
             type="text"
             id="q"
@@ -29,17 +51,9 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
             placeholder="장소명 검색"
           />
         </div>
-        <div class="col-sm-4 col-md-3">
-          <select id="statusFilter" class="form-select form-select-sm">
-            <option value="">전체</option>
-            <option value="PENDING">Pending</option>
-            <option value="APPROVED">승인</option>
-            <option value="REJECTED">반려</option>
-          </select>
-        </div>
 
-        <div class="col-auto">
-          <button type="submit" class="btn btn-primary">검색</button>
+        <div class="col-auto order-3">
+          <button type="submit" class="btn btn-primary btn-sm">검색</button>
         </div>
       </form>
 

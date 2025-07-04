@@ -1,7 +1,7 @@
 // 모듈 import
 import {
   renderAnswerFields, // 카테고리 선택에 따라 동적 필드 렌더링
-  renderCategoryOptions, // 카테고리 select 옵션 렌더링
+  renderCategoryDropdown, // 커스텀 카테고리 select 옵션 렌더링
 } from "./util/categoryUtils.js";
 
 import {
@@ -13,9 +13,9 @@ import {
 // 전역 변수
 let uploadedImageUrls = []; // 업로드된 이미지 URL 목록 (폼 전송에 포함됨)
 
-// 초기 렌더링 및 이벤트 바인딩] 
+// 초기 렌더링 및 이벤트 바인딩]
 $(document).ready(function () {
-  renderCategoryOptions($("#category"), allowedTypes); // 카테고리 셀렉트 박스 렌더링
+  renderCategoryDropdown($("#category"), allowedTypes); // 카테고리 셀렉트 박스 렌더링
   bindEventListeners(); // 모든 이벤트 핸들러 바인딩
 
   // 이미지 클릭 시 모달로 확대 보기
@@ -167,9 +167,9 @@ function bindFormSubmit() {
 function handleFileUpload(files) {
   uploadImages(files)
     .then((urls) => {
-      uploadedImageUrls.push(...urls);  // 기존 리스트에 추가
+      uploadedImageUrls.push(...urls); // 기존 리스트에 추가
       renderPreviewWithDelete();
-      $("#fileInput").val(""); 
+      $("#fileInput").val("");
     })
     .catch((err) => {
       alert("업로드 실패: " + err.responseText);

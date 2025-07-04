@@ -21,31 +21,47 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
       <h3 class="text-center mb-4">내가 공유한 정보</h3>
 
       <!-- 필터 영역 -->
-      <div class="row mb-4 align-items-end">
-        <div class="col-md-8 mb-2 mb-md-0">
-          <label for="statusTypeFilter" class="form-label fw-semibold"
-            >📂 상태 유형</label
+      <div
+        class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4"
+      >
+        <div class="filter-group">
+          <label for="statusTypeFilter" class="form-label fw-semibold mb-1">
+            📂 상태 유형</label
           >
-          <select
-            id="statusTypeFilter"
-            class="form-select form-select-lg custom-select"
-          >
-            <option value="">전체</option>
+          <!-- 숨겨진 기본 select (JS 연동용) -->
+          <select id="statusTypeFilter" class="form-select d-none">
+            <option value="">	🗂️ 전체</option>
             <option value="ANSWER">📥 요청 → 답변</option>
             <option value="FREE_SHARE">📢 정보 공유</option>
           </select>
+
+          <!-- 커스텀 드롭다운 -->
+          <div id="customStatusDropdown" class="custom-dropdown">
+            <button
+              type="button"
+              id="statusDropdownToggle"
+              class="dropdown-toggle-btn"
+            >
+              <span id="statusDropdownLabel">🗂️ 전체</span>
+              <span class="dropdown-arrow">▼</span>
+            </button>
+            <ul id="statusDropdownList" class="dropdown-list"></ul>
+          </div>
         </div>
 
-        <!-- 신고 제외 체크 -->
-        <div class="col-md-4 d-flex align-items-center gap-2 mt-md-4 mt-2">
+        <!-- 신고 제외 체크박스 -->
+        <div class="form-check form-switch mt-3 mt-md-4">
           <input
             class="form-check-input"
             type="checkbox"
             id="hideHiddenLogs"
             checked
           />
-          <label class="form-check-label text-nowrap" for="hideHiddenLogs">
-            <span class="text-danger-emphasis">🚫 신고처리 제외</span>
+          <label
+            class="form-check-label fw-semibold text-danger-emphasis"
+            for="hideHiddenLogs"
+          >
+            🚫 신고처리 제외
           </label>
         </div>
       </div>

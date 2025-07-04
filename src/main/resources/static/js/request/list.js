@@ -14,6 +14,8 @@ let activeInfoWindow = null;
 $(document).ready(function () {
   initMap();
   bindUIEvents();
+  renderCustomCategoryDropdown();
+  renderCustomRadiusDropdown();
 });
 
 // 네이버 지도 초기화
@@ -356,4 +358,82 @@ function createMarkerWithInfo(req) {
 
   // markers 배열에 저장할 객체 반환
   return { id: req.id, marker, infoWindow };
+}
+
+// 카테고리 드랍다운 이벤트 바인딩
+function renderCustomCategoryDropdown() {
+  const $dropdownList = $("#dropdownList");
+  const $dropdownLabel = $("#dropdownLabel");
+  const $categorySelect = $("#categoryFilter");
+
+  // 1. 기존 select의 옵션을 기반으로 커스텀 UI 구성
+  $dropdownList.empty();
+  $categorySelect.find("option").each(function () {
+    const value = $(this).val();
+    const text = $(this).text();
+    $dropdownList.append(
+      `<li class="dropdown-item" data-value="${value}">${text}</li>`
+    );
+  });
+
+  // 2. 토글 버튼 → 드롭다운 열기/닫기
+  $("#dropdownToggle").on("click", function () {
+    $dropdownList.toggleClass("show");
+  });
+
+  // 3. 외부 클릭 시 드롭다운 닫기
+  $(document).on("click", function (e) {
+    if (!$(e.target).closest("#customCategoryDropdown").length) {
+      $dropdownList.removeClass("show");
+    }
+  });
+
+  // 4. 항목 선택 시 → 실제 select 변경 + change 이벤트 발생
+  $dropdownList.on("click", ".dropdown-item", function () {
+    const value = $(this).data("value");
+    const label = $(this).text();
+
+    $dropdownLabel.text(label);
+    $categorySelect.val(value).trigger("change");
+    $dropdownList.removeClass("show");
+  });
+}
+
+// 원 반경 드랍다운 이벤트 바인딩
+function renderCustomRadiusDropdown() {
+  const $dropdownList = $("#radiusDropdownList");
+  const $dropdownLabel = $("#radiusDropdownLabel");
+  const $radiusSelect = $("#radiusFilter");
+
+  // 1. 기존 select의 옵션을 기반으로 커스텀 UI 구성
+  $dropdownList.empty();
+  $radiusSelect.find("option").each(function () {
+    const value = $(this).val();
+    const text = $(this).text();
+    $dropdownList.append(
+      `<li class="dropdown-item" data-value="${value}">${text}</li>`
+    );
+  });
+
+  // 2. 토글 버튼 → 드롭다운 열기/닫기
+  $("#radiusDropdownToggle").on("click", function () {
+    $dropdownList.toggleClass("show");
+  });
+
+  // 3. 외부 클릭 시 닫기
+  $(document).on("click", function (e) {
+    if (!$(e.target).closest("#customRadiusDropdown").length) {
+      $dropdownList.removeClass("show");
+    }
+  });
+
+  // 4. 항목 선택 시 반영
+  $dropdownList.on("click", ".dropdown-item", function () {
+    const value = $(this).data("value");
+    const label = $(this).text();
+
+    $radiusSelect.val(value).trigger("change");
+    $dropdownLabel.text(label);
+    $dropdownList.removeClass("show");
+  });
 }

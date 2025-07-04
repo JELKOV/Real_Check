@@ -1,7 +1,7 @@
 // 모듈 import
 import {
   renderAnswerFields,
-  renderCategoryOptions,
+  renderCategoryDropdown,
 } from "./util/categoryUtils.js";
 
 import {
@@ -16,7 +16,7 @@ let uploadedImageUrls = [...(existingImageUrls || [])].filter(
 );
 
 $(document).ready(function () {
-  renderCategoryOptions($("#category"), [currentCategory], currentCategory);
+  renderCategoryDropdown($("#category"), [currentCategory], currentCategory);
   $("#category").prop("disabled", true);
   bindEventListeners();
   updateCharCount();

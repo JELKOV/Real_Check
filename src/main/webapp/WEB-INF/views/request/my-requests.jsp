@@ -10,6 +10,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="/css/request/my-requests.css" />
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   </head>
   <body>
@@ -20,11 +21,25 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
       <!-- 필터 영역 -->
       <div class="row mb-4">
+        <!-- 기존 select는 숨기기 -->
         <div class="col-md-3">
-          <select id="categoryFilter" class="form-select">
-            <option value="">전체 카테고리</option>
-            <!-- 동적으로 항목 추가 -->
-          </select>
+          <div class="d-none">
+            <select id="categoryFilter" class="form-select">
+              <option value="">전체 카테고리</option>
+            </select>
+          </div>
+          <!-- 커스텀 드롭다운 렌더링 -->
+          <div id="customCategoryDropdown" class="custom-dropdown">
+            <button
+              type="button"
+              id="dropdownToggle"
+              class="dropdown-toggle-btn"
+            >
+              <span id="dropdownLabel">전체 카테고리</span>
+              <span class="dropdown-arrow">▼</span>
+            </button>
+            <ul id="dropdownList" class="dropdown-list"></ul>
+          </div>
         </div>
         <div class="col-md-6">
           <input

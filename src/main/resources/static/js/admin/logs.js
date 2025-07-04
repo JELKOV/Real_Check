@@ -20,6 +20,9 @@ function init() {
   bindTargetTypeChangeEvent();
   loadAdminList();
   loadLogs();
+  setupCustomDropdown("adminId", "adminList", "adminToggle");
+  setupCustomDropdown("targetType", "targetList", "targetToggle");
+  setupCustomDropdown("actionType", "actionList", "actionToggle");
 }
 
 // 검색 버튼 이벤트 바인딩
@@ -45,6 +48,9 @@ function bindTargetTypeChangeEvent() {
     listToUse.forEach((type) => {
       $actionType.append(`<option value="${type}">${type}</option>`);
     });
+
+    // 옵션 변경 함수 실행
+    renderOptionsForCustom("actionType", "actionList", "actionToggle");
   });
 }
 
@@ -57,6 +63,9 @@ function loadAdminList() {
         `<option value="${a.id}">${a.nickname} (${a.email})</option>`
       );
     });
+
+    // 옵션 변경 함수 실행
+    renderOptionsForCustom("adminId", "adminList", "adminToggle");
   });
 }
 
@@ -134,4 +143,67 @@ function renderPagination(totalPages) {
 
     container.append(button);
   }
+}
+
+// 드롭다운 셋업 함수 추가
+function setupCustomDropdown(selectId, listId, toggleId) {
+  const $select = $(`#${selectId}`);
+  const $list = $(`#${listId}`);
+  const $toggle = $(`#${toggleId}`);
+  const $label = $toggle.find(".label");
+
+  function renderOptions() {
+    $list.empty();
+    $select.find("option").each(function () {
+      const val = $(this).val();
+      const text = $(this).text();
+      $list.append(`<li data-value="${val}">${text}</li>`);
+    });
+  }
+
+  renderOptions();
+
+  $toggle.on("click", function () {
+    $list.toggle();
+  });
+
+  $list.on("click", "li", function () {
+    const value = $(this).data("value");
+    const label = $(this).text();
+    $label.text(label);
+
+    $list.find("li").removeClass("selected animate-flash");
+    $(this).addClass("selected animate-flash");
+
+    $list.hide();
+    $select.val(value).trigger("change");
+
+    // 애니메이션 재적용 가능하도록 제거 후 재추가
+    setTimeout(() => $(this).removeClass("animate-flash"), 500);
+  });
+
+  // 외부 클릭 시 닫기
+  $(document).on("click", function (e) {
+    if (!$(e.target).closest(`#${toggleId}, #${listId}`).length) {
+      $list.hide();
+    }
+  });
+}
+
+// 커스텀 드롭다운 옵션 리렌더링 (동적 변경 대응)
+function renderOptionsForCustom(selectId, listId, toggleId) {
+  const $select = $(`#${selectId}`);
+  const $list = $(`#${listId}`);
+  const $toggle = $(`#${toggleId}`);
+  const $label = $toggle.find(".label");
+
+  $list.empty();
+  $select.find("option").each(function () {
+    const val = $(this).val();
+    const text = $(this).text();
+    $list.append(`<li data-value="${val}">${text}</li>`);
+  });
+
+  const currentText = $select.find("option:selected").text() || "전체";
+  $label.text(currentText);
 }

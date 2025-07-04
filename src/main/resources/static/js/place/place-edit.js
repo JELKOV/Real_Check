@@ -82,11 +82,11 @@ function bindFormSubmit() {
       "input[name='categories']"
     );
 
-    if (!name) return alert("📌 장소 이름을 입력하세요.");
+    if (!name) return alert("장소 이름을 입력하세요.");
     if (!address || !lat || !lng)
-      return alert("📌 주소를 입력하거나 지도를 클릭하세요.");
+      return alert("주소를 입력하거나 지도를 클릭하세요.");
     if (selectedCategories.length === 0)
-      return alert("📌 하나 이상의 카테고리를 선택하세요.");
+      return alert("하나 이상의 카테고리를 선택하세요.");
 
     const data = {
       name,
@@ -107,14 +107,14 @@ function bindFormSubmit() {
       data: JSON.stringify(data),
       success: function () {
         if (isRejected) {
-          alert("📨 재등록 요청이 접수되었습니다. 관리자 승인을 기다려주세요.");
+          alert("재등록 요청이 접수되었습니다. 관리자 승인을 기다려주세요.");
         } else {
-          alert("✅ 장소 정보가 수정되었습니다.");
+          alert("장소 정보가 수정되었습니다.");
         }
         window.location.href = "/place/my";
       },
       error: function (xhr) {
-        alert("❌ 요청 실패: " + xhr.responseText);
+        alert("요청 실패: " + xhr.responseText);
       },
     });
   });

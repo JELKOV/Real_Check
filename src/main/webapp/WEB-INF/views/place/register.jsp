@@ -51,17 +51,29 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
                 </div>
 
                 <!-- 공지 카테고리 선택 -->
-                <div class="form-floating mb-3">
+                <div class="mb-3">
+                  <label for="category" class="form-label">카테고리</label>
+
+                  <!-- 숨겨진 select (폼 전송용) -->
                   <select
                     id="category"
                     name="category"
-                    class="form-select"
+                    class="form-select d-none"
                     required
-                  >
-                    <option value="">선택하세요</option>
-                    <!-- JS에서 옵션 렌더링됨 -->
-                  </select>
-                  <label for="category">카테고리</label>
+                  ></select>
+
+                  <!-- 커스텀 드롭다운 -->
+                  <div class="custom-dropdown" id="categoryDropdown">
+                    <button
+                      type="button"
+                      class="dropdown-toggle-btn"
+                      id="categoryToggle"
+                    >
+                      <span class="label">선택하세요</span>
+                      <span class="dropdown-arrow">▼</span>
+                    </button>
+                    <ul class="dropdown-list" id="categoryList"></ul>
+                  </div>
                 </div>
 
                 <!-- 카테고리별 필드 자동 렌더링 영역 -->

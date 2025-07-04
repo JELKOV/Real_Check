@@ -25,7 +25,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
       <!-- 필터 영역 -->
       <div class="mb-3 text-center">
-        <select id="categoryFilter" class="form-select w-auto d-inline-block">
+        <select id="categoryFilter" class="form-select visually-hidden">
           <option value="">전체 카테고리</option>
           <option value="PARKING">🅿️ 주차 가능 여부</option>
           <option value="WAITING_STATUS">⏳ 대기 상황</option>
@@ -41,16 +41,38 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
           <option value="ETC">❓ 기타</option>
         </select>
 
-        <select
-          id="radiusFilter"
-          class="form-select w-auto d-inline-block me-2"
+        <!-- 커스텀 드롭다운 UI -->
+        <div
+          id="customCategoryDropdown"
+          class="custom-dropdown d-inline-block me-2"
         >
+          <button type="button" id="dropdownToggle" class="dropdown-toggle-btn">
+            <span id="dropdownLabel">전체 카테고리</span>
+            <span class="dropdown-arrow">▼</span>
+          </button>
+          <ul id="dropdownList" class="dropdown-list"></ul>
+        </div>
+
+        <select id="radiusFilter" class="form-select visually-hidden">
           <option value="1000">1km 이내(검색 위치 기준)</option>
           <option value="2000">2km 이내(검색 위치 기준)</option>
           <option value="3000" selected>3km 이내(검색 위치 기준)</option>
           <option value="5000">5km 이내(검색 위치 기준)</option>
           <option value="10000">10km 이내(검색 위치 기준)</option>
         </select>
+
+        <!-- 커스텀 드롭다운 UI -->
+        <div id="customRadiusDropdown" class="custom-dropdown d-inline-block">
+          <button
+            type="button"
+            id="radiusDropdownToggle"
+            class="dropdown-toggle-btn"
+          >
+            <span id="radiusDropdownLabel">3km 이내(검색 위치 기준)</span>
+            <span class="dropdown-arrow">▼</span>
+          </button>
+          <ul id="radiusDropdownList" class="dropdown-list"></ul>
+        </div>
       </div>
 
       <!-- 위치 검색 -->

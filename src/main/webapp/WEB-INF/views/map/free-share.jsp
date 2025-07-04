@@ -45,21 +45,48 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
             <div class="row g-2 mb-3">
               <div class="col-md-6">
                 <label for="daysSelect" class="form-label">조회 기간</label>
-                <select id="daysSelect" class="form-select">
+                <!-- 실제 작동할 원본 select (숨김) -->
+                <select id="daysSelect" class="form-select d-none">
                   <option value="1">1일 이내</option>
                   <option value="3">3일 이내</option>
                   <option value="7" selected>7일 이내</option>
                   <option value="30">한 달 이내</option>
                 </select>
+
+                <!-- 커스텀 UI용 드롭다운 -->
+                <div class="custom-select-wrapper" id="daysDropdown">
+                  <div class="custom-select-toggle">
+                    <span class="label">7일 이내</span>
+                    <span class="caret-icon">▾</span>
+                  </div>
+                  <ul class="custom-select-options">
+                    <li data-value="1">1일 이내</li>
+                    <li data-value="3">3일 이내</li>
+                    <li data-value="7" class="selected">7일 이내</li>
+                    <li data-value="30">한 달 이내</li>
+                  </ul>
+                </div>
               </div>
 
               <div class="col-md-6">
                 <label for="radiusSelect" class="form-label">반경 거리</label>
-                <select id="radiusSelect" class="form-select">
+                <select id="radiusSelect" class="form-select d-none">
                   <option value="1000">1km</option>
                   <option value="3000" selected>3km</option>
                   <option value="5000">5km</option>
                 </select>
+
+                <div class="custom-select-wrapper" id="radiusDropdown">
+                  <div class="custom-select-toggle">
+                    <span class="label">3km</span>
+                    <span class="caret-icon">▾</span>
+                  </div>
+                  <ul class="custom-select-options">
+                    <li data-value="1000">1km</li>
+                    <li data-value="3000" class="selected">3km</li>
+                    <li data-value="5000">5km</li>
+                  </ul>
+                </div>
               </div>
 
               <div id="registerInstructionArea" style="display: none">

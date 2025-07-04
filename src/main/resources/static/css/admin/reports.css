@@ -1,0 +1,44 @@
+.btn-outline-purple {
+  background-color: white;
+  border: 1px solid #7a00cc;
+  color: #7a00cc;
+  font-weight: 500;
+  width: 90px;
+  padding: 5px 0;
+  transition: all 0.2s ease-in-out;
+  font-size: 0.85rem;
+}
+
+.btn-outline-purple:hover {
+  background-color: #7a00cc;
+  color: white;
+  transform: scale(1.04);
+}
+
+.btn-outline-purple:active {
+  transform: scale(0.98);
+}
+
+table.table {
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.table th,
+.table td {
+  vertical-align: middle;
+  padding: 10px 8px;
+}
+
+.table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) {
+  background-color: #fcfcfc;
+}
+
+.table-hover tbody tr:hover {
+  background-color: #f3f3ff;
+}

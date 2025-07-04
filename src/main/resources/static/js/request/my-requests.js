@@ -14,7 +14,7 @@ const categoryLabelMap = {
   NOISE_LEVEL: "🔊 소음 여부",
   FOOD_MENU: "🍔 메뉴 정보",
   CROWD_LEVEL: "👥 혼잡도",
-  ETC: "기타",
+  ETC: "❓ 기타",
 };
 
 // [1] 초기 진입
@@ -34,6 +34,14 @@ function bindEventListeners() {
   $("#filterBtn").click(handleFilterClick);
   $(document).on("click", ".view-detail", handleViewDetailClick);
   $(document).on("click", ".page-link", handlePageClick);
+
+  // Enter 키 입력 시 검색 실행
+  $("#searchKeyword").on("keydown", function (e) {
+    if (e.key === "Enter") {
+      e.preventDefault(); // 폼 submit 방지
+      handleFilterClick(); // 검색 실행
+    }
+  });
 }
 
 // 검색 버튼
@@ -194,5 +202,54 @@ function initializeCategoryFilter() {
       options += `<option value="${category}">${label}</option>`;
     });
     $("#categoryFilter").html(options);
+
+    // 옵션을 채운 뒤에 커스텀 카테고리 랜더링
+    renderCustomCategoryDropdown();
+  });
+}
+
+// 커스텀 카테고리 랜더링
+function renderCustomCategoryDropdown() {
+  const $realSelect = $("#categoryFilter");
+  const $dropdown = $("#dropdownList");
+  const $toggle = $("#dropdownToggle");
+
+  // 초기 렌더링
+  const options = $realSelect.find("option");
+  $dropdown.empty();
+  options.each(function () {
+    const val = $(this).val();
+    const text = $(this).text();
+    $dropdown.append(`<li data-value="${val}">${text}</li>`);
+  });
+
+  // 열기/닫기
+  $toggle.on("click", function () {
+    $dropdown.toggle();
+  });
+
+  // 항목 선택
+  $dropdown.on("click", "li", function () {
+    const value = $(this).data("value");
+    const label = $(this).text();
+
+    // 선택 표시
+    $dropdown.find("li").removeClass("selected");
+    $(this).addClass("selected");
+
+    // UI 반영
+    $("#dropdownLabel").text(label);
+    $dropdown.hide();
+
+    // 실제 select 값 변경 + 이벤트 트리거
+    $realSelect.val(value);
+    loadRequestList(); // 바로 필터링
+  });
+
+  // 외부 클릭 시 닫기
+  $(document).on("click", function (e) {
+    if (!$(e.target).closest("#customCategoryDropdown").length) {
+      $dropdown.hide();
+    }
   });
 }

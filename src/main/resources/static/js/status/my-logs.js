@@ -26,6 +26,7 @@ const categoryLabelMap = {
 $(document).ready(function () {
   bindEventListeners();
   loadMyLogs(1);
+  initCustomStatusDropdown();
 });
 
 // ─────────────────────────────────────
@@ -648,4 +649,42 @@ function getDynamicFieldsHTML(category, log) {
     default:
       return "";
   }
+}
+
+// 커스텀 드랍다운
+function initCustomStatusDropdown() {
+  const $select = $("#statusTypeFilter");
+  const $list = $("#statusDropdownList");
+  const $label = $("#statusDropdownLabel");
+
+  // 1. 옵션 리스트 렌더링
+  $list.empty();
+  $select.find("option").each(function () {
+    const value = $(this).val();
+    const text = $(this).text();
+    $list.append(
+      `<li class="dropdown-item" data-value="${value}">${text}</li>`
+    );
+  });
+
+  // 2. 토글 버튼 클릭 시 열고 닫기
+  $("#statusDropdownToggle").on("click", () => {
+    $list.toggleClass("show");
+  });
+
+  // 3. 항목 선택 시 텍스트 반영 + 기존 select 값 갱신 + 필터 트리거
+  $list.on("click", ".dropdown-item", function () {
+    const value = $(this).data("value");
+    const text = $(this).text();
+    $label.text(text);
+    $select.val(value).trigger("change");
+    $list.removeClass("show");
+  });
+
+  // 4. 외부 클릭 시 드롭다운 닫기
+  $(document).on("click", (e) => {
+    if (!$(e.target).closest("#customStatusDropdown").length) {
+      $list.removeClass("show");
+    }
+  });
 }

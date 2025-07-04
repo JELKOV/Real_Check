@@ -58,16 +58,31 @@ ${statusLog.content}</textarea
                 </div>
 
                 <!-- 카테고리 -->
-                <div class="form-floating mb-3">
-                  <select
+                <div class="mb-3" id="categoryDropdown">
+                  <label class="form-label fw-bold">카테고리</label>
+                  <input
+                    type="hidden"
                     id="category"
                     name="category"
-                    class="form-select"
+                    value="${statusLog.category}"
+                  />
+
+                  <button
+                    type="button"
+                    id="categoryToggle"
+                    class="btn btn-outline-secondary w-100 d-flex justify-content-between align-items-center"
                     disabled
                   >
-                    <option value="">선택하세요</option>
-                  </select>
-                  <label for="category">카테고리</label>
+                    <span class="label">선택하세요</span>
+                    <i class="bi bi-caret-down-fill ms-2"></i>
+                  </button>
+
+                  <ul
+                    id="categoryList"
+                    class="list-group position-absolute w-100 z-1 d-none mt-1"
+                  >
+                    <!-- JS에서 렌더링됨 -->
+                  </ul>
                 </div>
 
                 <!-- 동적 필드 -->

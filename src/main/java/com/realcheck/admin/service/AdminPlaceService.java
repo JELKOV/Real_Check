@@ -58,9 +58,12 @@ public class AdminPlaceService {
                             .findByIsRejectedAndNameContainingIgnoreCase(true, q, pageable);
                     break;
                 case "PENDING":
-                default:
                     places = placeRepository
                             .findByIsApprovedAndIsRejectedAndNameContainingIgnoreCase(false, false, q, pageable);
+                case "ALL":
+                default:
+                    places = placeRepository.findByNameContainingIgnoreCase(q, pageable);
+                    break;
             }
         } else {
             // 검색어 없을 때 (기존 상태 분기)
@@ -143,7 +146,6 @@ public class AdminPlaceService {
         place.setRejected(false);
 
         placeRepository.save(place);
-
 
         adminActionLogService.saveLog(
                 adminId,

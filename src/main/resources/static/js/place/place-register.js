@@ -86,11 +86,11 @@ function bindPlaceFormSubmit() {
     );
 
     // 유효성 검사
-    if (!name) return alert("📌 장소 이름을 입력하세요.");
+    if (!name) return alert("장소 이름을 입력하세요.");
     if (!address || !lat || !lng)
-      return alert("📌 주소를 검색하거나 지도를 클릭하세요.");
+      return alert("주소를 검색하거나 지도를 클릭하세요.");
     if (selectedCategories.length === 0)
-      return alert("📌 최소 하나 이상의 카테고리를 선택하세요.");
+      return alert("최소 하나 이상의 카테고리를 선택하세요.");
 
     const data = {
       name,
@@ -106,11 +106,11 @@ function bindPlaceFormSubmit() {
       contentType: "application/json",
       data: JSON.stringify(data),
       success: function () {
-        alert("✅ 장소 등록 요청 완료");
+        alert("장소 등록 요청 완료");
         window.location.href = "/";
       },
       error: function (xhr) {
-        alert("❌ 등록 실패: " + xhr.responseText);
+        alert("등록 실패: " + xhr.responseText);
       },
     });
   });

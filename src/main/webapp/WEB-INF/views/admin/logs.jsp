@@ -14,6 +14,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
     />
+    <link rel="stylesheet" href="/css/admin/logs.css" />
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   </head>
   <body>
@@ -22,36 +23,64 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
     <div class="container mt-5">
       <h3 class="text-center fw-bold mb-4">📝 관리자 행동 로그</h3>
 
-      <!-- 🔍 필터 영역 -->
+      <!-- 필터 영역 -->
       <div class="row g-3 align-items-end mb-4">
+        <!-- 관리자 -->
         <div class="col-md-3">
           <label for="adminId" class="form-label">관리자</label>
-          <select id="adminId" class="form-select">
-            <option value="">전체</option>
-            <!-- 관리자 목록이 동적으로 추가됨 -->
-          </select>
+          <div class="d-none">
+            <select id="adminId" class="form-select">
+              <option value="">전체</option>
+              <!-- 관리자 목록이 동적으로 추가됨 -->
+            </select>
+          </div>
+          <div class="custom-dropdown" id="adminDropdown">
+            <button type="button" class="dropdown-toggle-btn" id="adminToggle">
+              <span class="label">전체</span>
+              <span class="dropdown-arrow">▼</span>
+            </button>
+            <ul class="dropdown-list" id="adminList"></ul>
+          </div>
         </div>
 
         <div class="col-md-3">
           <label for="targetType" class="form-label">대상 유형</label>
-          <select id="targetType" class="form-select">
-            <option value="">전체</option>
-            <option value="USER">USER</option>
-            <option value="PLACE">PLACE</option>
-            <option value="REPORT">REPORT</option>
-            <option value="STATUS_LOG">STATUS_LOG</option>
-          </select>
+          <div class="d-none">
+            <select id="targetType" class="form-select">
+              <option value="">전체</option>
+              <option value="USER">USER</option>
+              <option value="PLACE">PLACE</option>
+              <option value="REPORT">REPORT</option>
+              <option value="STATUS_LOG">STATUS_LOG</option>
+            </select>
+          </div>
+          <div class="custom-dropdown" id="targetDropdown">
+            <button type="button" class="dropdown-toggle-btn" id="targetToggle">
+              <span class="label">전체</span>
+              <span class="dropdown-arrow">▼</span>
+            </button>
+            <ul class="dropdown-list" id="targetList"></ul>
+          </div>
         </div>
 
         <div class="col-md-3">
           <label for="actionType" class="form-label">작업 유형</label>
-          <select id="actionType" class="form-select">
-            <option value="">전체</option>
-            <option value="BLOCK">BLOCK</option>
-            <option value="UNBLOCK">UNBLOCK</option>
-            <option value="APPROVE">APPROVE</option>
-            <option value="REJECT">REJECT</option>
-          </select>
+          <div class="d-none">
+            <select id="actionType" class="form-select">
+              <option value="">전체</option>
+              <option value="BLOCK">BLOCK</option>
+              <option value="UNBLOCK">UNBLOCK</option>
+              <option value="APPROVE">APPROVE</option>
+              <option value="REJECT">REJECT</option>
+            </select>
+          </div>
+          <div class="custom-dropdown" id="actionDropdown">
+            <button type="button" class="dropdown-toggle-btn" id="actionToggle">
+              <span class="label">전체</span>
+              <span class="dropdown-arrow">▼</span>
+            </button>
+            <ul class="dropdown-list" id="actionList"></ul>
+          </div>
         </div>
 
         <div class="col-md-3 d-grid">
@@ -61,7 +90,7 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
         </div>
       </div>
 
-      <!-- 📋 로그 테이블 -->
+      <!-- 로그 테이블 -->
       <table class="table table-bordered text-center align-middle">
         <thead class="table-light">
           <tr>

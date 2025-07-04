@@ -22,6 +22,7 @@ import { parseFieldValue } from "../util/common.js";
 // 폼 관련련 import
 import {
   renderAnswerFields,
+  bindCustomSelectEvents,
   renderExtraAnswerFields,
   manageAnswerFormVisibility,
 } from "./util/formUtils.js";
@@ -44,6 +45,7 @@ let placeId = null;
 // [1] 문서 준비 및 이벤트 바인딩
 // ─────────────────────────────────────────────────────────────
 $(document).ready(function () {
+  // [1-1] 로그인 사용자 ID 파싱
   const loginUserIdElement = document.getElementById("loginUserId");
 
   if (!loginUserIdElement) {
@@ -53,14 +55,18 @@ $(document).ready(function () {
     loginUserIdNum = Number(loginUserId);
   }
 
+  // [1-2] 요청 ID 파싱
   requestId = document.getElementById("requestId").value;
 
-  // 이벤트 바인딩
+  // [1-3] 이벤트 바인딩
   bindEventListeners();
 
-  // 초기 데이터 로드
+  // [1-4] 커스텀 셀렉트 이벤트 바인딩 (한 번만)
+  bindCustomSelectEvents();
+
+  // [1-5] 요청 상세 및 답변 리스트 초기 로드
   loadRequestDetail(requestId, function (request) {
-    loadAnswerList(requestId, request); // request 전달
+    loadAnswerList(requestId, request);
   });
 });
 

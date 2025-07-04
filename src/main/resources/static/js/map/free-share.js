@@ -35,6 +35,9 @@ $(document).ready(function () {
   // 등록/정보 보기 토글 버튼 초기 텍스트 설정
   toggleRegisterUI(isRegisterMode);
 
+  bindCustomSelect("daysDropdown", "daysSelect");
+  bindCustomSelect("radiusDropdown", "radiusSelect");
+
   // ───────────── 버튼 및 이벤트 바인딩 ─────────────
 
   // 내 위치로 이동 버튼 클릭 시 → 위치 재탐색
@@ -349,8 +352,8 @@ function showLogDetail(log) {
     .fail((xhr) => {
       if (xhr.status === 429) {
         alert("너무 자주 조회하고 있습니다. 잠시 후 다시 시도해주세요.");
-      } else {
-        alert("상세 정보를 불러오지 못했습니다.");
+      } else if (xhr.status === 404) {
+        alert("이 정보는 더 이상 존재하지 않습니다.");
       }
     });
 }
@@ -752,4 +755,62 @@ function exitRegisterMode() {
   toggleRegisterUI(false);
 
   resetAndLoadFreeShareList();
+}
+
+// 커스텀 바인딩 설렉트 함수
+function bindCustomSelect(wrapperId, selectId) {
+  const $wrapper = $(`#${wrapperId}`); // 커스텀 드롭다운 전체 wrapper
+  const $toggle = $wrapper.find(".custom-select-toggle"); // 토글 영역
+  const $label = $toggle.find(".label"); // 선택된 값 표시 영역
+  const $options = $wrapper.find(".custom-select-options"); // 옵션 리스트
+  const $select = $(`#${selectId}`); // 실제 숨겨진 <select> 요소
+
+  // 초기 선택된 값 반영
+  const selectedText = $select.find("option:selected").text();
+  $label.text(selectedText);
+
+  // 토글 클릭 → 옵션 열기/닫기
+  $toggle.on("click", () => {
+    const isOpen = $wrapper.hasClass("open");
+
+    // 다른 열린 드롭다운 닫기
+    $(".custom-select-wrapper").not($wrapper).removeClass("open").find(".custom-select-options").hide();
+
+    // 현재 드롭다운 토글
+    if (isOpen) {
+      $wrapper.removeClass("open");
+      $options.hide();
+    } else {
+      $wrapper.addClass("open");
+      $options.show();
+    }
+  });
+
+  // 문서 클릭 시 닫기
+  $(document).on("click", (e) => {
+    if (!$(e.target).closest($wrapper).length) {
+      $wrapper.removeClass("open");
+      $options.hide();
+    }
+  });
+
+  // 옵션 클릭 → 값 선택 처리
+  $options.on("click", "li", function () {
+    const value = $(this).data("value");
+    const labelText = $(this).text();
+
+    // 선택값 UI 갱신
+    $label.text(labelText);
+
+    // 실제 <select> 값 변경 후 change 이벤트 발생
+    $select.val(value).trigger("change");
+
+    // 선택된 항목 표시
+    $options.find("li").removeClass("selected");
+    $(this).addClass("selected");
+
+    // 닫기
+    $wrapper.removeClass("open");
+    $options.hide();
+  });
 }
