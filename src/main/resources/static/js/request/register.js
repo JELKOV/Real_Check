@@ -356,7 +356,13 @@ function togglePlaceMode(mode) {
   $("#searchSection").toggle(!isCustom);
 
   resetSelectedPlace(isCustom);
-  resetCategoryDropdown();
+  
+  if (isCustom) {
+    resetCategoryDropdown(); // 전체 옵션 다시 채움
+    renderCustomCategoryDropdown(); // 드롭다운도 다시 갱신
+  } else {
+    resetCategoryDropdown(); // 공식 장소일 경우 초기화만
+  }
 
   const [activeBtn, inactiveBtn] = isCustom
     ? ["#btnCustom", "#btnPlace"]

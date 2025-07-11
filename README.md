@@ -217,7 +217,7 @@ java -jar target/realcheck-0.0.1-SNAPSHOT.jar
 
 <h6>공지 등록</h6>
 
-![공지등록](./src/main/resources/static/images/Register_Place.gif)
+![공지등록](./src/main/resources/static/images/Register_Notice.gif)
 
 <h6>커뮤니티 페이지</h6>
 
