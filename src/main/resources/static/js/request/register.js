@@ -436,7 +436,9 @@ function loadPlaceDetails(placeId) {
 
     // 카테고리 필터링 적용
     if (data.allowedRequestTypes) {
+      console.log("허용된 카테고리:", data.allowedRequestTypes);
       updateCategoryDropdown(data.allowedRequestTypes);
+      renderCustomCategoryDropdown();
     }
   }).fail(function (xhr) {
     console.error("API Error:", xhr.responseText);
@@ -449,9 +451,15 @@ function renderCustomCategoryDropdown() {
   const $dropdown = $("#dropdownList");
   const $toggle = $("#dropdownToggle");
 
+  // 기존 이벤트 제거 → 중복 바인딩 방지
+  $toggle.off("click");
+  $dropdown.off("click", "li");
+  $(document).off("click.customDropdown"); // 고유 네임스페이스 사용 권장
+
   // 초기 리스트 렌더링
-  const options = $realSelect.find("option");
   $dropdown.empty();
+  const options = $realSelect.find("option");
+
   options.each(function () {
     const val = $(this).val();
     const text = $(this).text();
@@ -481,7 +489,7 @@ function renderCustomCategoryDropdown() {
     // 실제 select 값 변경
     $realSelect.val(value).trigger("change");
   });
-  
+
   $(document).on("click", function (e) {
     if (!$(e.target).closest("#customCategoryDropdown").length) {
       $dropdown.hide();

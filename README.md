@@ -179,6 +179,12 @@ java -jar target/realcheck-0.0.1-SNAPSHOT.jar
 
 <h6>3시간이 지난 오픈된 요청 보기</h6>
 
+![3시간이 지난 오픈된 요청 보기](./src/main/resources/static/images/OverTime_Request.gif)
+
+<h6>주변 요청 보기</h6>
+
+![주변 요청 보기](./src/main/resources/static/images/Nearby_Request.gif)
+
 </details>
 
 <details>
@@ -196,17 +202,43 @@ java -jar target/realcheck-0.0.1-SNAPSHOT.jar
 
 ![답변채택](./src/main/resources/static/images/Select_Answer.gif)
 
+<h6>주변 응답 보기</h6>
+
+![주변 응답 보기](./src/main/resources/static/images/Nearby_Answer.gif)
+
 </details>
 
 <details>
 <summary>📍 장소 기능</summary>
 
+<h6>장소 등록</h6>
+
+![장소등록](./src/main/resources/static/images/Register_Place.gif)
+
+<h6>공지 등록</h6>
+
+![공지등록](./src/main/resources/static/images/Register_Place.gif)
+
+<h6>커뮤니티 페이지</h6>
 
 </details>
 
 <details>
 <summary>🛡️ 관리자 기능</summary>
 
+<h6>통계 기능</h6>
+
+<h6>사용자 관리</h6>
+
+<h6>신고 관리</h6>
+
+<h6>로그 관리</h6>
+
+<h6>장소 관리</h6>
+
+![장소관리](./src/main/resources/static/images/Admin_Place.gif)
+
+<h6>자발적 공유 관리</h6>
 
 </details>
 
