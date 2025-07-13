@@ -141,15 +141,15 @@ java -jar target/realcheck-0.0.1-SNAPSHOT.jar
 
 #### 🔹 메인 화면
 
-<img src="./src/main/resources/static/images/index.gif" alt="메인화면" style="max-width: 100%; margin-bottom: 1rem;" />
+<video src="https://github.com/user-attachments/assets/3c0d1909-6c2c-4d2b-97ab-dbca8b95c760" controls width="600"></video>
 
 #### 🔹 헤더 일반 사용자
 
-<img src="./src/main/resources/static/images/Header_User.png" alt="헤더 사용자" style="max-width: 100%; margin-bottom: 1rem;" />
+<img src="https://github.com/user-attachments/assets/f79aaa6f-45b1-490f-8a4b-def8ef77b1c1" width="500"/>
 
 #### 🔹 헤더 관리자
 
-<img src="./src/main/resources/static/images/Header_Admin.png" alt="헤더 관리자" style="max-width: 100%; margin-bottom: 1rem;" />
+<img src="https://github.com/user-attachments/assets/8c59d782-706c-4824-bf11-0945a79a3421" width="500"/>
 
 </div>
 </details>
@@ -161,23 +161,23 @@ java -jar target/realcheck-0.0.1-SNAPSHOT.jar
 
 #### 🔹 회원 가입
 
-<img src="./src/main/resources/static/images/Register_User.gif" style="max-width: 100%; margin-bottom: 1rem;" />
+<video src="https://github.com/user-attachments/assets/1b168e8e-5b12-4f09-ac64-a3a7b2d62260" controls width="600"></video>
 
 #### 🔹 로그인
 
-<img src="./src/main/resources/static/images/Login_User.gif" style="max-width: 100%; margin-bottom: 1rem;" />
+<video src="https://github.com/user-attachments/assets/15bb4f9d-132e-4a6b-a578-d22c6c2a2586" controls width="600"></video>
 
 #### 🔹 포인트 충전
 
-<img src="./src/main/resources/static/images/Point_Charge_Cash.gif" style="max-width: 100%; margin-bottom: 1rem;" />
+<video src="https://github.com/user-attachments/assets/693a5845-e80f-4fb5-b29b-f448f4141bc1" controls width="600"></video>
 
 #### 🔹 정보 수정
 
-<img src="./src/main/resources/static/images/Edit_User.gif" style="max-width: 100%; margin-bottom: 1rem;" />
+<video src="https://github.com/user-attachments/assets/1283ad9f-9a57-4e78-b9cd-8dd047dc1251" controls width="600"></video>
 
 #### 🔹 회원 탈퇴
 
-<img src="./src/main/resources/static/images/Delete_User.gif" style="max-width: 100%; margin-bottom: 1rem;" />
+<video src="https://github.com/user-attachments/assets/3d6e5bf9-1b9f-479d-8a46-ad42fd63df0b" controls width="600"></video>
 
 </div>
 </details>
@@ -189,19 +189,19 @@ java -jar target/realcheck-0.0.1-SNAPSHOT.jar
 
 #### 🔹 공식장소 정보요청
 
-<img src="./src/main/resources/static/images/PublicPlace_Request.gif" style="max-width: 100%; margin-bottom: 1rem;" />
+<video src="https://github.com/user-attachments/assets/1ed542d9-ec40-4e35-aeec-b6ce1101b802" controls width="600"></video>
 
 #### 🔹 일반장소 정보요청
 
-<img src="./src/main/resources/static/images/GeneralPlace_Request.gif" style="max-width: 100%; margin-bottom: 1rem;" />
+<video src="https://github.com/user-attachments/assets/2708b923-e877-4fd9-b20a-2045c3d4494b" controls width="600"></video>
 
 #### 🔹 3시간 경과 요청 보기
 
-<img src="./src/main/resources/static/images/OverTime_Request.gif" style="max-width: 100%; margin-bottom: 1rem;" />
+<video src="https://github.com/user-attachments/assets/daca81c9-83a2-4f63-9997-ffa816795625" controls width="600"></video>
 
 #### 🔹 주변 요청 보기
 
-<img src="./src/main/resources/static/images/Nearby_Request.gif" style="max-width: 100%; margin-bottom: 1rem;" />
+<video src="https://github.com/user-attachments/assets/602e7cc9-7b9c-44e8-ac00-ac5ac9193c41" controls width="600"></video>
 
 </div>
 </details>
@@ -213,19 +213,19 @@ java -jar target/realcheck-0.0.1-SNAPSHOT.jar
 
 #### 🔹 응답 답변 작성
 
-<img src="./src/main/resources/static/images/Request_Answer.gif" style="max-width: 100%; margin-bottom: 1rem;" />
+<video src="https://github.com/user-attachments/assets/d48e5c68-8de1-4a51-b2f5-267b69b656b5" controls width="600"></video>
 
 #### 🔹 자발적 정보 공유
 
-<img src="./src/main/resources/static/images/Free_Share.gif" style="max-width: 100%; margin-bottom: 1rem;" />
+<video src="https://github.com/user-attachments/assets/bc77b0b4-e914-4b4e-a3bd-1ee816be6480" controls width="600"></video>
 
 #### 🔹 답변 채택하기
 
-<img src="./src/main/resources/static/images/Select_Answer.gif" style="max-width: 100%; margin-bottom: 1rem;" />
+<video src="https://github.com/user-attachments/assets/76cfde2e-7be2-4f82-85dc-80ba3f782feb" controls width="600"></video>
 
 #### 🔹 주변 응답 보기
 
-<img src="./src/main/resources/static/images/Nearby_Answer.gif" style="max-width: 100%; margin-bottom: 1rem;" />
+<video src="https://github.com/user-attachments/assets/fca8179b-f820-4a23-b57e-a773c689f448" controls width="600"></video>
 
 </div>
 </details>
@@ -237,15 +237,15 @@ java -jar target/realcheck-0.0.1-SNAPSHOT.jar
 
 #### 🔹 장소 등록
 
-<img src="./src/main/resources/static/images/Register_Place.gif" style="max-width: 100%; margin-bottom: 1rem;" />
+<video src="https://github.com/user-attachments/assets/f6954565-1fee-4dd5-80a6-a72b51e91d91" controls width="600"></video>
 
 #### 🔹 공지 등록
 
-<img src="./src/main/resources/static/images/Register_Notice.gif" style="max-width: 100%; margin-bottom: 1rem;" />
+<video src="https://github.com/user-attachments/assets/4706cb47-6760-4c54-9fe6-0a6f2f967538" controls width="600"></video>
 
 #### 🔹 커뮤니티 페이지
 
-<img src="./src/main/resources/static/images/Community.gif" style="max-width: 100%; margin-bottom: 1rem;" />
+<video src="https://github.com/user-attachments/assets/a119fe58-d997-426c-b3ba-68ea6a96aece" controls width="600"></video>
 
 </div>
 </details>
@@ -257,27 +257,27 @@ java -jar target/realcheck-0.0.1-SNAPSHOT.jar
 
 #### 🔹 통계 기능
 
-<img src="./src/main/resources/static/images/Admin_Statistics.gif" style="max-width: 100%; margin-bottom: 1rem;" />
+<video src="https://github.com/user-attachments/assets/aac1aa85-dc3d-4bd3-a970-7b90583c7495" controls width="600"></video>
 
 #### 🔹 사용자 관리
 
-<img src="./src/main/resources/static/images/Admin_Users.gif" style="max-width: 100%; margin-bottom: 1rem;" />
+<video src="https://github.com/user-attachments/assets/8282c742-f2f7-4360-a2cc-2a3c3f62969b" controls width="600"></video>
 
 #### 🔹 신고 관리
 
-<img src="./src/main/resources/static/images/Admin_Reports.gif" style="max-width: 100%; margin-bottom: 1rem;" />
+<video src="https://github.com/user-attachments/assets/504ca92a-fe83-4607-85b0-06113787c6a3" controls width="600"></video>
 
 #### 🔹 로그 관리
 
-<img src="./src/main/resources/static/images/Admin_Logs.gif" style="max-width: 100%; margin-bottom: 1rem;" />
+<video src="https://github.com/user-attachments/assets/4b330ef0-fd41-4e95-b3a6-c6a0d908e94b" controls width="600"></video>
 
 #### 🔹 장소 관리
 
-<img src="./src/main/resources/static/images/Admin_Place.gif" style="max-width: 100%; margin-bottom: 1rem;" />
+<video src="https://github.com/user-attachments/assets/9bec2f7f-5b8f-4c34-b7a5-da971c7cbd8a" controls width="600"></video>
 
 #### 🔹 자발적 공유 관리
 
-<img src="./src/main/resources/static/images/Admin_FreeShare.gif" style="max-width: 100%; margin-bottom: 1rem;" />
+<video src="https://github.com/user-attachments/assets/b5ff4e66-8802-4ff3-b14a-c61d33d9cbe0" controls width="600"></video>
 
 </div>
 </details>
