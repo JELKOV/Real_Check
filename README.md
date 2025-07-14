@@ -141,7 +141,35 @@ realcheck/
 
 #### 🗂 ERD
 
+> 아래는 RealCheck 프로젝트의 데이터베이스 설계도 입니다. <br>
+> MySQL 기반 관계형 데이터베이스로, 사용자-요청-응답-장소 간의 흐름을 중심으로 설계되었습니다.
+
 <img src="https://github.com/user-attachments/assets/2ec9078b-eceb-4498-92c2-e88ffe83067c" width="800"/>
+
+#### 🔹 테이블 요약
+
+| 테이블명               | 설명                     |
+| ------------------ | ---------------------- |
+| `users`            | 회원 정보 및 권한, 포인트 보유량 관리  |
+| `request`          | 요청 등록 정보 (공식/비공식 장소 포함) |
+| `status_logs`      | 요청에 대한 응답글, 자발적 공유, 공지 등을 포함  |
+| `places`           | 공식 장소 데이터     |
+| `points`           | 포인트 적립/사용 내역           |
+| `reports`          | 상태 로그 신고 및 블라인드 관리     |
+| `admin_action_log` | 관리자 조치 로그 기록           |
+| `deleted_user_log` | 탈퇴 유저 기록 보존용 (데이터 정합성 유지) |
+
+#### 🔹 관계 구조
+
+> 각 테이블은 JPA 기준 `@OneToMany`, `@ManyToOne` 관계로 머티환되어 있습니다.
+
+* `users` ↔ `request`, `status_logs`, `points` : **1\:N**
+* `places` ↔ `status_logs`, `request`, `reports` : **1\:N**
+* `request` ↔ `status_logs` : **1\:N**
+* `status_logs` ↔ `status_log_images` : **1\:N**
+
+> status_logs는 request, user, place 등과 다대일 관계를 유지합니다. <br>
+> 또한, report_count, view_count, is_selected 등 상태 정보가 포함되어 비즈니스 로직 중심의 설계를 반영하고 있습니다.
 
 </details>
 
