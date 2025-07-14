@@ -378,9 +378,9 @@ java -jar target/realcheck-0.0.1-SNAPSHOT.jar
 
 <br>
 
-| 이름   | 역할                                   | GitHub                                                 | 포트폴리오 & 개인블로그                              |
-| ------ | -------------------------------------- | ------------------------------------------------------ | ----------------------------------------------- |
-| 안제호 | 전체 개발 (기획, 백엔드, 프론트, 배포) | [🔗 GitHub](https://github.com/JELKOV)                | [🌐 Portfolio](https://jelkov.github.io/Portfolio-New-Version/) <br> [📘 Blog](https://jelkov-developer.notion.site/49ba695ecae34a729cce1f8b250c4502?source=copy_link) |
+| 이름   | 역할                                   | GitHub                                                 | 포트폴리오 & 개인블로그                                                                                 |
+| ------ | -------------------------------------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| 안제호 | 전체 개발 (기획, 백엔드, 프론트, 배포) | [🔗 GitHub](https://github.com/JELKOV)                | [🌐 Portfolio](https://jelkov.github.io/Portfolio-New-Version/) ｜ [📘 Blog](https://jelkov-developer.notion.site/49ba695ecae34a729cce1f8b250c4502?source=copy_link) |
 
 </details>
 
