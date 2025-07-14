@@ -12,7 +12,7 @@
 <br>
 
 <details>
-<summary> <span style="font-size: 1.2rem;"><strong>🛠️ 기술 스택</strong></summary>
+<summary>🛠️<strong>기술 스택</strong></summary>
 
 <br>
 
@@ -32,7 +32,9 @@
 <br>
 
 <details>
-<summary> <span style="font-size: 1.2rem;"><strong>💡 주요 기능 요약</strong></summary>
+<summary>💡<strong>주요 기능 요약</strong></summary>
+
+<br>
 
 ### 👤 사용자 기능
 
@@ -68,7 +70,7 @@
 <br>
 
 <details>
-<summary> <span style="font-size: 1.2rem;"><strong>📁 프로젝트 구조</strong></summary>
+<summary>📁<strong>프로젝트 구조</strong></summary>
 
 <br>
 
@@ -94,7 +96,7 @@ realcheck/
 <br>
 
 <details>
-<summary> <span style="font-size: 1.2rem;"><strong>🚀 실행 방법</strong></summary>
+<summary>🚀<strong>실행 방법</strong></summary>
 
 <br>
 
@@ -116,7 +118,7 @@ java -jar target/realcheck-0.0.1-SNAPSHOT.jar
 <br>
 
 <details>
-<summary> <span style="font-size: 1.2rem;"><strong>🌐 배포 환경</strong></summary>
+<summary>🌐<strong>배포 환경</strong></summary>
 
 <br>
 
@@ -131,13 +133,18 @@ java -jar target/realcheck-0.0.1-SNAPSHOT.jar
 <br>
 
 <details>
-<summary> <span style="font-size: 1.2rem;"><strong>📸 프로젝트 시연</strong></summary>
-<div style="padding-left: 1rem; border-left: 2px solid #555; margin-top: 0.5rem;">
+<summary>📸<strong>프로젝트 시연</strong></summary>
 
-<details style="margin-left: 0.5rem;">
-<summary><span style="font-size: 1.05rem;">🧭 메인페이지</summary>
+<br>
 
-<div style="margin: 0.5rem 0 1rem 1rem;">
+> 아래는 주요 기능 시연 영상과 스크린샷입니다. 각 항목을 클릭해 내용을 펼쳐보세요.
+
+<br>
+
+<details>
+<summary>🧭<strong>메인페이지</strong></summary>
+
+---
 
 #### 🔹 메인 화면
 
@@ -151,13 +158,15 @@ java -jar target/realcheck-0.0.1-SNAPSHOT.jar
 
 <img src="https://github.com/user-attachments/assets/8c59d782-706c-4824-bf11-0945a79a3421" width="500"/>
 
-</div>
+---
 </details>
 
-<details style="margin-left: 0.5rem;">
-<summary><span style="font-size: 1.05rem;">👤 사용자 기능</summary>
+<br>
 
-<div style="margin: 0.5rem 0 1rem 1rem;">
+<details>
+<summary>👤<strong>사용자 기능</strong></summary>
+
+---
 
 #### 🔹 회원 가입
 
@@ -179,13 +188,15 @@ java -jar target/realcheck-0.0.1-SNAPSHOT.jar
 
 <video src="https://github.com/user-attachments/assets/3d6e5bf9-1b9f-479d-8a46-ad42fd63df0b" controls width="600"></video>
 
-</div>
+---
 </details>
 
-<details style="margin-left: 0.5rem;">
-<summary><span style="font-size: 1.05rem;">📨 요청 기능</summary>
+<br>
 
-<div style="margin: 0.5rem 0 1rem 1rem;">
+<details>
+<summary>📨<strong>요청 기능</strong></summary>
+
+---
 
 #### 🔹 공식장소 정보요청
 
@@ -203,13 +214,15 @@ java -jar target/realcheck-0.0.1-SNAPSHOT.jar
 
 <video src="https://github.com/user-attachments/assets/602e7cc9-7b9c-44e8-ac00-ac5ac9193c41" controls width="600"></video>
 
-</div>
+---
 </details>
 
-<details style="margin-left: 0.5rem;">
-<summary><span style="font-size: 1.05rem;">💬 답변 기능</summary>
+<br>
 
-<div style="margin: 0.5rem 0 1rem 1rem;">
+<details>
+<summary>💬<strong>답변 기능</strong></summary>
+
+---
 
 #### 🔹 응답 답변 작성
 
@@ -227,13 +240,15 @@ java -jar target/realcheck-0.0.1-SNAPSHOT.jar
 
 <video src="https://github.com/user-attachments/assets/fca8179b-f820-4a23-b57e-a773c689f448" controls width="600"></video>
 
-</div>
+---
 </details>
 
-<details style="margin-left: 0.5rem;">
-<summary><span style="font-size: 1.05rem;">📍 장소 기능</summary>
+<br>
 
-<div style="margin: 0.5rem 0 1rem 1rem;">
+<details>
+<summary>📍<strong>장소 기능</strong></summary>
+
+---
 
 #### 🔹 장소 등록
 
@@ -247,13 +262,15 @@ java -jar target/realcheck-0.0.1-SNAPSHOT.jar
 
 <video src="https://github.com/user-attachments/assets/a119fe58-d997-426c-b3ba-68ea6a96aece" controls width="600"></video>
 
-</div>
+---
 </details>
 
-<details style="margin-left: 0.5rem;">
-<summary><span style="font-size: 1.05rem;">🛡️ 관리자 기능</summary>
+<br>
 
-<div style="margin: 0.5rem 0 1rem 1rem;">
+<details>
+<summary>🛡️<strong>관리자 기능</strong></summary>
+
+---
 
 #### 🔹 통계 기능
 
@@ -279,10 +296,9 @@ java -jar target/realcheck-0.0.1-SNAPSHOT.jar
 
 <video src="https://github.com/user-attachments/assets/b5ff4e66-8802-4ff3-b14a-c61d33d9cbe0" controls width="600"></video>
 
-</div>
+---
 </details>
 
-</div>
 </details>
 
 ---
@@ -290,7 +306,9 @@ java -jar target/realcheck-0.0.1-SNAPSHOT.jar
 <br>
 
 <details>
-<summary><span style="font-size: 1.2rem;"><strong>🙋‍♂️ 개발자 정보</strong></summary>
+<summary>🙋‍♂️<strong>개발자 정보</strong></summary>
+
+<br>
 
 | 이름   | 역할                                   | GitHub                                                 |
 | ------ | -------------------------------------- | ------------------------------------------------------ |
@@ -303,8 +321,12 @@ java -jar target/realcheck-0.0.1-SNAPSHOT.jar
 <br>
 
 <details>
-<summary><span style="font-size: 1.2rem;"><strong>📄 라이선스</strong></summary>
+<summary>📄<strong>라이선스</strong></summary>
+
+<br>
 
 > 본 프로젝트는 포트폴리오용으로 제작되었으며, 상업적 사용을 금합니다.
 
 </details>
+
+---
