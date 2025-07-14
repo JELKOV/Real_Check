@@ -89,6 +89,10 @@ realcheck/
             ├── admin/ map/ place/ request/ status/ user/
 ```
 
+### 🗂 ERD (Database Structure)
+
+<img src="https://github.com/user-attachments/assets/2ec9078b-eceb-4498-92c2-e88ffe83067c" width="800"/>
+
 </details>
 
 ---
