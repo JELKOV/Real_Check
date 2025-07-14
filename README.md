@@ -4,8 +4,28 @@
 
 # 📍 RealCheck
 
-> **실시간 현장 정보 공유 플랫폼**
-> 사용자들이 주변의 대기 상태, 편의시설, 요청 응답 등을 실시간으로 주고받는 위치 기반 커뮤니티 서비스입니다.
+> **사람이 가장 빠르다, RealCheck**🏃💨  
+
+- **RealCheck**는 사용자들이 주변의 대기 상태, 편의시설, 요청 응답 등을  
+실시간으로 주고받는 **위치 기반 커뮤니티 서비스**입니다.
+
+---
+
+### 👉 배경 및 목적
+
+- 우리는 인공지능이 빠르게 발전하는 시대에 살고 있지만,  
+**AI가 아직 감지할 수 없는 현장의 정보**는 여전히 많습니다.  
+
+- 예를 들어, 지금 이 순간 특정 장소의 대기열은 얼마나 긴가?  
+화장실은 사용 가능한가?  
+
+- 이런 **짧은 시간 안에 필요한 실시간 정보**는  
+누군가의 도움이 없이는 알기 어렵습니다.
+
+- **RealCheck는 이러한 문제의식에서 출발했습니다.**  
+사람들이 **서로에게 실시간 상황을 전달**하고,  
+필요한 정보를 교환하며,  
+지역 기반 커뮤니티로서 상호작용할 수 있도록 돕는 플랫폼입니다.
 
 ---
 
@@ -340,13 +360,27 @@ java -jar target/realcheck-0.0.1-SNAPSHOT.jar
 <br>
 
 <details>
-<summary>🙋‍♂️<strong>개발자 정보</strong></summary>
+<summary>📘 <strong>개발 문서 (Notion)</strong></summary>
 
 <br>
 
-| 이름   | 역할                                   | GitHub                                                 |
-| ------ | -------------------------------------- | ------------------------------------------------------ |
-| 안제호 | 전체 개발 (기획, 백엔드, 프론트, 배포) | [https://github.com/JELKOV](https://github.com/JELKOV) |
+- 전체 프로젝트 개발 과정, 일정 관리, 기획 흐름 등은 아래 페이지에서 확인하실 수 있습니다.  
+- 🔗 **[RealCheck 개발 노션 바로가기](https://jelkov-developer.notion.site/RealCheck-JAVA-SpringBoot-1d1c23f3073480c2bf20c9d7a208f4ea?source=copy_link)**
+
+</details>
+
+---
+
+<br>
+
+<details>
+<summary>🙋‍♂️ <strong>개발자 정보</strong></summary>
+
+<br>
+
+| 이름   | 역할                                   | GitHub                                                 | 포트폴리오 & 개인블로그                              |
+| ------ | -------------------------------------- | ------------------------------------------------------ | ----------------------------------------------- |
+| 안제호 | 전체 개발 (기획, 백엔드, 프론트, 배포) | [🔗 GitHub](https://github.com/JELKOV)                | [🌐 Portfolio](https://jelkov.github.io/Portfolio-New-Version/) <br> [📘 Blog](https://jelkov-developer.notion.site/49ba695ecae34a729cce1f8b250c4502?source=copy_link) |
 
 </details>
 
