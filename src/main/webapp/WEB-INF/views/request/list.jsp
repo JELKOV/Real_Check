@@ -31,13 +31,13 @@ prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
           <option value="WAITING_STATUS">⏳ 대기 상황</option>
           <option value="STREET_VENDOR">🥟 노점 현황</option>
           <option value="PHOTO_REQUEST">📸 사진 요청</option>
-          <option value="BUSINESS_STATUS">🏪 업영 유무</option>
-          <option value="OPEN_SEAT">💺 자석 유여</option>
+          <option value="BUSINESS_STATUS">🏪 영업 유무</option>
+          <option value="OPEN_SEAT">💺 자석 유무</option>
           <option value="BATHROOM">🚻 화장실 유무</option>
           <option value="WEATHER_LOCAL">☁️ 현장 날씨</option>
           <option value="NOISE_LEVEL">🔊 소음 상황</option>
           <option value="FOOD_MENU">🍔 음식/메뉴</option>
-          <option value="CROWD_LEVEL">👥 호장도</option>
+          <option value="CROWD_LEVEL">👥 혼잡도</option>
           <option value="ETC">❓ 기타</option>
         </select>
 
