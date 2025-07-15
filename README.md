@@ -45,6 +45,12 @@
 | **API**      | RESTful API, Naver Maps API                      |
 | **Others**   | GitHub, Maven, Linux shell 배포                  |
 
+<br>
+
+### 🔹 시스템 아키텍처
+
+<img width="910" height="521" alt="RealCheck Architecture" src="https://github.com/user-attachments/assets/9ae40aa4-881c-4fba-8261-e96fe17b5125" />
+
 </details>
 
 ---
